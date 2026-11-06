@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="FluentAssertions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\SistemaFuneraria.Core\SistemaFuneraria.Core.csproj" />
+    <ProjectReference Include="..\..\src\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj" />
+    <ProjectReference Include="..\..\src\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\SistemaFuneraria.Web\SistemaFuneraria.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="E2E\" />
+    <Folder Include="Functional\" />
+    <Folder Include="Integration\" />
+  </ItemGroup>
+
+</Project>
