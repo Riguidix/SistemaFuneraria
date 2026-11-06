@@ -165,10 +165,9 @@ git push origin feature/FUN-010-calculadora-financiamiento
 1. Ve al repositorio en GitHub. Verás un botón amarillo que dice **"Compare & pull request"**. Haz clic en él.
 2. **Base:** `dev` $\leftarrow$ **Compare:** `feature/FUN-010-calculadora-financiamiento`.
 3. Llena la plantilla de Pull Request que aparecerá automáticamente en pantalla:
-   * Describe qué hiciste.
-   * Adjunta tu captura de pantalla de `dotnet test` en verde.
+   * Describe qué problema resolviste y cómo lo implementaste.
+   * **Adjunta tu evidencia TDD obligatoria:** Pega la captura de terminal de tu prueba en **ROJO** (fallando antes de implementar) y en **VERDE** (pasando tras implementar).
    * Confirma que tu PR no excede las 300 líneas de código (Blast Radius $\le 300$ LOCs).
-   * Escribe el comando de rollback si aplica.
 4. Asigna como revisores a un compañero de equipo (Revisión Par) y al **Tech Lead**.
 5. Haz clic en **Create Pull Request**.
 
@@ -187,11 +186,13 @@ git push origin feature/FUN-010-calculadora-financiamiento
 
 1. **Límite de Blast Radius ($\le 300$ Líneas):**  
    Ningún Pull Request debe superar las 300 líneas de código modificadas. Si tu tarea es muy grande, divídela con la ayuda del Tech Lead. PRs grandes provocan fatiga, se revisan mal y esconden errores.
-2. **Cero Fantasía (Evidencia Obligatoria):**  
-   No se acepta "ya casi queda" ni "funciona en mi máquina". Un ticket solo está terminado si tiene una prueba automatizada en verde o una captura de pantalla demostrando que cumple el criterio de aceptación.
-3. **No romper `dev`:**  
+2. **Cero Fantasía (Evidencia TDD Obligatoria):**  
+   No se acepta "ya casi queda" ni "funciona en mi máquina". Cada Pull Request debe incluir obligatoriamente su captura de la fase **ROJO** (test que fallaba) y su fase **VERDE** (suite completa pasando).
+3. **Regla del Escritor Único (Cero Merge Conflicts en Docs):**  
+   Los desarrolladores **NUNCA deben modificar archivos de la carpeta `docs/` en sus ramas de feature**. Toda evidencia se entrega dentro del Pull Request en GitHub. Los documentos maestros de `docs/` son mantenidos exclusivamente por el Tech Lead y el QA Lead.
+4. **No romper `dev`:**  
    Antes de abrir un PR, corre **siempre** `dotnet test` en tu computadora. Si algo falla localmente, jamás lo subas a GitHub.
-4. **Prohibido `git push --force`:**  
+5. **Prohibido `git push --force`:**  
    Nunca uses la opción `--force` para subir cambios. Si te equivocas, pide apoyo.
 
 ---

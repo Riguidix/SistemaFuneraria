@@ -37,10 +37,10 @@ Marca con una `[x]` las casillas verificadas antes de solicitar revisión:
 
 ---
 
-### 📸 Evidencia de Entrega (Cero Fantasía)
+### 🧪 Evidencia TDD de Entrega (Obligatoria)
 
-1. **Captura de Terminal (`dotnet test` en verde):**
-   > *Arrastra y pega aquí la captura de tu terminal mostrando las pruebas pasando.*
+1. **Evidencia ROJO (Fase RED):**
+   > *Pega aquí la captura de terminal de `dotnet test` fallando antes de escribir la implementación.*
 
-2. **Captura de Pantalla de la Interfaz UI (si aplica para vistas o partials):**
-   > *Arrastra y pega aquí la captura visual de la pantalla renderizada.*
+2. **Evidencia VERDE (Fase GREEN):**
+   > *Pega aquí la captura de terminal de `dotnet test` pasando con todas las pruebas en verde tras la implementación.*
