@@ -1,0 +1,48 @@
+name: CI - Build & Test Gatekeeper
+
+on:
+  pull_request:
+    branches: [ dev, beta, main ]
+  push:
+    branches: [ dev, beta, main ]
+
+jobs:
+  build-and-test:
+    name: Compilación y Suite de Pruebas
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: funeraria_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📥 Clonar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Configurar .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 📦 Restaurar paquetes NuGet
+        run: dotnet restore
+
+      - name: 🔨 Compilar solución en Release
+        run: dotnet build --no-restore --configuration Release
+
+      - name: 🧪 Ejecutar Suite de Pruebas (xUnit)
+        env:
+          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=funeraria_test;Username=postgres;Password=postgres_test_password"
+          ASPNETCORE_ENVIRONMENT: "Development"
+        run: dotnet test --no-build --configuration Release --verbosity normal --logger "console;verbosity=normal"
