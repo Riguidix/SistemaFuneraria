@@ -1,6 +1,6 @@
 ### 📋 Resumen del Pull Request
 
-* **Ticket Relacionado:** Closes #FUN-___ <!-- o Fixes #INC-___ -->
+* **Ticket Relacionado:** Closes #SF-___ <!-- o Fixes #INC-___ -->
 * **Tipo de Cambio:**
   - [ ] `feat` (Nueva funcionalidad de negocio)
   - [ ] `fix` (Corrección de error / bug)
@@ -41,5 +41,5 @@ Marca con una `[x]` las casillas verificadas antes de solicitar revisión:
 
 He creado e incluido en este PR los dos archivos de evidencia en Markdown (plantilla en `docs/evidencias/README.md`):
 
-- [ ] **Fase ROJO:** `docs/evidencias/FUN-___/Red_Test.md` (Prueba fallando antes de implementar la solución)
-- [ ] **Fase VERDE:** `docs/evidencias/FUN-___/Green_Test.md` (Prueba pasando exitosamente tras implementar la solución)
+- [ ] **Fase ROJO:** `docs/evidencias/SF-___/Red_Test.md` (Prueba fallando antes de implementar la solución)
+- [ ] **Fase VERDE:** `docs/evidencias/SF-___/Green_Test.md` (Prueba pasando exitosamente tras implementar la solución)

@@ -12,7 +12,7 @@ En nuestro repositorio existen tres ramas principales protegidas y ramas tempora
 
 ```mermaid
 flowchart LR
-    DEV["Rama dev<br>(Integración Continua)"] -->|"git checkout -b"| FEAT["feature/FUN-XXX<br>(Tu rama de trabajo)"]
+    DEV["Rama dev<br>(Integración Continua)"] -->|"git checkout -b"| FEAT["feature/SF-XXX<br>(Tu rama de trabajo)"]
     FEAT -->|"TDD: Rojo / Verde / Refactor"| FEAT
     FEAT -->|"git push & Pull Request"| PR["Pull Request en GitHub<br>(CI en Verde + Aprobación)"]
     PR -->|"Squash & Merge"| DEV
@@ -25,7 +25,7 @@ flowchart LR
 | **`main`** | **Producción.** Código 100% estable, certificado y listo para entrega final. | **Solo el Tech Lead** (Mediante PR desde `beta`). |
 | **`beta`** | **Staging / Pre-release.** Entorno donde ejecutamos las pruebas de certificación UAT. | **Solo el Tech Lead** (Mediante PR desde `dev`). |
 | **`dev`** | **Integración Continua.** Aquí se integran todas las funcionalidades terminadas del sprint. | **Mediante Pull Requests aprobados.** |
-| **`feature/FUN-XXX-...`** | **Tu rama de trabajo.** Aquí programas tu tarea asignada. Nace de `dev` y muere al unirse a `dev`. | **Tú (Desarrollador asignado).** |
+| **`feature/SF-XXX-...`** | **Tu rama de trabajo.** Aquí programas tu tarea asignada. Nace de `dev` y muere al unirse a `dev`. | **Tú (Desarrollador asignado).** |
 
 > [!CAUTION]
 > **REGLA DE ORO #1:** Nunca hagas `git commit` ni `git push` directamente sobre `main`, `beta` ni `dev`. Siempre debes crear tu propia rama de feature.
@@ -38,7 +38,7 @@ Cada vez que vayas a trabajar en una tarea, sigue estrictamente estos **8 pasos*
 
 ### Paso 1: Toma tu tarea en GitHub Projects
 1. Entra al repositorio en GitHub $\rightarrow$ pestaña **Projects**.
-2. Ubica la tarjeta asignada a ti (ejemplo: `[FUN-010] CalculadoraFinanciamiento`).
+2. Ubica la tarjeta asignada a ti (ejemplo: `[SF-010] CalculadoraFinanciamiento`).
 3. Arrastra la tarjeta de la columna **To Do (Por Hacer)** a **In Progress (En Curso)**.
 4. *Límite WIP (Work In Progress):* **Solo puedes tener 1 tarea activa a la vez.**
 
@@ -59,8 +59,8 @@ git pull origin dev
 ### Paso 3: Crea tu rama de trabajo
 El nombre de tu rama **debe** incluir el identificador del ticket y una descripción corta en minúsculas separada por guiones (`kebab-case`):
 ```bash
-# Formato: git checkout -b feature/FUN-XXX-nombre-corto dev
-git checkout -b feature/FUN-010-calculadora-financiamiento dev
+# Formato: git checkout -b feature/SF-XXX-nombre-corto dev
+git checkout -b feature/SF-010-calculadora-financiamiento dev
 ```
 
 ---
@@ -149,24 +149,24 @@ git status
 git add .
 
 # 3. Haz el commit con el formato correcto
-git commit -m "feat(financiamiento): implementa calculo de enganche accesible, estandar y alto" -m "Closes #FUN-010"
+git commit -m "feat(financiamiento): implementa calculo de enganche accesible, estandar y alto" -m "Closes #SF-010"
 ```
 
 ---
 
 ### Paso 6: Sube tu rama a GitHub
 ```bash
-git push origin feature/FUN-010-calculadora-financiamiento
+git push origin feature/SF-010-calculadora-financiamiento
 ```
 
 ---
 
 ### Paso 7: Abre tu Pull Request (PR) en GitHub
 1. Ve al repositorio en GitHub. Verás un botón amarillo que dice **"Compare & pull request"**. Haz clic en él.
-2. **Base:** `dev` $\leftarrow$ **Compare:** `feature/FUN-010-calculadora-financiamiento`.
+2. **Base:** `dev` $\leftarrow$ **Compare:** `feature/SF-010-calculadora-financiamiento`.
 3. Llena la plantilla de Pull Request que aparecerá automáticamente en pantalla:
    * Describe qué problema resolviste y cómo lo implementaste.
-   * **Crea y sube tus evidencias TDD en Markdown:** Crea la carpeta `docs/evidencias/FUN-XXX/` y adentro genera `Red_Test.md` (falla previa) y `Green_Test.md` (pase exitoso) usando las plantillas de `docs/evidencias/README.md`.
+   * **Crea y sube tus evidencias TDD en Markdown:** Crea la carpeta `docs/evidencias/SF-XXX/` y adentro genera `Red_Test.md` (falla previa) y `Green_Test.md` (pase exitoso) usando las plantillas de `docs/evidencias/README.md`.
    * Confirma que tu PR no excede las 300 líneas de código (Blast Radius $\le 300$ LOCs).
 4. Asigna como revisores a un compañero de equipo (Revisión Par) y al **Tech Lead**.
 5. Haz clic en **Create Pull Request**.
@@ -189,7 +189,7 @@ git push origin feature/FUN-010-calculadora-financiamiento
 2. **Cero Fantasía (Evidencia TDD Obligatoria):**  
    No se acepta "ya casi queda" ni "funciona en mi máquina". Cada Pull Request debe incluir obligatoriamente su captura de la fase **ROJO** (test que fallaba) y su fase **VERDE** (suite completa pasando).
 3. **Aislamiento de Evidencias (Cero Merge Conflicts):**  
-   Los desarrolladores **NUNCA modifican los documentos maestros compartidos** (`01-PRD`, `02-matriz`, `03-plan`, `04-diseno`, etc.). Cada desarrollador únicamente crea sus archivos de evidencia dentro de su propia subcarpeta aislada: `docs/evidencias/FUN-XXX/` (`Red_Test.md` y `Green_Test.md`). Al ser rutas exclusivas por ticket, Git jamás genera conflictos de merge.
+   Los desarrolladores **NUNCA modifican los documentos maestros compartidos** (`01-PRD`, `02-matriz`, `03-plan`, `04-diseno`, etc.). Cada desarrollador únicamente crea sus archivos de evidencia dentro de su propia subcarpeta aislada: `docs/evidencias/SF-XXX/` (`Red_Test.md` y `Green_Test.md`). Al ser rutas exclusivas por ticket, Git jamás genera conflictos de merge.
 4. **No romper `dev`:**  
    Antes de abrir un PR, corre **siempre** `dotnet test` en tu computadora. Si algo falla localmente, jamás lo subas a GitHub.
 5. **Prohibido `git push --force`:**  
@@ -220,7 +220,7 @@ git reset --soft HEAD~1
 git stash
 
 # 2. Crea tu rama correcta desde dev
-git checkout -b feature/FUN-XXX-mi-tarea dev
+git checkout -b feature/SF-XXX-mi-tarea dev
 
 # 3. Recupera tus cambios en la rama correcta
 git stash pop
@@ -242,7 +242,7 @@ git stash pop
 | Ver el historial de commits limpio | `git log --oneline -n 5` |
 | Cambiarme a la rama `dev` | `git checkout dev` |
 | Bajar los últimos cambios de GitHub | `git pull origin dev` |
-| Crear una nueva rama de trabajo | `git checkout -b feature/FUN-XXX-slug dev` |
-| Guardar cambios en commit | `git add .` <br> `git commit -m "feat(modulo): descripcion" -m "Closes #FUN-XXX"` |
-| Subir mi rama a GitHub | `git push origin feature/FUN-XXX-slug` |
+| Crear una nueva rama de trabajo | `git checkout -b feature/SF-XXX-slug dev` |
+| Guardar cambios en commit | `git add .` <br> `git commit -m "feat(modulo): descripcion" -m "Closes #SF-XXX"` |
+| Subir mi rama a GitHub | `git push origin feature/SF-XXX-slug` |
 | Ejecutar todas las pruebas del proyecto | `dotnet test` |

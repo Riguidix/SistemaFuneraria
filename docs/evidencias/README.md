@@ -9,11 +9,11 @@
 
 ### Estructura de Carpetas
 
-Cada vez que desarrolles un ticket `FUN-XXX`, crea una carpeta con el identificador del ticket y adentro los dos archivos de evidencia TDD:
+Cada vez que desarrolles un ticket `SF-XXX`, crea una carpeta con el identificador del ticket y adentro los dos archivos de evidencia TDD:
 
 ```text
 docs/evidencias/
-└── FUN-010/
+└── SF-010/
     ├── Red_Test.md      # Evidencia de la prueba fallando antes de implementar
     └── Green_Test.md    # Evidencia de la prueba pasando tras implementar
 ```
@@ -22,18 +22,18 @@ docs/evidencias/
 
 ## 1. Plantilla Oficial: `Red_Test.md` (Fase ROJO)
 
-Copia este contenido exacto al crear tu archivo `docs/evidencias/FUN-XXX/Red_Test.md`:
+Copia este contenido exacto al crear tu archivo `docs/evidencias/SF-XXX/Red_Test.md`:
 
 ```markdown
 # Evidencia TDD: Fase ROJO (RED)
 
 | Campo | Detalle |
 |---|---|
-| **Ticket de Trabajo** | FUN-___ |
+| **Ticket de Trabajo** | SF-___ |
 | **Caso de Prueba Relacionado** | CP-___ (o EP-___ / BVA-___ / DT-___ / ST-___) |
 | **Fecha y Hora de Ejecución** | dd/mm/aaaa hh:mm |
 | **Desarrollador / Tester** | [Tu Nombre] |
-| **Rama Git** | feature/FUN-___-... |
+| **Rama Git** | feature/SF-___-... |
 
 ---
 
@@ -59,18 +59,18 @@ La prueba falló como se esperaba porque [explica qué método o lógica aún no
 
 ## 2. Plantilla Oficial: `Green_Test.md` (Fase VERDE)
 
-Copia este contenido exacto al crear tu archivo `docs/evidencias/FUN-XXX/Green_Test.md`:
+Copia este contenido exacto al crear tu archivo `docs/evidencias/SF-XXX/Green_Test.md`:
 
 ```markdown
 # Evidencia TDD: Fase VERDE (GREEN)
 
 | Campo | Detalle |
 |---|---|
-| **Ticket de Trabajo** | FUN-___ |
+| **Ticket de Trabajo** | SF-___ |
 | **Caso de Prueba Relacionado** | CP-___ (o EP-___ / BVA-___ / DT-___ / ST-___) |
 | **Fecha y Hora de Ejecución** | dd/mm/aaaa hh:mm |
 | **Desarrollador / Tester** | [Tu Nombre] |
-| **Rama Git** | feature/FUN-___-... |
+| **Rama Git** | feature/SF-___-... |
 
 ---
 

@@ -92,7 +92,7 @@ El Sistema de Venta y Financiamiento de Lotes Funerarios demuestra un **alto niv
 
 * **Precisión Matemática:** Los tipos de datos de punto fijo (`decimal` de 128 bits) garantizaron que no existiera pérdida de precisión decimal ni desbordamiento de centavos.
 * **Trazabilidad Bidireccional Total:** Cada línea de código en producción está respaldada por una prueba unitaria o de integración, la cual a su vez responde a un caso de prueba documentado y a un requisito del cliente.
-* **Disciplina de Trabajo en Equipo:** La separación de evidencias por carpetas de ticket (`docs/evidencias/FUN-XXX/`) permitió que los 5 ingenieros desarrollaran código en paralelo sin experimentar colisiones ni bloqueos de ramas.
+* **Disciplina de Trabajo en Equipo:** La separación de evidencias por carpetas de ticket (`docs/evidencias/SF-XXX/`) permitió que los 5 ingenieros desarrollaran código en paralelo sin experimentar colisiones ni bloqueos de ramas.
 
 ---
 

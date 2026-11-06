@@ -134,7 +134,7 @@ El diseño de casos se rige por las 4 técnicas formales detalladas en la [Matri
 ### 6.1 Criterios de Entrada (Entry Criteria)
 Para que un ticket inicie pruebas en su rama de feature:
 * El ticket cuenta con criterios de aceptación en formato BDD (Dado / Cuando / Entonces).
-* La rama `feature/FUN-XXX` nace de la versión actualizada de `dev`.
+* La rama `feature/SF-XXX` nace de la versión actualizada de `dev`.
 
 ### 6.2 Criterios de Suspensión (Suspension Criteria)
 El proceso de pruebas se detiene de inmediato ante cualquier incidencia crítica (**SEV1**):
