@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# .githooks/pre-push
+# Previene push directo o eliminación accidental de las ramas protegidas: main, beta y dev.
+
+set -euo pipefail
+
+protected_branches=("main" "beta" "dev")
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  for branch in "${protected_branches[@]}"; do
+    # Verifica si el push apunta a refs/heads/<branch>
+    if [[ "$remote_ref" == "refs/heads/$branch" ]]; then
+      # Caso 1: Intento de eliminación de rama (remote_sha es cero o local_ref es (delete))
+      if [[ "$local_sha" == "0000000000000000000000000000000000000000" || "$local_ref" == "(delete)" ]]; then
+        echo "" >&2
+        echo "⛔ ERROR: Prohibido eliminar la rama protegida '$branch'." >&2
+        echo "Las ramas 'main', 'beta' y 'dev' son inmutables y están protegidas por gobernanza." >&2
+        echo "" >&2
+        exit 1
+      fi
+
+      # Caso 2: Intento de push directo
+      echo "" >&2
+      echo "⛔ ERROR: Prohibido hacer push directo a la rama protegida '$branch'." >&2
+      echo "Flujo obligatorio:" >&2
+      echo "  1. Crea una rama de trabajo: git checkout -b feature/SF-XXX-slug dev" >&2
+      echo "  2. Sube tus cambios a tu rama: git push origin feature/SF-XXX-slug" >&2
+      echo "  3. Abre un Pull Request hacia '$branch' para revisión y paso por CI." >&2
+      echo "" >&2
+      exit 1
+    fi
+  done
+done
+
+exit 0
