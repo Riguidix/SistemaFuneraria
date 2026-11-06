@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B32C0CC3-45DF-4557-A4E4-2DE8E8BBC8DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaFuneraria.Core", "src\SistemaFuneraria.Core\SistemaFuneraria.Core.csproj", "{43706B19-793A-494C-B55C-159C32322D2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaFuneraria.Application", "src\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj", "{67489778-1A63-4971-82AE-2320B0AD3E15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaFuneraria.Infrastructure", "src\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj", "{E0E2D368-E5FF-4AE6-AAFA-DD5415103484}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaFuneraria.Web", "src\SistemaFuneraria.Web\SistemaFuneraria.Web.csproj", "{62EA325A-EE59-4582-89D6-2C434816E1C1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{621406C4-75A4-423B-BD45-7EAC88A98AC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SistemaFuneraria.Tests", "tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj", "{FD8EFC01-FA28-43C3-9B3A-9A07D1C0AFA6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{43706B19-793A-494C-B55C-159C32322D2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43706B19-793A-494C-B55C-159C32322D2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43706B19-793A-494C-B55C-159C32322D2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43706B19-793A-494C-B55C-159C32322D2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67489778-1A63-4971-82AE-2320B0AD3E15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67489778-1A63-4971-82AE-2320B0AD3E15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67489778-1A63-4971-82AE-2320B0AD3E15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67489778-1A63-4971-82AE-2320B0AD3E15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0E2D368-E5FF-4AE6-AAFA-DD5415103484}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0E2D368-E5FF-4AE6-AAFA-DD5415103484}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0E2D368-E5FF-4AE6-AAFA-DD5415103484}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0E2D368-E5FF-4AE6-AAFA-DD5415103484}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62EA325A-EE59-4582-89D6-2C434816E1C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62EA325A-EE59-4582-89D6-2C434816E1C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62EA325A-EE59-4582-89D6-2C434816E1C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62EA325A-EE59-4582-89D6-2C434816E1C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD8EFC01-FA28-43C3-9B3A-9A07D1C0AFA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD8EFC01-FA28-43C3-9B3A-9A07D1C0AFA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD8EFC01-FA28-43C3-9B3A-9A07D1C0AFA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD8EFC01-FA28-43C3-9B3A-9A07D1C0AFA6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{43706B19-793A-494C-B55C-159C32322D2A} = {B32C0CC3-45DF-4557-A4E4-2DE8E8BBC8DA}
+		{67489778-1A63-4971-82AE-2320B0AD3E15} = {B32C0CC3-45DF-4557-A4E4-2DE8E8BBC8DA}
+		{E0E2D368-E5FF-4AE6-AAFA-DD5415103484} = {B32C0CC3-45DF-4557-A4E4-2DE8E8BBC8DA}
+		{62EA325A-EE59-4582-89D6-2C434816E1C1} = {B32C0CC3-45DF-4557-A4E4-2DE8E8BBC8DA}
+		{FD8EFC01-FA28-43C3-9B3A-9A07D1C0AFA6} = {621406C4-75A4-423B-BD45-7EAC88A98AC2}
+	EndGlobalSection
+EndGlobal
