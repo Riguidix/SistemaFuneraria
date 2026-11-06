@@ -39,8 +39,7 @@ Marca con una `[x]` las casillas verificadas antes de solicitar revisión:
 
 ### 🧪 Evidencia TDD de Entrega (Obligatoria)
 
-1. **Evidencia ROJO (Fase RED):**
-   > *Pega aquí la captura de terminal de `dotnet test` fallando antes de escribir la implementación.*
+He creado e incluido en este PR los dos archivos de evidencia en Markdown (plantilla en `docs/evidencias/README.md`):
 
-2. **Evidencia VERDE (Fase GREEN):**
-   > *Pega aquí la captura de terminal de `dotnet test` pasando con todas las pruebas en verde tras la implementación.*
+- [ ] **Fase ROJO:** `docs/evidencias/FUN-___/Red_Test.md` (Prueba fallando antes de implementar la solución)
+- [ ] **Fase VERDE:** `docs/evidencias/FUN-___/Green_Test.md` (Prueba pasando exitosamente tras implementar la solución)

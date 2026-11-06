@@ -166,7 +166,7 @@ git push origin feature/FUN-010-calculadora-financiamiento
 2. **Base:** `dev` $\leftarrow$ **Compare:** `feature/FUN-010-calculadora-financiamiento`.
 3. Llena la plantilla de Pull Request que aparecerá automáticamente en pantalla:
    * Describe qué problema resolviste y cómo lo implementaste.
-   * **Adjunta tu evidencia TDD obligatoria:** Pega la captura de terminal de tu prueba en **ROJO** (fallando antes de implementar) y en **VERDE** (pasando tras implementar).
+   * **Crea y sube tus evidencias TDD en Markdown:** Crea la carpeta `docs/evidencias/FUN-XXX/` y adentro genera `Red_Test.md` (falla previa) y `Green_Test.md` (pase exitoso) usando las plantillas de `docs/evidencias/README.md`.
    * Confirma que tu PR no excede las 300 líneas de código (Blast Radius $\le 300$ LOCs).
 4. Asigna como revisores a un compañero de equipo (Revisión Par) y al **Tech Lead**.
 5. Haz clic en **Create Pull Request**.
@@ -188,8 +188,8 @@ git push origin feature/FUN-010-calculadora-financiamiento
    Ningún Pull Request debe superar las 300 líneas de código modificadas. Si tu tarea es muy grande, divídela con la ayuda del Tech Lead. PRs grandes provocan fatiga, se revisan mal y esconden errores.
 2. **Cero Fantasía (Evidencia TDD Obligatoria):**  
    No se acepta "ya casi queda" ni "funciona en mi máquina". Cada Pull Request debe incluir obligatoriamente su captura de la fase **ROJO** (test que fallaba) y su fase **VERDE** (suite completa pasando).
-3. **Regla del Escritor Único (Cero Merge Conflicts en Docs):**  
-   Los desarrolladores **NUNCA deben modificar archivos de la carpeta `docs/` en sus ramas de feature**. Toda evidencia se entrega dentro del Pull Request en GitHub. Los documentos maestros de `docs/` son mantenidos exclusivamente por el Tech Lead y el QA Lead.
+3. **Aislamiento de Evidencias (Cero Merge Conflicts):**  
+   Los desarrolladores **NUNCA modifican los documentos maestros compartidos** (`01-PRD`, `02-matriz`, `03-plan`, `04-diseno`, etc.). Cada desarrollador únicamente crea sus archivos de evidencia dentro de su propia subcarpeta aislada: `docs/evidencias/FUN-XXX/` (`Red_Test.md` y `Green_Test.md`). Al ser rutas exclusivas por ticket, Git jamás genera conflictos de merge.
 4. **No romper `dev`:**  
    Antes de abrir un PR, corre **siempre** `dotnet test` en tu computadora. Si algo falla localmente, jamás lo subas a GitHub.
 5. **Prohibido `git push --force`:**  
