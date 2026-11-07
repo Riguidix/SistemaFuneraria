@@ -105,6 +105,7 @@ La documentación técnica del proyecto se ubica en el primer nivel de la carpet
 | [**06-bitacora-incidencias.md**](docs/06-bitacora-incidencias.md) | Registro y ciclo de vida de defectos (SEV1 a SEV3). Incluye plantilla formal y la resolución de la incidencia modelo `INC-001`. |
 | [**07-informe-cierre.md**](docs/07-informe-cierre.md) | Acta formal de certificación de calidad y dictamen de liberación para producción (`v1.0.0`). |
 | [**08-backlog.md**](docs/08-backlog.md) | Backlog Maestro Oficial con 55 tickets atómicos (`SF-001` a `SF-055`, 135 SP) organizados en 4 Milestones. |
+| [**09-modelo-datos-erd.md**](docs/09-modelo-datos-erd.md) | Especificación oficial del Modelo Entidad-Relación (ERD), diccionario de datos PostgreSQL 16, índices parciales y tokens de concurrencia optimista (`xmin`). |
 | [**workflow.md**](docs/workflow.md) | Manual operativo del desarrollador: ramas GitFlow, ciclo diario de 8 pasos, límite de Blast Radius y resolución de emergencias Git. |
 | [**evidencias/README.md**](docs/evidencias/README.md) | Guía de aislamiento de evidencias TDD (`Red_Test.md` y `Green_Test.md`) por carpeta de ticket (`docs/evidencias/SF-XXX/`). |
 

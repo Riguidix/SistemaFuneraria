@@ -162,27 +162,34 @@ Habilitador fundacional. Establece la estructura de proyectos .NET 8 con Central
 * **Commit Base:** `chore(infra): SF-002: docker-compose with postgres 16 and healthcheck`
 
 #### 1. Contexto & Valor de Negocio
-Permite que cualquier desarrollador en Windows o Mac levante una base de datos PostgreSQL 16 idéntica a producción con un solo comando sin instalar software extra.
+Permite que cualquier desarrollador en Windows o Mac levante una base de datos PostgreSQL 16 idéntica a producción con un solo comando sin instalar software extra. Establece el baseline de persistencia alineado con la especificación oficial del Modelo de Datos y ERD ([`docs/09-modelo-datos-erd.md`](docs/09-modelo-datos-erd.md)).
 
 #### 2. Dependencias & Paralelismo
 * 🔴 **Bloqueado por:** Ninguno
 * 🟢 **Desbloquea a:** SF-016 (Migración inicial)
+* 📖 **Especificación de Esquema:** [`docs/09-modelo-datos-erd.md`](docs/09-modelo-datos-erd.md)
 * 🤝 **Contrato:** `localhost:5432`, base de datos `funeraria_dev`, usuario `postgres`, password `postgres`.
 
 #### 3. Especificación Técnica
 * **Archivos a crear:**
-  - `docker-compose.yml`
+  - `docker-compose.yml` (servicio PostgreSQL 16 con healthcheck `pg_isready`, volumen de datos persistente y montaje de initdb)
   - `.env.example`
   - `appsettings.Development.json` (ConnectionStrings:DefaultConnection)
+  - `scripts/db/init.sql` (Script de inicialización DDL con las tablas, check constraints, secuencia `seq_pagos_folio` e índices de [`docs/09-modelo-datos-erd.md`](docs/09-modelo-datos-erd.md))
 
 #### 4. Criterios de Aceptación (BDD Gherkin)
-* **Dado** que Docker está en ejecución,
-* **Cuando** el desarrollador ejecuta `docker compose up -d`,
-* **Entonces** el contenedor `postgres:16` inicia, expone el puerto 5432 y responde `healthy` al comando `pg_isready`.
+* **Escenario 1: Contenedor Saludable**
+  - **Dado** que Docker está en ejecución,
+  - **Cuando** el desarrollador ejecuta `docker compose up -d`,
+  - **Entonces** el contenedor `postgres:16-alpine` inicia, expone el puerto 5432 y responde `healthy` al comando `pg_isready`.
+* **Escenario 2: Esquema ERD Inicializado**
+  - **Dado** que el contenedor PostgreSQL inicia por primera vez,
+  - **Cuando** se ejecuta el script de inicialización montado en `/docker-entrypoint-initdb.d/init.sql`,
+  - **Entonces** la base de datos `funeraria_dev` cuenta con las tablas (`lotes`, `clientes`, `ventas`, `financiamientos`, `mensualidades`, `pagos`), la secuencia `seq_pagos_folio` y los check constraints de acuerdo con [`docs/09-modelo-datos-erd.md`](docs/09-modelo-datos-erd.md).
 
 #### 5. Evidencias TDD Requeridas
 * `docs/evidencias/SF-002/Red_Test.md` (Conexión rechazada a puerto 5432 con contenedor apagado)
-* `docs/evidencias/SF-002/Green_Test.md` (Conexión exitosa y verificación de versión PostgreSQL 16)
+* `docs/evidencias/SF-002/Green_Test.md` (Conexión exitosa, verificación de versión PostgreSQL 16 y existencia del esquema en `funeraria_dev`)
 
 ---
 
