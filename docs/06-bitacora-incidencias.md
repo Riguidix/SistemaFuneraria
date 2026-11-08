@@ -116,11 +116,58 @@ Al generar la tabla de amortización para un financiamiento de Lote Básico ($12
 
 ---
 
+### [INC-002] Rechazo de Quality Gate por mutabilidad de pagos, omisión de rollback DDL y evidencia no empírica en SF-002
+
+* **Caso de Prueba Relacionado:** Criterios de Aceptación SF-002 / RNF-02 / RN-10 / Estándar M.E.S.T.
+* **Fecha de Detección:** 08/11/2026 12:55
+* **Reportado por:** Edgar Acevedo (Lead QA / Guardián del Quality Gate)
+* **Severidad:** SEV2-Mayor (Violación de inmutabilidad contable y ausencia de reversibilidad en base de datos)
+* **Prioridad:** P1 (Alta - Bloqueador de entrega de infraestructura)
+* **Estado:** `Cerrada` (Superó retest de QA tras retrabajo de DBA)
+* **Asignado a:** Gustavo Lucio / Edgar Acevedo (DBA Agent / DevOps)
+* **Pull Request de Corrección:** Rama `feature/SF-002-docker-postgres16`
+
+#### 1. Descripción del Problema
+Durante la auditoría formal de Quality Gate realizada por el Lead QA sobre la entrega inicial del ticket `SF-002`, se detectaron cuatro anomalías críticas que violaban el estándar de calidad y gobierno del proyecto:
+1. **Ausencia de Reversibilidad (Rollback-First):** Se suministró `scripts/db/init.sql` sin su correspondiente script de desmantelamiento ordenado (`scripts/db/down.sql`), impidiendo restaurar la base de datos a un estado limpio de forma determinista.
+2. **Vulnerabilidad de Mutabilidad en Ledger de Caja:** La tabla `pagos` carecía de restricciones o triggers a nivel motor para impedir sentencias `UPDATE` o `DELETE`, comprometiendo la inmutabilidad y la trazabilidad de auditoría contable exigida en el sistema de financiamiento funerario.
+3. **Violación de la Política Cero Fantasía:** El documento de evidencia `Green_Test.md` inicial contenía únicamente validaciones cosméticas con `Test-Path` en PowerShell y el volcado de `appsettings.Development.json`, sin ejecutar ni capturar la salida real de PostgreSQL 16 (`pg_isready`, `docker compose ps`, consultas al catálogo y esquema).
+4. **Falta de Trazabilidad xUnit:** No existía ninguna prueba automatizada en la suite de pruebas con el atributo formal `[Trait("Ticket", "SF-002")]`.
+5. **Contaminación de Rama:** Presencia del archivo espurio `.agents/agents/senior-pm-copilot.md` en el árbol de trabajo.
+
+#### 2. Impacto Operativo y Retraso en Cronograma
+* **Impacto en Sprint 1 (Milestone 1):** Bloqueo inmediato de la rama y emisión de orden formal de retrabajo por el Guardián del Quality Gate.
+* **Tiempo de Retraso Registrado:** **2.0 horas hombre** consumidas en el ciclo de triage, rechazo formal de QA, refactorización DDL, diseño de trigger plpgsql, implementación de pruebas xUnit de infraestructura y regeneración de evidencias irrefutables.
+* **Mitigación del Retraso:** El DBA Agent completó el retrabajo dentro de la misma jornada operativa (08/11/2026), evitando el desbordamiento de la fecha límite de Milestone 1.
+
+#### 3. Comportamiento Observado vs. Esperado
+* **Resultado Esperado:** 
+  1. Script DDL `scripts/db/init.sql` con trigger `trg_pagos_inmutables` que rechace `UPDATE` y `DELETE` en la tabla `pagos`.
+  2. Script `scripts/db/down.sql` que elimine limpiamente triggers, funciones, tablas y secuencias sin dejar objetos huérfanos.
+  3. Evidencia empírica en terminal de `funeraria-db` en estado `healthy`, versión PostgreSQL 16 y 7 tablas creadas en `funeraria_dev`.
+  4. Suite de pruebas xUnit ejecutando prueba de integración con tag `[Trait("Ticket", "SF-002")]`.
+* **Resultado Real Observado:** La entrega inicial carecía de `down.sql`, la tabla `pagos` permitía modificaciones arbitrarias, `Green_Test.md` no contenía salidas reales de PostgreSQL y no existían tests xUnit vinculados al ticket.
+
+#### 4. Evidencia TDD y de Retrabajo
+* **Evidencia del Rechazo Inicial (Falla de Gate):** Dictamen de QA emitido el 08/11/2026 12:55 rechazando la certificación por incumplimiento de M.E.S.T. y Cero Fantasía.
+* **Evidencia de Corrección y Aprobación (GREEN tras Retrabajo):**
+  - Implementación de `fn_prevenir_modificacion_pagos()` y `trg_pagos_inmutables` en `scripts/db/init.sql`. Intento de `UPDATE` genera excepción: `ERROR: Operación no permitida: La tabla pagos es estrictamente append-only...`.
+  - Creación de `scripts/db/down.sql` con desmantelamiento reversible validado (0 tablas restantes).
+  - Creación de `tests/SistemaFuneraria.Tests/Integration/PostgresConexionTests.cs` con tag `[Trait("Ticket", "SF-002")]` pasando exitosamente.
+  - Documentación de capturas de terminal reales en `docs/evidencias/SF-002/Green_Test.md`.
+
+#### 5. Registro de Retest y Cierre
+* **Fecha de Retest:** 08/11/2026 13:12
+* **Verificado por:** Edgar Acevedo (Lead QA / Guardián del Quality Gate)
+* **Dictamen:** Retest 100% Satisfactorio. La infraestructura y persistencia cumplen con Mantenibilidad, Eficiencia, Seguridad (inmutabilidad estricta) y Testeabilidad (M.E.S.T.). Incidencia **Cerrada**.
+
+---
+
 ## 5. Tabla Maestra Consolidada de Incidencias (Incident Tracker)
 
 | ID | Caso Asoc. | Título Corto del Defecto | Severidad | Prioridad | Asignado | Estado | PR Asociado | Fecha Cierre |
 |---|---|---|---|---|---|---|---|---|
 | **INC-001** | CP-06 | Descuadre de 3 centavos en saldo final de amortización | SEV1 | P0 | Gustavo Lucio | `Cerrada` | PR #14 | 10/11/2026 |
-| *INC-002* | *CP-___* | *[Espacio reservado para nuevo defecto]* | — | — | — | `Abierta` | — | — |
+| **INC-002** | SF-002 | Rechazo de Quality Gate por mutabilidad de pagos y omisión de rollback | SEV2 | P1 | Gustavo Lucio / Edgar Acevedo | `Cerrada` | feature/SF-002-docker-postgres16 | 08/11/2026 |
 | *INC-003* | *CP-___* | *[Espacio reservado para nuevo defecto]* | — | — | — | `Abierta` | — | — |
 | *INC-004* | *CP-___* | *[Espacio reservado para nuevo defecto]* | — | — | — | `Abierta` | — | — |
