@@ -66,4 +66,70 @@ public static class CalculadoraFinanciamiento
 
         return (enganche, capitalFinanciado);
     }
+
+    /// <summary>
+    /// Calcula la cuota ordinaria fija bajo el sistema de amortización francesa sobre saldos insolutos (CP-05, RF-07, RN-07).
+    /// M = P * [ i * (1 + i)^n ] / [ (1 + i)^n - 1 ]
+    /// </summary>
+    /// <param name="capital">Capital neto financiado en MXN (> 0) (P).</param>
+    /// <param name="tasaMensual">Tasa de interés mensual decimal (> 0) (i).</param>
+    /// <param name="plazo">Plazo del financiamiento en meses (12, 18, 24 o 48) (n).</param>
+    /// <returns>Monto de la mensualidad fija ordinaria redondeada con redondeo bancario.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Se lanza cuando el capital, la tasa mensual o el plazo no son válidos.</exception>
+    public static decimal CalcularMensualidadOrdinaria(decimal capital, decimal tasaMensual, int plazo)
+    {
+        // 1. Validación de capital neto financiado (RN-04, RNF-02)
+        if (capital <= 0m)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(capital),
+                capital,
+                $"El capital financiado debe ser estrictamente mayor a cero (RN-04, RNF-02). Valor recibido: {capital:C2}.");
+        }
+
+        // 2. Validación de plazo autorizado (RN-05)
+        if (!ParametrosNegocio.EsPlazoAutorizado(plazo))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(plazo),
+                plazo,
+                $"El plazo de {plazo} meses no está autorizado (RN-05). Los plazos permitidos son exclusivamente 12, 18, 24 y 48 meses.");
+        }
+
+        // 3. Validación de tasa de interés mensual
+        if (tasaMensual <= 0m)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(tasaMensual),
+                tasaMensual,
+                $"La tasa de interés mensual debe ser mayor a cero. Valor recibido: {tasaMensual}.");
+        }
+
+        // 4. Cálculo de (1 + i)^n con precisión decimal de 128 bits sin float/double (RNF-02)
+        decimal factor = 1m + tasaMensual;
+        decimal factorPotencia = 1m;
+        for (int k = 0; k < plazo; k++)
+        {
+            factorPotencia *= factor;
+        }
+
+        // 5. Aplicación de la fórmula francesa: M = P * [ i * (1 + i)^n ] / [ (1 + i)^n - 1 ]
+        decimal cuota = capital * (tasaMensual * factorPotencia) / (factorPotencia - 1m);
+
+        // 6. Redondeo bancario a 2 decimales (RNF-02)
+        return RedondeoBancario.Redondear(cuota);
+    }
+
+    /// <summary>
+    /// Sobrecarga de conveniencia que calcula la cuota ordinaria fija a partir del capital y plazo,
+    /// obteniendo la tasa mensual oficial indexada del catálogo de negocio (RN-05, RN-06).
+    /// </summary>
+    /// <param name="capital">Capital neto financiado en MXN (> 0).</param>
+    /// <param name="plazoMeses">Plazo autorizado en meses (12, 18, 24 o 48).</param>
+    /// <returns>Monto de la mensualidad fija ordinaria.</returns>
+    public static decimal CalcularCuota(decimal capital, int plazoMeses)
+    {
+        decimal tasaMensual = ObtenerTasaMensual(plazoMeses);
+        return CalcularMensualidadOrdinaria(capital, tasaMensual, plazoMeses);
+    }
 }
