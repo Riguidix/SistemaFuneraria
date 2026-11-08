@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 
 namespace SistemaFuneraria.Core.Comun;
 
@@ -18,6 +18,9 @@ public static class ParametrosNegocio
             [12] = 0.16m, [18] = 0.18m, [24] = 0.20m, [48] = 0.24m
         });
 
+    private static readonly HashSet<decimal> PreciosSet = [.. PreciosLotesAutorizados];
+    private static readonly HashSet<int> EnganchesSet = [.. EnganchesAutorizados];
+
     public static bool EsPlazoAutorizado(int plazoMeses) => TasasAnualesPorPlazo.ContainsKey(plazoMeses);
 
     public static decimal ObtenerTasaAnual(int plazoMeses)
@@ -31,4 +34,16 @@ public static class ParametrosNegocio
         }
         return tasaAnual;
     }
+
+    /// <summary>
+    /// Valida en O(1) si el precio especificado corresponde a uno de los 3 precios de lista oficiales
+    /// ($120k, $150k, $180k) (RN-01).
+    /// </summary>
+    public static bool EsPrecioAutorizado(decimal precio) => PreciosSet.Contains(precio);
+
+    /// <summary>
+    /// Valida en O(1) si el porcentaje de enganche corresponde a los autorizados
+    /// (10%, 20% o 30%) (RN-04).
+    /// </summary>
+    public static bool EsEngancheAutorizado(int porcentaje) => EnganchesSet.Contains(porcentaje);
 }
