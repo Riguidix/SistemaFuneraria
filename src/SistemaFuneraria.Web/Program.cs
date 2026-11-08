@@ -1,9 +1,22 @@
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
+
+// Configuración de Cultura Global es-MX (RN-12, SF-004)
+var esMxCulture = new CultureInfo("es-MX");
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(esMxCulture),
+    SupportedCultures = new[] { esMxCulture },
+    SupportedUICultures = new[] { esMxCulture }
+};
+app.UseRequestLocalization(localizationOptions);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
