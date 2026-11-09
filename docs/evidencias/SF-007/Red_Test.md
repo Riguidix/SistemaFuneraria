@@ -22,20 +22,20 @@ dotnet build tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj
 ### 3. Salida Real de Terminal (Falla Esperada / RED)
 ```text
   Determining projects to restore...
-  Restored C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj (in 184 ms).
-  Restored C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj (in 184 ms).
-  Restored C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\SistemaFuneraria.Web.csproj (in 184 ms).
-  Restored C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Core\SistemaFuneraria.Core.csproj (in 167 ms).
-  Restored C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj (in 4.12 sec).
-  SistemaFuneraria.Core -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
-  SistemaFuneraria.Application -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\bin\Debug\net8.0\SistemaFuneraria.Application.dll
-  SistemaFuneraria.Infrastructure -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Infrastructure\bin\Debug\net8.0\SistemaFuneraria.Infrastructure.dll
-  SistemaFuneraria.Web -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\bin\Debug\net8.0\SistemaFuneraria.Web.dll
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\ResultadoTests.cs(4,24): error CS0234: The type or namespace name 'Application' does not exist in the namespace 'SistemaFuneraria' (are you missing an assembly reference?) [C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+  Restored <REPO_ROOT>/src/SistemaFuneraria.Application/SistemaFuneraria.Application.csproj (in 184 ms).
+  Restored <REPO_ROOT>/src/SistemaFuneraria.Infrastructure/SistemaFuneraria.Infrastructure.csproj (in 184 ms).
+  Restored <REPO_ROOT>/src/SistemaFuneraria.Web/SistemaFuneraria.Web.csproj (in 184 ms).
+  Restored <REPO_ROOT>/src/SistemaFuneraria.Core/SistemaFuneraria.Core.csproj (in 167 ms).
+  Restored <REPO_ROOT>/tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj (in 4.12 sec).
+  SistemaFuneraria.Core -> <REPO_ROOT>/src/SistemaFuneraria.Core/bin/Debug/net8.0/SistemaFuneraria.Core.dll
+  SistemaFuneraria.Application -> <REPO_ROOT>/src/SistemaFuneraria.Application/bin/Debug/net8.0/SistemaFuneraria.Application.dll
+  SistemaFuneraria.Infrastructure -> <REPO_ROOT>/src/SistemaFuneraria.Infrastructure/bin/Debug/net8.0/SistemaFuneraria.Infrastructure.dll
+  SistemaFuneraria.Web -> <REPO_ROOT>/src/SistemaFuneraria.Web/bin/Debug/net8.0/SistemaFuneraria.Web.dll
+<REPO_ROOT>/tests/SistemaFuneraria.Tests/Application/ResultadoTests.cs(4,24): error CS0234: The type or namespace name 'Application' does not exist in the namespace 'SistemaFuneraria' (are you missing an assembly reference?) [<REPO_ROOT>/tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj]
 
 Build FAILED.
 
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\ResultadoTests.cs(4,24): error CS0234: The type or namespace name 'Application' does not exist in the namespace 'SistemaFuneraria' (are you missing an assembly reference?) [C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+<REPO_ROOT>/tests/SistemaFuneraria.Tests/Application/ResultadoTests.cs(4,24): error CS0234: The type or namespace name 'Application' does not exist in the namespace 'SistemaFuneraria' (are you missing an assembly reference?) [<REPO_ROOT>/tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj]
     0 Warning(s)
     1 Error(s)
 

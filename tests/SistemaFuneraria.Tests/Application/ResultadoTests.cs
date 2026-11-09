@@ -6,6 +6,8 @@ using Xunit;
 
 namespace SistemaFuneraria.Tests.Application;
 
+[Trait("Ticket", "SF-007")]
+[Trait("Capa", "Application")]
 public class ResultadoTests
 {
     [Fact]
