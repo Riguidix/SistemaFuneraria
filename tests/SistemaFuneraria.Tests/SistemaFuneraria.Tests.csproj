@@ -11,6 +11,7 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NetArchTest.Rules" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Arquitectura\" />
     <Folder Include="E2E\" />
     <Folder Include="Functional\" />
     <Folder Include="Integration\" />
