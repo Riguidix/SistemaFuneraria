@@ -1,13 +1,13 @@
 """Oráculo de referencia independiente (Python Decimal) para validar el motor financiero en C#.
 
-Convenciones (ver ADR-001 en FUN-007):
-- Mensualidad calculada con precisión completa y redondeada UNA vez a 2 decimales (HALF_UP = MidpointRounding.AwayFromZero).
+Convenciones (alineadas a RNF-02 del PRD):
+- Mensualidad calculada con precisión completa y redondeada UNA vez a 2 decimales (HALF_EVEN = MidpointRounding.ToEven, Banker's Rounding).
 - Interés del periodo = round2(saldo_inicial * tasa_mensual).
 - Capital del periodo = mensualidad - interés; la última mensualidad paga el saldo exacto restante (+ su interés).
 
 Uso: python3 generar_oraculo.py  -> regenera los CSV de esta carpeta.
 """
-from decimal import Decimal as D, getcontext, ROUND_HALF_UP
+from decimal import Decimal as D, getcontext, ROUND_HALF_EVEN
 
 getcontext().prec = 40
 TASAS = {12: 16, 18: 18, 24: 20, 48: 24}
@@ -15,7 +15,7 @@ LOTES = [("Lote basico", 2, 120000), ("Lote familiar", 3, 150000), ("Lote amplia
 
 
 def r(x):
-    return x.quantize(D("0.01"), rounding=ROUND_HALF_UP)
+    return x.quantize(D("0.01"), rounding=ROUND_HALF_EVEN)
 
 
 def tabla(capital, tasa_anual, n):
