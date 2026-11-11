@@ -29,17 +29,17 @@ dotnet build tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj
 ```text
   Determining projects to restore...
   All projects are up-to-date for restore.
-  SistemaFuneraria.Core -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
-  SistemaFuneraria.Application -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\bin\Debug\net8.0\SistemaFuneraria.Application.dll
-  SistemaFuneraria.Infrastructure -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Infrastructure\bin\Debug\net8.0\SistemaFuneraria.Infrastructure.dll
-  SistemaFuneraria.Web -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\bin\Debug\net8.0\SistemaFuneraria.Web.dll
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\SimuladorServiceTests.cs(2,36): error CS0234: The type or namespace name 'Servicios' does not exist in the namespace 'SistemaFuneraria.Application' (are you missing an assembly reference?) [C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\SimuladorServiceTests.cs(9,22): error CS0246: The type or namespace name 'ISimuladorService' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+  SistemaFuneraria.Core -> <REPO_ROOT>/src/SistemaFuneraria.Core/bin/Debug/net8.0/SistemaFuneraria.Core.dll
+  SistemaFuneraria.Application -> <REPO_ROOT>/src/SistemaFuneraria.Application/bin/Debug/net8.0/SistemaFuneraria.Application.dll
+  SistemaFuneraria.Infrastructure -> <REPO_ROOT>/src/SistemaFuneraria.Infrastructure/bin/Debug/net8.0/SistemaFuneraria.Infrastructure.dll
+  SistemaFuneraria.Web -> <REPO_ROOT>/src/SistemaFuneraria.Web/bin/Debug/net8.0/SistemaFuneraria.Web.dll
+<REPO_ROOT>/tests/SistemaFuneraria.Tests/Application/SimuladorServiceTests.cs(2,36): error CS0234: The type or namespace name 'Servicios' does not exist in the namespace 'SistemaFuneraria.Application' (are you missing an assembly reference?) [<REPO_ROOT>/tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj]
+<REPO_ROOT>/tests/SistemaFuneraria.Tests/Application/SimuladorServiceTests.cs(9,22): error CS0246: The type or namespace name 'ISimuladorService' could not be found (are you missing a using directive or an assembly reference?) [<REPO_ROOT>/tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj]
 
 Build FAILED.
 
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\SimuladorServiceTests.cs(2,36): error CS0234: The type or namespace name 'Servicios' does not exist in the namespace 'SistemaFuneraria.Application' (are you missing an assembly reference?) [C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\SimuladorServiceTests.cs(9,22): error CS0246: The type or namespace name 'ISimuladorService' could not be found (are you missing a using directive or an assembly reference?) [C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+<REPO_ROOT>/tests/SistemaFuneraria.Tests/Application/SimuladorServiceTests.cs(2,36): error CS0234: The type or namespace name 'Servicios' does not exist in the namespace 'SistemaFuneraria.Application' (are you missing an assembly reference?) [<REPO_ROOT>/tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj]
+<REPO_ROOT>/tests/SistemaFuneraria.Tests/Application/SimuladorServiceTests.cs(9,22): error CS0246: The type or namespace name 'ISimuladorService' could not be found (are you missing a using directive or an assembly reference?) [<REPO_ROOT>/tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj]
     0 Warning(s)
     2 Error(s)
 

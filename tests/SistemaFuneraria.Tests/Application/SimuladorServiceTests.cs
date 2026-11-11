@@ -4,6 +4,8 @@ using Xunit;
 
 namespace SistemaFuneraria.Tests.Application;
 
+[Trait("Ticket", "SF-013")]
+[Trait("Capa", "Application")]
 public class SimuladorServiceTests
 {
     private readonly ISimuladorService _simuladorService;

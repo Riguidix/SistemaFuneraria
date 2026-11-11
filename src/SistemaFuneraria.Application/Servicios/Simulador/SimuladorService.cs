@@ -38,49 +38,25 @@ public class SimuladorService : ISimuladorService
             return Resultado<SimulacionFinanciamientoDto>.Fallo(errores);
         }
 
-        // 2. Cálculos financieros de enganche y tasas
+        // 2. Orquestación del motor financiero de dominio puro (Core)
         var (montoEnganche, capitalFinanciado) = CalculadoraFinanciamiento.CalcularEnganche(request.PrecioLote, request.PorcentajeEnganche);
         var (tasaAnual, tasaMensual) = CalculadoraFinanciamiento.ObtenerTasas(request.PlazoMeses);
+        decimal mensualidadOrdinaria = CalculadoraFinanciamiento.CalcularMensualidadOrdinaria(capitalFinanciado, tasaMensual, request.PlazoMeses);
+        var renglones = GeneradorAmortizacion.Generar(capitalFinanciado, tasaMensual, request.PlazoMeses);
 
-        // 3. Fórmula de amortización francesa para mensualidad ordinaria
-        double iDouble = (double)tasaMensual;
-        double factor = Math.Pow(1.0 + iDouble, request.PlazoMeses);
-        decimal mensualidadOrdinaria = Math.Round((decimal)((double)capitalFinanciado * (iDouble * factor) / (factor - 1.0)), 2, MidpointRounding.ToEven);
+        // 3. Mapeo de entidades de dominio a DTOs para la capa Web
+        var tabla = renglones
+            .Select(r => new CuotaAmortizacionDto(
+                r.Periodo,
+                r.SaldoInicial,
+                r.PagoMensual,
+                r.Interes,
+                r.CapitalAmortizado,
+                r.SaldoFinal))
+            .ToList();
 
-        // 4. Generación de tabla de amortización con absorción al centavo en cuota final
-        var tabla = new List<CuotaAmortizacionDto>(request.PlazoMeses);
-        decimal saldo = capitalFinanciado;
-        decimal totalIntereses = 0m;
-        decimal totalPagosCuotas = 0m;
-
-        for (int k = 1; k <= request.PlazoMeses; k++)
-        {
-            decimal interes = Math.Round(saldo * tasaMensual, 2, MidpointRounding.ToEven);
-            decimal cuota = mensualidadOrdinaria;
-            decimal amortizacion;
-            decimal saldoFinal;
-
-            if (k == request.PlazoMeses)
-            {
-                // La última cuota absorbe el saldo residual para garantizar saldo final de $0.00
-                amortizacion = saldo;
-                cuota = amortizacion + interes;
-                saldoFinal = 0.00m;
-            }
-            else
-            {
-                amortizacion = cuota - interes;
-                saldoFinal = saldo - amortizacion;
-            }
-
-            totalIntereses += interes;
-            totalPagosCuotas += cuota;
-
-            tabla.Add(new CuotaAmortizacionDto(k, saldo, cuota, interes, amortizacion, saldoFinal));
-            saldo = saldoFinal;
-        }
-
-        decimal totalPagar = montoEnganche + totalPagosCuotas;
+        decimal totalIntereses = renglones.Sum(r => r.Interes);
+        decimal totalPagar = montoEnganche + renglones.Sum(r => r.PagoMensual);
 
         var dto = new SimulacionFinanciamientoDto(
             PrecioLote: request.PrecioLote,
