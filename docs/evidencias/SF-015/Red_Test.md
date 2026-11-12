@@ -32,7 +32,7 @@ Demostrar que la entidad de dominio `Cliente` y su Factory Method `Cliente.Crear
 
 ### 4. Salida de Terminal (Falla Esperada)
 ```text
-Serie de pruebas para C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Serie de pruebas para <REPO_ROOT>/tests/SistemaFuneraria.Tests/bin/Debug/net8.0/SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...
