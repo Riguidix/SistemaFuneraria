@@ -1,6 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj" />
     <ProjectReference Include="..\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj" />
   </ItemGroup>
