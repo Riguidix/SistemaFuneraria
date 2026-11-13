@@ -6,17 +6,14 @@ using SistemaFuneraria.Infrastructure.Persistencia;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddRazorPages();
 
-// Configuración de Persistencia con AppDbContext (PostgreSQL 16)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? "Host=localhost;Port=5432;Database=sistema_funeraria;Username=postgres;Password=postgres";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// SF-021: Configuración de ASP.NET Core Identity y Roles (Vendedor, Cajero) - RNF-03
 builder.Services.AddIdentityCore<IdentityUser>(options =>
 {
     options.Password.RequireDigit = false;
@@ -43,7 +40,6 @@ builder.Services.AddAuthorization(options =>
 
 var app = builder.Build();
 
-// Configuración de Cultura Global es-MX (RN-12, SF-004)
 var esMxCulture = new CultureInfo("es-MX");
 var localizationOptions = new RequestLocalizationOptions
 {
@@ -53,11 +49,9 @@ var localizationOptions = new RequestLocalizationOptions
 };
 app.UseRequestLocalization(localizationOptions);
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
