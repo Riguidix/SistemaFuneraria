@@ -1,0 +1,463 @@
+/* ==========================================================================
+   SERENIA - GESTIÓN MEMORIAL (SF-019)
+   Tema cromático, tipografía y componentes memoriales Serenia
+   ========================================================================== */
+
+:root {
+  /* Paleta cromática oficial Serenia */
+  --serenia-bg-canvas: #F4F1EA;             /* Crema cálido memorial */
+  --serenia-sidebar-bg: #304126;            /* Verde oliva oscuro profundo */
+  --serenia-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --serenia-sidebar-active-bg: rgba(255, 255, 255, 0.12);
+  --serenia-sidebar-active-border: rgba(255, 255, 255, 0.16);
+  --serenia-sidebar-text: #D2DCD0;          /* Verde salvia claro / texto inactivo */
+  --serenia-sidebar-kicker: #8E9B79;        /* Verde tenue para títulos de sección */
+  --serenia-gold: #CCA352;                  /* Oro suave del isotipo Serenia */
+  --serenia-gold-badge: #C8972E;            /* Badge mostaza/dorado de caja */
+  --serenia-primary: #2D4224;               /* Verde oliva Serenia (botones) */
+  --serenia-primary-hover: #22341B;         /* Verde oliva oscuro hover */
+  --serenia-text-dark: #1E221E;             /* Carbón memorial para títulos */
+  --serenia-text-muted: #737067;            /* Gris tenue para subtítulos */
+  --serenia-border-light: #E5E1D7;          /* Borde sutil para divisores */
+  --serenia-input-border: #D8D4CA;          /* Borde de campos de formulario */
+  --serenia-input-focus: #2D4224;           /* Anillo de foco */
+  --serenia-card-bg: #FFFFFF;
+}
+
+/* Base del Canvas */
+body.serenia-app {
+  background-color: var(--serenia-bg-canvas);
+  color: var(--serenia-text-dark);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Layout Serenia: Estructura de 2 columnas */
+.serenia-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar Lateral */
+.serenia-sidebar {
+  width: 260px;
+  min-width: 260px;
+  background-color: var(--serenia-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem 1rem;
+  z-index: 1020;
+}
+
+/* Marca / Logo Serenia */
+.serenia-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+}
+
+.serenia-brand-icon {
+  width: 40px;
+  height: 40px;
+  background-color: var(--serenia-gold);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A2415;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.serenia-brand-title {
+  color: #FFFFFF;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.serenia-brand-subtitle {
+  color: var(--serenia-sidebar-kicker);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* Secciones de Navegación */
+.serenia-nav-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--serenia-sidebar-kicker);
+  padding: 0 0.75rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.serenia-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Enlaces del Sidebar */
+.serenia-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  color: var(--serenia-sidebar-text);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+}
+
+.serenia-nav-item:hover {
+  background-color: var(--serenia-sidebar-hover);
+  color: #FFFFFF;
+}
+
+/* Ítem Activo (Únicamente Clientes) */
+.serenia-nav-item.active {
+  background-color: var(--serenia-sidebar-active-bg);
+  color: #FFFFFF;
+  border: 1px solid var(--serenia-sidebar-active-border);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Ítems Inertes (No navegables) */
+.serenia-nav-item.inert {
+  cursor: default;
+}
+
+.serenia-nav-item.inert:hover {
+  background-color: transparent;
+  color: var(--serenia-sidebar-text);
+}
+
+/* Badge Dorado en Caja */
+.serenia-badge-gold {
+  background-color: var(--serenia-gold-badge);
+  color: #1A2415;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 7px;
+  margin-left: auto;
+  line-height: 1.2;
+}
+
+/* Tarjeta de Soporte al pie del Sidebar */
+.serenia-support-card {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+  margin-top: 1.5rem;
+}
+
+.serenia-support-card:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.serenia-support-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--serenia-gold);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A2415;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.serenia-support-title {
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.serenia-support-sub {
+  color: var(--serenia-sidebar-kicker);
+  font-size: 0.68rem;
+  line-height: 1.1;
+}
+
+/* Contenido Principal */
+.serenia-main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--serenia-bg-canvas);
+}
+
+/* Top Navbar Serenia */
+.serenia-top-navbar {
+  height: 70px;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.serenia-branch-picker {
+  display: flex;
+  flex-direction: column;
+}
+
+.serenia-branch-kicker {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--serenia-text-muted);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.serenia-branch-selector {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--serenia-text-dark);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.serenia-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.serenia-btn-icon-capsule {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--serenia-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4A463D;
+  position: relative;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.serenia-btn-icon-capsule:hover {
+  background-color: #F8F6F0;
+  color: var(--serenia-text-dark);
+}
+
+.serenia-notification-dot {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 6px;
+  height: 6px;
+  background-color: var(--serenia-gold-badge);
+  border-radius: 50%;
+}
+
+/* Perfil de Usuario */
+.serenia-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.serenia-avatar-am {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #CBB998;
+  color: #383020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: -0.02em;
+}
+
+.serenia-user-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--serenia-text-dark);
+  line-height: 1.2;
+}
+
+.serenia-user-role {
+  font-size: 0.72rem;
+  color: var(--serenia-text-muted);
+  line-height: 1;
+}
+
+/* Área de Contenido de la Página */
+.serenia-page-body {
+  flex: 1;
+  padding: 2.5rem 2.5rem;
+}
+
+/* Encabezados de Página */
+.serenia-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--serenia-text-muted);
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+.serenia-page-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--serenia-text-dark);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.serenia-page-subtitle {
+  font-size: 0.95rem;
+  color: var(--serenia-text-muted);
+  font-weight: 400;
+}
+
+/* Botones Serenia */
+.btn-serenia-primary {
+  background-color: var(--serenia-primary);
+  border: 1px solid var(--serenia-primary);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-serenia-primary:hover,
+.btn-serenia-primary:focus {
+  background-color: var(--serenia-primary-hover);
+  border-color: var(--serenia-primary-hover);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(45, 66, 36, 0.25);
+}
+
+.btn-serenia-secondary {
+  background-color: #FFFFFF;
+  border: 1px solid var(--serenia-border-light);
+  color: #4A463D;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-serenia-secondary:hover {
+  background-color: #F8F6F0;
+  color: var(--serenia-text-dark);
+  border-color: #D5D0C3;
+}
+
+/* Modal Registrar Nuevo Cliente */
+.modal-dialog-serenia {
+  max-width: 580px;
+}
+
+.serenia-modal-card {
+  border-radius: 18px !important;
+  background-color: var(--serenia-card-bg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--serenia-border-light) !important;
+}
+
+.serenia-form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--serenia-text-dark);
+  margin-bottom: 0.4rem;
+}
+
+.serenia-input {
+  border: 1px solid var(--serenia-input-border);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.92rem;
+  color: var(--serenia-text-dark);
+  background-color: #FFFFFF;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.serenia-input:focus {
+  border-color: var(--serenia-primary);
+  box-shadow: 0 0 0 3px rgba(45, 66, 36, 0.15);
+  outline: none;
+}
+
+.serenia-input::placeholder {
+  color: #A6A298;
+}
+
+/* Botón Flotante de Soporte Inferior Derecho */
+.serenia-fab-help {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #1A1F18;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  z-index: 1040;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.serenia-fab-help:hover {
+  transform: scale(1.05);
+  background-color: #2D4224;
+  color: #FFFFFF;
+}

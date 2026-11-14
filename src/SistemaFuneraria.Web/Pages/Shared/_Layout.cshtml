@@ -3,75 +3,222 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Sistema Funerario</title>
+    <title>@ViewData["Title"] - Serenia Gestión Memorial</title>
     <!-- Bootstrap 5.3.8 (RNF-06) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='/lib/bootstrap/dist/css/bootstrap.min.css';" />
+    <!-- Hoja de estilos del tema Serenia (SF-019) -->
+    <link rel="stylesheet" href="~/css/serenia-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light">
-    <header role="banner">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm" aria-label="Navegación principal">
-            <div class="container">
-                <a class="navbar-brand fw-bold tracking-wide" asp-page="/Index">
-                    <span class="text-warning">✦</span> Sistema Funerario
+<body class="serenia-app">
+    <div class="serenia-wrapper">
+        <!-- ==========================================
+             SIDEBAR LATERAL SERENIA (CAPA 1)
+             ========================================== -->
+        <aside class="serenia-sidebar" aria-label="Navegación principal Serenia">
+            <div>
+                <!-- Logotipo e Identidad de Marca Serenia -->
+                <a href="/Clientes" class="serenia-brand mb-3">
+                    <div class="serenia-brand-icon" aria-hidden="true">S</div>
+                    <div>
+                        <div class="serenia-brand-title">Serenia</div>
+                        <div class="serenia-brand-subtitle">Gestión memorial</div>
+                    </div>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
-                        aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegación">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarMain">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Index">Inicio</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Catalogo/Index">Catálogo de Lotes</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Clientes/Index">Clientes</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Ventas/Nueva">Nueva Venta</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Caja/Index">Caja y Cobranza</a>
-                        </li>
-                    </ul>
-                    <span class="navbar-text small text-secondary">
-                        Moneda Oficial: <strong class="text-light">MXN ($)</strong>
-                    </span>
+
+                <!-- SECCIÓN: OPERACIÓN -->
+                <div class="serenia-nav-section-title">OPERACIÓN</div>
+                <ul class="serenia-nav-list" role="navigation">
+                    <!-- 1. Resumen (Inerte) -->
+                    <li>
+                        <a href="#" class="serenia-nav-item inert" onclick="return false;" title="Resumen (No navegable)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                                <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                                <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                                <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                            </svg>
+                            <span>Resumen</span>
+                        </a>
+                    </li>
+                    <!-- 2. Catálogo de lotes (Inerte) -->
+                    <li>
+                        <a href="#" class="serenia-nav-item inert" onclick="return false;" title="Catálogo de lotes (No navegable)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                            <span>Catálogo de lotes</span>
+                        </a>
+                    </li>
+                    <!-- 3. Clientes (ÚNICO ACTIVO Y FUNCIONAL) -->
+                    <li>
+                        <a href="/Clientes" class="serenia-nav-item active" aria-current="page">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            <span>Clientes</span>
+                        </a>
+                    </li>
+                    <!-- 4. + Nueva venta (Inerte) -->
+                    <li>
+                        <a href="#" class="serenia-nav-item inert" onclick="return false;" title="Nueva venta (No navegable)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            <span>+ Nueva venta</span>
+                        </a>
+                    </li>
+                    <!-- 5. Contratos (Inerte) -->
+                    <li>
+                        <a href="#" class="serenia-nav-item inert" onclick="return false;" title="Contratos (No navegable)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                            </svg>
+                            <span>Contratos</span>
+                        </a>
+                    </li>
+                    <!-- 6. Caja y cobranza (Inerte + Badge Mostaza "8") -->
+                    <li>
+                        <a href="#" class="serenia-nav-item inert" onclick="return false;" title="Caja y cobranza (No navegable)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                <path d="M6 10h12"></path>
+                                <line x1="10" y1="14" x2="14" y2="14"></line>
+                            </svg>
+                            <span>Caja y cobranza</span>
+                            <span class="serenia-badge-gold">8</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- SECCIÓN: ADMINISTRACIÓN -->
+                <div class="serenia-nav-section-title">ADMINISTRACIÓN</div>
+                <ul class="serenia-nav-list" role="navigation">
+                    <!-- 7. Reportes (Inerte) -->
+                    <li>
+                        <a href="#" class="serenia-nav-item inert" onclick="return false;" title="Reportes (No navegable)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                            <span>Reportes</span>
+                        </a>
+                    </li>
+                    <!-- 8. Configuración (Inerte) -->
+                    <li>
+                        <a href="#" class="serenia-nav-item inert" onclick="return false;" title="Configuración (No navegable)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            <span>Configuración</span>
+                        </a>
+                    </li>
+                    <!-- 9. Parámetros UI (Inerte) -->
+                    <li>
+                        <a href="#" class="serenia-nav-item inert" onclick="return false;" title="Parámetros UI (No navegable)">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M3 12h3m12 0h3M12 3v3m0 12v3"></path>
+                                <circle cx="12" cy="12" r="9"></circle>
+                            </svg>
+                            <span>Parámetros UI</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Pie de Sidebar: Tarjeta Visual de Soporte -->
+            <div>
+                <a href="#" class="serenia-support-card" onclick="return false;" title="Guía operativa y soporte Serenia">
+                    <div class="serenia-support-icon">?</div>
+                    <div>
+                        <div class="serenia-support-title">¿Necesitas ayuda?</div>
+                        <div class="serenia-support-sub">Consulta la guía operativa</div>
+                    </div>
+                    <svg class="ms-auto" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </a>
+            </div>
+        </aside>
+
+        <!-- ==========================================
+             ÁREA PRINCIPAL DE CONTENIDO (CAPA 1)
+             ========================================== -->
+        <div class="serenia-main-container">
+            <!-- Top Navbar Serenia -->
+            <header class="serenia-top-navbar" role="banner">
+                <!-- Selector de Sucursal -->
+                <div class="serenia-branch-picker">
+                    <span class="serenia-branch-kicker">SUCURSAL</span>
+                    <div class="serenia-branch-selector" title="Cambiar sucursal">
+                        <span>Jardines del Valle</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
 
-    <div class="container my-4 flex-grow-1">
-        @if (TempData["MensajeExito"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                @TempData["MensajeExito"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-            </div>
-        }
-        @if (TempData["MensajeError"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                @TempData["MensajeError"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-            </div>
-        }
+                <!-- Notificaciones y Perfil de Usuario -->
+                <div class="serenia-top-actions">
+                    <!-- Campana de notificaciones con badge -->
+                    <a href="#" class="serenia-btn-icon-capsule" onclick="return false;" aria-label="Notificaciones" title="Notificaciones (1 nueva)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="serenia-notification-dot" aria-hidden="true"></span>
+                    </a>
 
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+                    <!-- Perfil de Usuario Serenia -->
+                    <div class="serenia-user-profile" title="Perfil de usuario">
+                        <div class="serenia-avatar-am" aria-hidden="true">AM</div>
+                        <div>
+                            <div class="serenia-user-name">Andrea Morales</div>
+                            <div class="serenia-user-role">Administradora</div>
+                        </div>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted ms-1" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Cuerpo Principal / Vistas de Razor Pages -->
+            <main role="main" class="serenia-page-body">
+                @if (TempData["MensajeExito"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+                        <strong>✓</strong> @TempData["MensajeExito"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                }
+                @if (TempData["MensajeError"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+                        <strong>!</strong> @TempData["MensajeError"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
-    <footer class="border-top py-3 text-muted bg-white mt-auto" role="contentinfo">
-        <div class="container d-flex flex-wrap justify-content-between align-items-center">
-            <span class="small">&copy; @DateTime.Now.Year - Sistema de Venta y Financiamiento de Lotes Funerarios</span>
-            <span class="badge bg-dark-subtle text-dark border small">Cultura: es-MX ($#,##0.00)</span>
-        </div>
-    </footer>
+    <!-- Botón Flotante de Ayuda Rápida Serenia (Esquina inferior derecha) -->
+    <a href="#" class="serenia-fab-help" onclick="return false;" title="Ayuda y soporte memorial" aria-label="Ayuda">
+        ?
+    </a>
 
     <!-- Bootstrap 5.3.8 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/lib/bootstrap/dist/js/bootstrap.bundle.min.js';"></script>
