@@ -12,7 +12,7 @@
 ---
 
 ### 1. Objetivo de la Prueba
-Demostrar con evidencia técnica verificable (**política Cero Fantasía**) que la implementación de las tres capas de interfaz gráfica en `SistemaFuneraria.Web` cumple al 100% con los criterios de aceptación visual, control de navegación y diseño establecidos para el ticket SF-019:
+Demostrar con evidencia técnica y visual verificable (**política Cero Fantasía / *"Screenshots Don't Lie"***) que la implementación de las tres capas de interfaz gráfica en `SistemaFuneraria.Web` cumple al 100% con los criterios de aceptación visual, control de navegación y diseño establecidos para el ticket SF-019:
 
 1. **Capa 1: Master Layout Funeraria (`Pages/Shared/_Layout.cshtml` + `funeraria-theme.css`):**
    * **Top Navbar:**
@@ -51,9 +51,43 @@ Demostrar con evidencia técnica verificable (**política Cero Fantasía**) que 
 
 ---
 
-### 2. Comandos de Terminal Ejecutados y Salida Real
+### 2. Evidencia Visual Tangible (*"Screenshots Don't Lie"*)
 
-#### 2.1 Verificación de Integridad de Código y Marcado
+#### 2.1 Vista Principal de Clientes y Master Layout Funeraria
+Captura real de la aplicación web en ejecución mostrando la barra lateral con identidad memorial, el ítem **Clientes** como único activo, la barra superior con sucursal y perfil, y el encabezado de página:
+
+![Vista Clientes y Master Layout](./vista_clientes_layout.png)
+
+*Evidencia visual comprobada:*
+- Identidad de marca visible: Icono **"F"** y título **"Funeraria - Gestión memorial"**.
+- Top Navbar: Selector de sucursal *"Jardines del Valle"*, campana de alertas y avatar *"AM"* con *"Andrea Morales (Administradora)"*.
+- Sección *Operación*: Módulos visualmente completos con enlaces inertes (`href="#"`), Clientes en estado activo destacado y Caja con badge numérico **8**.
+- Encabezado: Kicker `RELACIONES`, título `Clientes`, subtítulo descriptivo y botón `+ Nuevo cliente`.
+- Botón flotante de asistencia rápida `?` en la esquina inferior derecha.
+
+---
+
+#### 2.2 Modal Reutilizable de Registro de Nuevo Cliente
+Captura real del modal abierto interactivo tras disparar el evento Bootstrap desde el botón `+ Nuevo cliente`:
+
+![Modal Registrar Nuevo Cliente](./modal_nuevo_cliente.png)
+
+*Evidencia visual comprobada:*
+- Modal centrado en pantalla sobre fondo crema translúcido con bordes curvos suaves (`rounded-4`).
+- Título *"Registrar nuevo cliente"* y texto secundario indicativo.
+- 5 campos de entrada con placeholders exactos:
+  1. `Nombre(s)` con `"Ej. Carlos"`
+  2. `Apellidos` con `"Ej. López"`
+  3. `Teléfono` con `"55 0000 0000"`
+  4. `CURP` con `"18 CARACTERES"`
+  5. `Correo electrónico` con `"correo@email.mx"`
+- Botones de acción: *"Cancelar"* (estilo outline neutro) y *"Guardar cliente"* (verde oliva memorial).
+
+---
+
+### 3. Comandos de Terminal Ejecutados y Salida Real
+
+#### 3.1 Verificación de Integridad de Código y Marcado
 ```bash
 dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~ClientesUiTests"
 ```
@@ -79,7 +113,7 @@ Iniciando la ejecución de pruebas, espere...
 Correctas! - Con error:     0, Superado:     5, Omitido:     0, Total:     5, Duración: 46 ms - SistemaFuneraria.Tests.dll (net8.0)
 ```
 
-#### 2.2 Auditoría de Registro en Git
+#### 3.2 Auditoría de Registro en Git
 ```bash
 $ git log -1 --stat
 commit b27bb26
@@ -98,7 +132,7 @@ Date:   Sat Nov 14 02:25:35 2026 -0600
 
 ---
 
-### 3. Explicación del Resultado
+### 4. Explicación del Resultado
 La fase **VERDE** certifica:
 1. **Fidelidad al Diseño:** Se implementaron los estilos en `funeraria-theme.css` con variables CSS reutilizables (`--funeraria-bg: #F4F1EA`, `--funeraria-primary: #2D4224`, `--funeraria-gold-badge: #D4A338`), garantizando una experiencia visual memorial coherente.
 2. **Seguridad de Navegación:** El sidebar muestra la estructura completa de la aplicación sin generar errores 404 ni recargas accidentales al interactuar con módulos aún no implementados.
