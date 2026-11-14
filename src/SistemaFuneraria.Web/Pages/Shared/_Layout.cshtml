@@ -3,133 +3,101 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Funeraria</title>
+    <title>@ViewData["Title"] - Serenia Gestión Memorial</title>
     <!-- Bootstrap 5.3.8 (RNF-06) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='/lib/bootstrap/dist/css/bootstrap.min.css';" />
-    <!-- Hoja de estilos del tema Funeraria (SF-019) -->
+    <!-- CDN de Font Awesome (SF-020) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <!-- Hoja de estilos del tema memorial Serenia (SF-019 / SF-020) -->
     <link rel="stylesheet" href="~/css/funeraria-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="funeraria-app">
-    <div class="funeraria-wrapper">
+<body class="funeraria-app serenia-app">
+    <div class="funeraria-wrapper serenia-wrapper">
         <!-- ==========================================
-             SIDEBAR LATERAL FUNERARIA (CAPA 1)
+             SIDEBAR LATERAL MEMORIAL (CAPA 1)
              ========================================== -->
-        <aside class="funeraria-sidebar" aria-label="Navegación principal Funeraria">
+        <aside class="funeraria-sidebar serenia-sidebar" aria-label="Navegación principal Serenia">
             <div>
-                <!-- Logotipo e Identidad de Marca Funeraria -->
-                <a href="/Clientes" class="funeraria-brand mb-3">
-                    <div class="funeraria-brand-icon" aria-hidden="true">F</div>
+                <!-- Logotipo e Identidad de Marca Serenia -->
+                <a href="/Clientes" class="funeraria-brand serenia-brand mb-3">
+                    <div class="funeraria-brand-icon serenia-brand-icon" aria-hidden="true">S</div>
                     <div>
-                        <div class="funeraria-brand-title">Funeraria</div>
-                        <div class="funeraria-brand-subtitle">Gestión memorial</div>
+                        <div class="funeraria-brand-title serenia-brand-title">Serenia</div>
+                        <div class="funeraria-brand-subtitle serenia-brand-subtitle">Gestión memorial</div>
                     </div>
                 </a>
 
                 <!-- SECCIÓN: OPERACIÓN -->
-                <div class="funeraria-nav-section-title">OPERACIÓN</div>
-                <ul class="funeraria-nav-list" role="navigation">
+                <div class="funeraria-nav-section-title serenia-nav-section-title">OPERACIÓN</div>
+                <ul class="funeraria-nav-list serenia-nav-list" role="navigation">
                     <!-- 1. Resumen (Inerte) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Resumen (No navegable)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-                                <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-                                <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-                                <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-                            </svg>
+                        <a href="#" class="funeraria-nav-item serenia-nav-item inert" onclick="return false;" title="Resumen (No navegable)">
+                            <i class="fa-solid fa-table-cells-large fa-fw" aria-hidden="true"></i>
                             <span>Resumen</span>
                         </a>
                     </li>
                     <!-- 2. Catálogo de lotes (Inerte) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Catálogo de lotes (No navegable)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                            </svg>
+                        <a href="#" class="funeraria-nav-item serenia-nav-item inert" onclick="return false;" title="Catálogo de lotes (No navegable)">
+                            <i class="fa-solid fa-book-open fa-fw" aria-hidden="true"></i>
                             <span>Catálogo de lotes</span>
                         </a>
                     </li>
                     <!-- 3. Clientes (ÚNICO ACTIVO Y FUNCIONAL) -->
                     <li>
-                        <a href="/Clientes" class="funeraria-nav-item active" aria-current="page">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="9" cy="7" r="4"></circle>
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                            </svg>
+                        <a href="/Clientes" class="funeraria-nav-item serenia-nav-item active" aria-current="page">
+                            <i class="fa-solid fa-users fa-fw" aria-hidden="true"></i>
                             <span>Clientes</span>
                         </a>
                     </li>
                     <!-- 4. + Nueva venta (Inerte) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Nueva venta (No navegable)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="9"></circle>
-                                <line x1="12" y1="8" x2="12" y2="16"></line>
-                                <line x1="8" y1="12" x2="16" y2="12"></line>
-                            </svg>
+                        <a href="#" class="funeraria-nav-item serenia-nav-item inert" onclick="return false;" title="Nueva venta (No navegable)">
+                            <i class="fa-solid fa-circle-plus fa-fw" aria-hidden="true"></i>
                             <span>+ Nueva venta</span>
                         </a>
                     </li>
                     <!-- 5. Contratos (Inerte) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Contratos (No navegable)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                            </svg>
+                        <a href="#" class="funeraria-nav-item serenia-nav-item inert" onclick="return false;" title="Contratos (No navegable)">
+                            <i class="fa-solid fa-file-lines fa-fw" aria-hidden="true"></i>
                             <span>Contratos</span>
                         </a>
                     </li>
-                    <!-- 6. Caja y cobranza (Inerte + Badge Mostaza "8") -->
+                    <!-- 6. Caja y cobranza (Inerte + Badge Dorado "8") -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Caja y cobranza (No navegable)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-                                <path d="M6 10h12"></path>
-                                <line x1="10" y1="14" x2="14" y2="14"></line>
-                            </svg>
+                        <a href="#" class="funeraria-nav-item serenia-nav-item inert" onclick="return false;" title="Caja y cobranza (No navegable)">
+                            <i class="fa-solid fa-cash-register fa-fw" aria-hidden="true"></i>
                             <span>Caja y cobranza</span>
-                            <span class="funeraria-badge-gold">8</span>
+                            <span class="funeraria-badge-gold serenia-badge-gold">8</span>
                         </a>
                     </li>
                 </ul>
 
                 <!-- SECCIÓN: ADMINISTRACIÓN -->
-                <div class="funeraria-nav-section-title">ADMINISTRACIÓN</div>
-                <ul class="funeraria-nav-list" role="navigation">
+                <div class="funeraria-nav-section-title serenia-nav-section-title">ADMINISTRACIÓN</div>
+                <ul class="funeraria-nav-list serenia-nav-list" role="navigation">
                     <!-- 7. Reportes (Inerte) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Reportes (No navegable)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                            </svg>
+                        <a href="#" class="funeraria-nav-item serenia-nav-item inert" onclick="return false;" title="Reportes (No navegable)">
+                            <i class="fa-solid fa-chart-line fa-fw" aria-hidden="true"></i>
                             <span>Reportes</span>
                         </a>
                     </li>
                     <!-- 8. Configuración (Inerte) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Configuración (No navegable)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                            </svg>
+                        <a href="#" class="funeraria-nav-item serenia-nav-item inert" onclick="return false;" title="Configuración (No navegable)">
+                            <i class="fa-solid fa-gear fa-fw" aria-hidden="true"></i>
                             <span>Configuración</span>
                         </a>
                     </li>
                     <!-- 9. Parámetros UI (Inerte) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Parámetros UI (No navegable)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <circle cx="12" cy="12" r="3"></circle>
-                                <path d="M3 12h3m12 0h3M12 3v3m0 12v3"></path>
-                                <circle cx="12" cy="12" r="9"></circle>
-                            </svg>
+                        <a href="#" class="funeraria-nav-item serenia-nav-item inert" onclick="return false;" title="Parámetros UI (No navegable)">
+                            <i class="fa-solid fa-sliders fa-fw" aria-hidden="true"></i>
                             <span>Parámetros UI</span>
                         </a>
                     </li>
@@ -138,15 +106,13 @@
 
             <!-- Pie de Sidebar: Tarjeta Visual de Soporte -->
             <div>
-                <a href="#" class="funeraria-support-card" onclick="return false;" title="Guía operativa y soporte Funeraria">
-                    <div class="funeraria-support-icon">?</div>
+                <a href="#" class="funeraria-support-card serenia-support-card" onclick="return false;" title="Guía operativa y soporte memorial">
+                    <div class="funeraria-support-icon serenia-support-icon">?</div>
                     <div>
-                        <div class="funeraria-support-title">¿Necesitas ayuda?</div>
-                        <div class="funeraria-support-sub">Consulta la guía operativa</div>
+                        <div class="funeraria-support-title serenia-support-title">¿Necesitas ayuda?</div>
+                        <div class="funeraria-support-sub serenia-support-sub">Consulta la guía operativa</div>
                     </div>
-                    <svg class="ms-auto" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
+                    <i class="fa-solid fa-chevron-right ms-auto text-white-50" aria-hidden="true"></i>
                 </a>
             </div>
         </aside>
@@ -154,47 +120,40 @@
         <!-- ==========================================
              ÁREA PRINCIPAL DE CONTENIDO (CAPA 1)
              ========================================== -->
-        <div class="funeraria-main-container">
-            <!-- Top Navbar Funeraria -->
-            <header class="funeraria-top-navbar" role="banner">
+        <div class="funeraria-main-container serenia-main-container">
+            <!-- Top Navbar Serenia -->
+            <header class="funeraria-top-navbar serenia-top-navbar" role="banner">
                 <!-- Selector de Sucursal -->
-                <div class="funeraria-branch-picker">
-                    <span class="funeraria-branch-kicker">SUCURSAL</span>
-                    <div class="funeraria-branch-selector" title="Cambiar sucursal">
+                <div class="funeraria-branch-picker serenia-branch-picker">
+                    <span class="funeraria-branch-kicker serenia-branch-kicker">SUCURSAL</span>
+                    <div class="funeraria-branch-selector serenia-branch-selector" title="Cambiar sucursal">
                         <span>Jardines del Valle</span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
+                        <i class="fa-solid fa-chevron-down ms-1 small" aria-hidden="true"></i>
                     </div>
                 </div>
 
                 <!-- Notificaciones y Perfil de Usuario -->
-                <div class="funeraria-top-actions">
+                <div class="funeraria-top-actions serenia-top-actions">
                     <!-- Campana de notificaciones con badge -->
-                    <a href="#" class="funeraria-btn-icon-capsule" onclick="return false;" aria-label="Notificaciones" title="Notificaciones (1 nueva)">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <span class="funeraria-notification-dot" aria-hidden="true"></span>
+                    <a href="#" class="funeraria-btn-icon-capsule serenia-btn-icon-capsule" onclick="return false;" aria-label="Notificaciones" title="Notificaciones (1 nueva)">
+                        <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                        <span class="funeraria-notification-dot serenia-notification-dot" aria-hidden="true"></span>
                     </a>
 
-                    <!-- Perfil de Usuario Funeraria -->
-                    <div class="funeraria-user-profile" title="Perfil de usuario">
-                        <div class="funeraria-avatar-am" aria-hidden="true">AM</div>
+                    <!-- Perfil de Usuario Serenia -->
+                    <div class="funeraria-user-profile serenia-user-profile" title="Perfil de usuario">
+                        <div class="funeraria-avatar-am serenia-avatar-am" aria-hidden="true">AM</div>
                         <div>
-                            <div class="funeraria-user-name">Andrea Morales</div>
-                            <div class="funeraria-user-role">Administradora</div>
+                            <div class="funeraria-user-name serenia-user-name">Andrea Morales</div>
+                            <div class="funeraria-user-role serenia-user-role">Administradora</div>
                         </div>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted ms-1" aria-hidden="true">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
+                        <i class="fa-solid fa-chevron-down ms-1 text-muted small" aria-hidden="true"></i>
                     </div>
                 </div>
             </header>
 
             <!-- Cuerpo Principal / Vistas de Razor Pages -->
-            <main role="main" class="funeraria-page-body">
+            <main role="main" class="funeraria-page-body serenia-page-body">
                 @if (TempData["MensajeExito"] != null)
                 {
                     <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
@@ -215,13 +174,13 @@
         </div>
     </div>
 
-    <!-- Botón Flotante de Ayuda Rápida Funeraria (Esquina inferior derecha) -->
-    <a href="#" class="funeraria-fab-help" onclick="return false;" title="Ayuda y soporte memorial" aria-label="Ayuda">
+    <!-- Botón Flotante de Ayuda Rápida (Esquina inferior derecha) -->
+    <a href="#" class="funeraria-fab-help serenia-fab-help" onclick="return false;" title="Ayuda y soporte memorial" aria-label="Ayuda">
         ?
     </a>
 
     <!-- Bootstrap 5.3.8 Bundle JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/lib/bootstrap/dist/js/bootstrap.bundle.min.js';"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/lib/bootstrap/dist/css/bootstrap.min.css';"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)

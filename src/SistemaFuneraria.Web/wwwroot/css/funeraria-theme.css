@@ -461,3 +461,202 @@ body.funeraria-app {
   background-color: #2D4224;
   color: #FFFFFF;
 }
+
+
+/* ==========================================================================
+   COMPONENTES DE TABLA DE CLIENTES Y BÚSQUEDA REACTIVA (SF-020)
+   ========================================================================== */
+
+/* Barra de herramientas / Toolbar */
+.serenia-toolbar,
+.funeraria-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .serenia-toolbar,
+  .funeraria-toolbar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* Caja de búsqueda con icono de lupa */
+.serenia-search-box,
+.funeraria-search-box {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+}
+
+.serenia-search-icon,
+.funeraria-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  color: #9E9A90;
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.serenia-search-input,
+.funeraria-search-input {
+  width: 100%;
+  padding: 0.72rem 1rem 0.72rem 2.6rem;
+  border: 1px solid var(--funeraria-border-light, #E5E1D7);
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  color: var(--funeraria-text-dark, #1E221E);
+  font-size: 0.92rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.serenia-search-input:focus,
+.funeraria-search-input:focus {
+  border-color: var(--funeraria-primary, #2D4224);
+  box-shadow: 0 0 0 3px rgba(45, 66, 36, 0.15);
+  outline: none;
+}
+
+.serenia-search-input::placeholder,
+.funeraria-search-input::placeholder {
+  color: #9E9A90;
+}
+
+/* Botón de exportación */
+.btn-exportar-directorio {
+  background-color: #FFFFFF;
+  border: 1px solid var(--funeraria-border-light, #E5E1D7);
+  color: #2D2A24;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.68rem 1.25rem;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-exportar-directorio:hover {
+  background-color: #F8F6F0;
+  border-color: #D5D0C3;
+  color: #1E221E;
+}
+
+/* Contenedor de la tabla */
+.serenia-table-card,
+.funeraria-table-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--funeraria-border-light, #E5E1D7);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Tabla de Clientes */
+.serenia-table,
+.funeraria-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.serenia-table thead th,
+.funeraria-table thead th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8E8A80;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid #ECE7DC;
+  background-color: transparent;
+  vertical-align: middle;
+}
+
+.serenia-table tbody td,
+.funeraria-table tbody td {
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid #F1ECE2;
+  color: var(--funeraria-text-dark, #1E221E);
+  font-size: 0.9rem;
+  vertical-align: middle;
+}
+
+.serenia-table tbody tr:last-child td,
+.funeraria-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.serenia-table tbody tr:hover,
+.funeraria-table tbody tr:hover {
+  background-color: #FAF8F4;
+}
+
+/* Avatares circulares Serenia */
+.avatar-serenia,
+.avatar-funeraria {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #D3C5A3;
+  color: #443B28;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+
+/* Badges de estado Serenia */
+.badge-estado {
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.badge-al-corriente {
+  background-color: #E6F4EA;
+  color: #137333;
+}
+
+.badge-pago-vencido {
+  background-color: #FCE8E6;
+  color: #C5221F;
+}
+
+.badge-en-revision {
+  background-color: #FEF7E0;
+  color: #B06000;
+}
+
+/* Enlace de acción Abrir */
+.serenia-action-link,
+.funeraria-action-link {
+  color: #2D2A24;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: color 0.15s ease;
+}
+
+.serenia-action-link:hover,
+.funeraria-action-link:hover {
+  color: var(--funeraria-primary, #2D4224);
+  text-decoration: underline;
+}
