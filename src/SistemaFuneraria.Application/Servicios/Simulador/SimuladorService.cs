@@ -5,8 +5,8 @@ using SistemaFuneraria.Core.Comun;
 namespace SistemaFuneraria.Application.Servicios.Simulador;
 
 /// <summary>
-/// Implementación en memoria del servicio de simulación financiera de lotes funerarios (SF-013).
-/// Valida parámetros contra el catálogo oficial y orquesta el cálculo de amortización francesa.
+/// Implementación en memoria del servicio de simulación financiera de lotes funerarios (SF-013, SF-027).
+/// Valida parámetros contra el catálogo oficial y orquesta el cálculo de amortización francesa bajo CP-10.
 /// </summary>
 public class SimuladorService : ISimuladorService
 {
@@ -15,22 +15,22 @@ public class SimuladorService : ISimuladorService
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // 1. Validaciones de catálogo y reglas de negocio
+        // 1. Validaciones de catálogo y reglas de negocio (CP-10, RN-01, RN-04, RN-05)
         var errores = new List<string>();
 
         if (!ParametrosNegocio.EsPrecioAutorizado(request.PrecioLote))
         {
-            errores.Add($"El precio de {request.PrecioLote:C2} no está autorizado (RN-01).");
+            errores.Add("Precio no permitido. Solo se autorizan lotes de $120,000.00, $150,000.00 y $180,000.00 (RN-01).");
         }
 
         if (!ParametrosNegocio.EsEngancheAutorizado(request.PorcentajeEnganche))
         {
-            errores.Add($"El porcentaje de enganche de {request.PorcentajeEnganche}% no está autorizado (RN-04).");
+            errores.Add("Enganche no permitido. Solo se acepta 10%, 20% o 30% (RN-04).");
         }
 
         if (!ParametrosNegocio.EsPlazoAutorizado(request.PlazoMeses))
         {
-            errores.Add($"El plazo de {request.PlazoMeses} meses no está autorizado (RN-05).");
+            errores.Add("Plazo inválido. Solo se admiten plazos de 12, 18, 24 o 48 meses (RN-05).");
         }
 
         if (errores.Count > 0)
