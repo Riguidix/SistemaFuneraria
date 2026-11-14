@@ -1,0 +1,463 @@
+/* ==========================================================================
+   FUNERARIA - GESTIÓN MEMORIAL (SF-019)
+   Tema cromático, tipografía y componentes memoriales Funeraria
+   ========================================================================== */
+
+:root {
+  /* Paleta cromática oficial Funeraria */
+  --funeraria-bg-canvas: #F4F1EA;             /* Crema cálido memorial */
+  --funeraria-sidebar-bg: #304126;            /* Verde oliva oscuro profundo */
+  --funeraria-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --funeraria-sidebar-active-bg: rgba(255, 255, 255, 0.12);
+  --funeraria-sidebar-active-border: rgba(255, 255, 255, 0.16);
+  --funeraria-sidebar-text: #D2DCD0;          /* Verde salvia claro / texto inactivo */
+  --funeraria-sidebar-kicker: #8E9B79;        /* Verde tenue para títulos de sección */
+  --funeraria-gold: #CCA352;                  /* Oro suave del isotipo Funeraria */
+  --funeraria-gold-badge: #C8972E;            /* Badge mostaza/dorado de caja */
+  --funeraria-primary: #2D4224;               /* Verde oliva Funeraria (botones) */
+  --funeraria-primary-hover: #22341B;         /* Verde oliva oscuro hover */
+  --funeraria-text-dark: #1E221E;             /* Carbón memorial para títulos */
+  --funeraria-text-muted: #737067;            /* Gris tenue para subtítulos */
+  --funeraria-border-light: #E5E1D7;          /* Borde sutil para divisores */
+  --funeraria-input-border: #D8D4CA;          /* Borde de campos de formulario */
+  --funeraria-input-focus: #2D4224;           /* Anillo de foco */
+  --funeraria-card-bg: #FFFFFF;
+}
+
+/* Base del Canvas */
+body.funeraria-app {
+  background-color: var(--funeraria-bg-canvas);
+  color: var(--funeraria-text-dark);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Layout Funeraria: Estructura de 2 columnas */
+.funeraria-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar Lateral */
+.funeraria-sidebar {
+  width: 260px;
+  min-width: 260px;
+  background-color: var(--funeraria-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem 1rem;
+  z-index: 1020;
+}
+
+/* Marca / Logo Funeraria */
+.funeraria-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+}
+
+.funeraria-brand-icon {
+  width: 40px;
+  height: 40px;
+  background-color: var(--funeraria-gold);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A2415;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.funeraria-brand-title {
+  color: #FFFFFF;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.funeraria-brand-subtitle {
+  color: var(--funeraria-sidebar-kicker);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* Secciones de Navegación */
+.funeraria-nav-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--funeraria-sidebar-kicker);
+  padding: 0 0.75rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.funeraria-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Enlaces del Sidebar */
+.funeraria-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+  color: var(--funeraria-sidebar-text);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+}
+
+.funeraria-nav-item:hover {
+  background-color: var(--funeraria-sidebar-hover);
+  color: #FFFFFF;
+}
+
+/* Ítem Activo (Únicamente Clientes) */
+.funeraria-nav-item.active {
+  background-color: var(--funeraria-sidebar-active-bg);
+  color: #FFFFFF;
+  border: 1px solid var(--funeraria-sidebar-active-border);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Ítems Inertes (No navegables) */
+.funeraria-nav-item.inert {
+  cursor: default;
+}
+
+.funeraria-nav-item.inert:hover {
+  background-color: transparent;
+  color: var(--funeraria-sidebar-text);
+}
+
+/* Badge Dorado en Caja */
+.funeraria-badge-gold {
+  background-color: var(--funeraria-gold-badge);
+  color: #1A2415;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 7px;
+  margin-left: auto;
+  line-height: 1.2;
+}
+
+/* Tarjeta de Soporte al pie del Sidebar */
+.funeraria-support-card {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease;
+  margin-top: 1.5rem;
+}
+
+.funeraria-support-card:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.funeraria-support-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--funeraria-gold);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A2415;
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.funeraria-support-title {
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.funeraria-support-sub {
+  color: var(--funeraria-sidebar-kicker);
+  font-size: 0.68rem;
+  line-height: 1.1;
+}
+
+/* Contenido Principal */
+.funeraria-main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--funeraria-bg-canvas);
+}
+
+/* Top Navbar Funeraria */
+.funeraria-top-navbar {
+  height: 70px;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.funeraria-branch-picker {
+  display: flex;
+  flex-direction: column;
+}
+
+.funeraria-branch-kicker {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--funeraria-text-muted);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.funeraria-branch-selector {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--funeraria-text-dark);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.funeraria-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.funeraria-btn-icon-capsule {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--funeraria-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4A463D;
+  position: relative;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.funeraria-btn-icon-capsule:hover {
+  background-color: #F8F6F0;
+  color: var(--funeraria-text-dark);
+}
+
+.funeraria-notification-dot {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  width: 6px;
+  height: 6px;
+  background-color: var(--funeraria-gold-badge);
+  border-radius: 50%;
+}
+
+/* Perfil de Usuario */
+.funeraria-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.funeraria-avatar-am {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #CBB998;
+  color: #383020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: -0.02em;
+}
+
+.funeraria-user-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--funeraria-text-dark);
+  line-height: 1.2;
+}
+
+.funeraria-user-role {
+  font-size: 0.72rem;
+  color: var(--funeraria-text-muted);
+  line-height: 1;
+}
+
+/* Área de Contenido de la Página */
+.funeraria-page-body {
+  flex: 1;
+  padding: 2.5rem 2.5rem;
+}
+
+/* Encabezados de Página */
+.funeraria-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--funeraria-text-muted);
+  margin-bottom: 0.35rem;
+  display: block;
+}
+
+.funeraria-page-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--funeraria-text-dark);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.funeraria-page-subtitle {
+  font-size: 0.95rem;
+  color: var(--funeraria-text-muted);
+  font-weight: 400;
+}
+
+/* Botones Funeraria */
+.btn-funeraria-primary {
+  background-color: var(--funeraria-primary);
+  border: 1px solid var(--funeraria-primary);
+  color: #FFFFFF;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-funeraria-primary:hover,
+.btn-funeraria-primary:focus {
+  background-color: var(--funeraria-primary-hover);
+  border-color: var(--funeraria-primary-hover);
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(45, 66, 36, 0.25);
+}
+
+.btn-funeraria-secondary {
+  background-color: #FFFFFF;
+  border: 1px solid var(--funeraria-border-light);
+  color: #4A463D;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-funeraria-secondary:hover {
+  background-color: #F8F6F0;
+  color: var(--funeraria-text-dark);
+  border-color: #D5D0C3;
+}
+
+/* Modal Registrar Nuevo Cliente */
+.modal-dialog-funeraria {
+  max-width: 580px;
+}
+
+.funeraria-modal-card {
+  border-radius: 18px !important;
+  background-color: var(--funeraria-card-bg);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--funeraria-border-light) !important;
+}
+
+.funeraria-form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--funeraria-text-dark);
+  margin-bottom: 0.4rem;
+}
+
+.funeraria-input {
+  border: 1px solid var(--funeraria-input-border);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.92rem;
+  color: var(--funeraria-text-dark);
+  background-color: #FFFFFF;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.funeraria-input:focus {
+  border-color: var(--funeraria-primary);
+  box-shadow: 0 0 0 3px rgba(45, 66, 36, 0.15);
+  outline: none;
+}
+
+.funeraria-input::placeholder {
+  color: #A6A298;
+}
+
+/* Botón Flotante de Soporte Inferior Derecho */
+.funeraria-fab-help {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #1A1F18;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  z-index: 1040;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.funeraria-fab-help:hover {
+  transform: scale(1.05);
+  background-color: #2D4224;
+  color: #FFFFFF;
+}

@@ -1,0 +1,77 @@
+@* Componente Reutilizable: Modal de Registro de Nuevo Cliente (SF-019) *@
+<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-funeraria">
+        <div class="modal-content funeraria-modal-card p-2 p-md-3">
+            <div class="modal-header border-0 pb-1 align-items-start">
+                <div>
+                    <h2 class="modal-title fs-4 fw-bold text-dark mb-1" id="modalNuevoClienteLabel">Registrar nuevo cliente</h2>
+                    <p class="text-muted small mb-0">Proporciona la información del titular para guardarlo en la tabla.</p>
+                </div>
+                <button type="button" class="btn-close ms-auto mt-1" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body py-3">
+                <form id="formNuevoCliente" onsubmit="event.preventDefault();">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="modalClienteNombre" class="form-label funeraria-form-label">Nombre(s)</label>
+                            <input type="text" 
+                                   id="modalClienteNombre" 
+                                   name="Nombre" 
+                                   class="form-control funeraria-input" 
+                                   placeholder="Ej. Carlos" 
+                                   autocomplete="given-name" 
+                                   required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modalClienteApellidos" class="form-label funeraria-form-label">Apellidos</label>
+                            <input type="text" 
+                                   id="modalClienteApellidos" 
+                                   name="Apellidos" 
+                                   class="form-control funeraria-input" 
+                                   placeholder="Ej. López" 
+                                   autocomplete="family-name" 
+                                   required />
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="modalClienteTelefono" class="form-label funeraria-form-label">Teléfono</label>
+                            <input type="tel" 
+                                   id="modalClienteTelefono" 
+                                   name="Telefono" 
+                                   class="form-control funeraria-input" 
+                                   placeholder="55 0000 0000" 
+                                   autocomplete="tel" 
+                                   maxlength="15" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="modalClienteCurp" class="form-label funeraria-form-label">CURP</label>
+                            <input type="text" 
+                                   id="modalClienteCurp" 
+                                   name="Curp" 
+                                   class="form-control funeraria-input text-uppercase" 
+                                   placeholder="18 caracteres" 
+                                   maxlength="18" 
+                                   style="text-transform: uppercase;" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="modalClienteEmail" class="form-label funeraria-form-label">Correo electrónico</label>
+                        <input type="email" 
+                               id="modalClienteEmail" 
+                               name="Email" 
+                               class="form-control funeraria-input" 
+                               placeholder="correo@email.mx" 
+                               autocomplete="email" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 pt-1 pb-2 px-3 d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-funeraria-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-funeraria-primary" id="btnGuardarClienteModal">Guardar cliente</button>
+            </div>
+        </div>
+    </div>
+</div>
