@@ -660,3 +660,158 @@ body.funeraria-app {
   color: var(--funeraria-primary, #2D4224);
   text-decoration: underline;
 }
+
+
+/* ==========================================================================
+   CHECKLIST DESIGN: MEJORAS PARA DATA TABLE (https://www.checklist.design)
+   ========================================================================== */
+
+/* Cabeceras ordenables */
+.funeraria-table thead th.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.funeraria-table thead th.th-sortable:hover {
+  color: var(--funeraria-primary, #2D4224);
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.sort-icon {
+  font-size: 0.7rem;
+  margin-left: 0.35rem;
+  color: #B5B0A4;
+  vertical-align: middle;
+  transition: color 0.15s ease;
+}
+
+.th-sortable:hover .sort-icon {
+  color: var(--funeraria-primary, #2D4224);
+}
+
+/* Botón de limpiar búsqueda */
+.btn-clear-search {
+  position: absolute;
+  top: 50%;
+  right: 0.85rem;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9E9A90;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.25rem;
+  line-height: 1;
+  display: none;
+}
+
+.btn-clear-search:hover {
+  color: #1E221E;
+}
+
+/* Filtros rápidos por estado (Pills) */
+.funeraria-filter-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  border: 1px solid var(--funeraria-border-light, #E5E1D7);
+  background-color: #FFFFFF;
+  color: #555148;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-pill:hover {
+  background-color: #F8F6F0;
+  color: #1E221E;
+}
+
+.filter-pill.active {
+  background-color: var(--funeraria-primary, #2D4224);
+  border-color: var(--funeraria-primary, #2D4224);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Footer de Tabla & Paginación */
+.funeraria-table-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background-color: #FFFFFF;
+  border-top: 1px solid #ECE7DC;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .funeraria-table-footer {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.table-pagination-info {
+  font-size: 0.85rem;
+  color: #737067;
+}
+
+.funeraria-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--funeraria-border-light, #E5E1D7);
+  background-color: #FFFFFF;
+  color: #4A463D;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.page-btn:hover:not(.disabled) {
+  background-color: #F8F6F0;
+  color: #1E221E;
+  border-color: #D5D0C3;
+}
+
+.page-btn.active {
+  background-color: var(--funeraria-primary, #2D4224);
+  border-color: var(--funeraria-primary, #2D4224);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.page-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Alineaciones numéricas para Data Table */
+.text-tabular {
+  font-variant-numeric: tabular-nums;
+}

@@ -23,7 +23,7 @@
 </div>
 
 <!-- Barra de Herramientas: Búsqueda Reactiva y Exportar Directorio -->
-<div class="funeraria-toolbar mb-4">
+<div class="funeraria-toolbar mb-3">
     <div class="funeraria-search-box flex-grow-1">
         <i class="fa-solid fa-magnifying-glass funeraria-search-icon" aria-hidden="true"></i>
         <input type="text" 
@@ -32,6 +32,9 @@
                placeholder="Buscar por nombre, teléfono o CURP" 
                autocomplete="off" 
                aria-label="Buscar clientes" />
+        <button type="button" id="btnClearSearch" class="btn-clear-search" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
     </div>
     <div>
         <button type="button" 
@@ -44,29 +47,56 @@
     </div>
 </div>
 
-<!-- Card Contenedor: Tabla de Clientes Funeraria (Fiel a Figma) -->
+<!-- Filtros Rápidos por Estado (Checklist Design: Filter Controls) -->
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div class="funeraria-filter-pills" role="tablist" aria-label="Filtrar por estado">
+        <button type="button" class="filter-pill active" data-filter="todos" aria-pressed="true">
+            Todos <span class="badge bg-white text-dark ms-1 rounded-pill" id="badgeTotalTodos">4</span>
+        </button>
+        <button type="button" class="filter-pill" data-filter="al corriente" aria-pressed="false">
+            Al corriente <span class="badge bg-success-subtle text-success ms-1 rounded-pill">2</span>
+        </button>
+        <button type="button" class="filter-pill" data-filter="pago vencido" aria-pressed="false">
+            Pago vencido <span class="badge bg-danger-subtle text-danger ms-1 rounded-pill">1</span>
+        </button>
+        <button type="button" class="filter-pill" data-filter="en revisión" aria-pressed="false">
+            En revisión <span class="badge bg-warning-subtle text-warning-emphasis ms-1 rounded-pill">1</span>
+        </button>
+    </div>
+    <div class="text-muted small">
+        <span id="contadorResultados">Mostrando 4 clientes</span>
+    </div>
+</div>
+
+<!-- Card Contenedor: Data Table Funeraria (Diseñada bajo estándares Checklist.design) -->
 <div class="funeraria-table-card card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
     <div class="table-responsive">
-        <table class="table funeraria-table align-middle mb-0" id="tablaClientes">
+        <table class="table funeraria-table align-middle mb-0" id="tablaClientes" aria-label="Directorio de clientes">
             <thead>
                 <tr>
-                    <th scope="col" class="ps-4">CLIENTE</th>
+                    <th scope="col" class="ps-4 th-sortable" data-sort-col="nombre" title="Ordenar por Nombre">
+                        CLIENTE <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
+                    </th>
                     <th scope="col">CONTACTO</th>
                     <th scope="col">CONTRATOS</th>
-                    <th scope="col">SALDO ACTUAL</th>
-                    <th scope="col">ÚLTIMO PAGO</th>
+                    <th scope="col" class="text-end th-sortable" data-sort-col="saldo" title="Ordenar por Saldo Actual">
+                        SALDO ACTUAL <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
+                    </th>
+                    <th scope="col" class="th-sortable" data-sort-col="fecha" title="Ordenar por Fecha de Pago">
+                        ÚLTIMO PAGO <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
+                    </th>
                     <th scope="col">ESTADO</th>
                     <th scope="col" class="text-end pe-4"><span class="visually-hidden">Acciones</span></th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tbodyClientes">
                 <!-- 1. Laura Castañeda -->
-                <tr data-curp="CAL951118MDFRR01">
+                <tr data-curp="CAL951118MDFRR01" data-estado="al corriente" data-nombre="Laura Castañeda" data-saldo="127500.00" data-fecha="2025-11-18">
                     <td class="ps-4">
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-funeraria" aria-hidden="true">LC</div>
                             <div>
-                                <div class="fw-bold text-dark">Laura Castañeda</div>
+                                <div class="fw-bold text-dark nombre-cliente">Laura Castañeda</div>
                                 <div class="text-muted small">Cliente desde nov. 2025</div>
                             </div>
                         </div>
@@ -76,7 +106,7 @@
                         <div class="text-muted small">laura.c@email.mx</div>
                     </td>
                     <td>1 activo</td>
-                    <td class="fw-bold formato-moneda">$127,500.00</td>
+                    <td class="text-end fw-bold formato-moneda text-tabular">$127,500.00</td>
                     <td>18 nov. 2025</td>
                     <td>
                         <span class="badge badge-estado badge-al-corriente">Al corriente</span>
@@ -90,12 +120,12 @@
                 </tr>
 
                 <!-- 2. Roberto Méndez -->
-                <tr data-curp="MER920315HDFNN02">
+                <tr data-curp="MER920315HDFNN02" data-estado="al corriente" data-nombre="Roberto Méndez" data-saldo="58743.20" data-fecha="2025-11-18">
                     <td class="ps-4">
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-funeraria" aria-hidden="true">RM</div>
                             <div>
-                                <div class="fw-bold text-dark">Roberto Méndez</div>
+                                <div class="fw-bold text-dark nombre-cliente">Roberto Méndez</div>
                                 <div class="text-muted small">Cliente desde mar. 2024</div>
                             </div>
                         </div>
@@ -105,7 +135,7 @@
                         <div class="text-muted small">roberto.m@email.mx</div>
                     </td>
                     <td>1 activo</td>
-                    <td class="fw-bold formato-moneda">$58,743.20</td>
+                    <td class="text-end fw-bold formato-moneda text-tabular">$58,743.20</td>
                     <td>18 nov. 2025</td>
                     <td>
                         <span class="badge badge-estado badge-al-corriente">Al corriente</span>
@@ -119,12 +149,12 @@
                 </tr>
 
                 <!-- 3. Elena Vargas -->
-                <tr data-curp="VAE880820MDFRR03">
+                <tr data-curp="VAE880820MDFRR03" data-estado="pago vencido" data-nombre="Elena Vargas" data-saldo="76180.40" data-fecha="2025-10-02">
                     <td class="ps-4">
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-funeraria" aria-hidden="true">EV</div>
                             <div>
-                                <div class="fw-bold text-dark">Elena Vargas</div>
+                                <div class="fw-bold text-dark nombre-cliente">Elena Vargas</div>
                                 <div class="text-muted small">Cliente desde ago. 2023</div>
                             </div>
                         </div>
@@ -134,7 +164,7 @@
                         <div class="text-muted small">elena.v@email.mx</div>
                     </td>
                     <td>2 activos</td>
-                    <td class="fw-bold formato-moneda">$76,180.40</td>
+                    <td class="text-end fw-bold formato-moneda text-tabular">$76,180.40</td>
                     <td>02 oct. 2025</td>
                     <td>
                         <span class="badge badge-estado badge-pago-vencido">Pago vencido</span>
@@ -148,12 +178,12 @@
                 </tr>
 
                 <!-- 4. Jorge Salinas -->
-                <tr data-curp="SAJ900110HDFLL04">
+                <tr data-curp="SAJ900110HDFLL04" data-estado="en revisión" data-nombre="Jorge Salinas" data-saldo="94265.80" data-fecha="2025-11-17">
                     <td class="ps-4">
                         <div class="d-flex align-items-center gap-3">
                             <div class="avatar-funeraria" aria-hidden="true">JS</div>
                             <div>
-                                <div class="fw-bold text-dark">Jorge Salinas</div>
+                                <div class="fw-bold text-dark nombre-cliente">Jorge Salinas</div>
                                 <div class="text-muted small">Cliente desde ene. 2025</div>
                             </div>
                         </div>
@@ -163,7 +193,7 @@
                         <div class="text-muted small">jorge.s@email.mx</div>
                     </td>
                     <td>1 activo</td>
-                    <td class="fw-bold formato-moneda">$94,265.80</td>
+                    <td class="text-end fw-bold formato-moneda text-tabular">$94,265.80</td>
                     <td>17 nov. 2025</td>
                     <td>
                         <span class="badge badge-estado badge-en-revision">En revisión</span>
@@ -176,18 +206,45 @@
                     </td>
                 </tr>
 
-                <!-- Mensaje para cuando la búsqueda no arroje resultados -->
+                <!-- Estado Vacío / Empty State (Checklist Design: No Results) -->
                 <tr id="filaSinResultados" style="display: none;">
                     <td colspan="7" class="text-center py-5">
-                        <div class="py-3 text-muted">
+                        <div class="py-4 text-muted">
                             <i class="fa-solid fa-magnifying-glass fa-2x mb-2 opacity-50 d-block" aria-hidden="true"></i>
-                            <div class="fw-semibold">No se encontraron clientes</div>
-                            <div class="small">Ningún cliente coincide con el criterio de búsqueda ingresado.</div>
+                            <div class="fw-semibold fs-6 text-dark mb-1">No se encontraron clientes</div>
+                            <div class="small mb-3">Ningún registro coincide con el criterio o filtro seleccionado.</div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btnRestablecerFiltros">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Restablecer filtros
+                            </button>
                         </div>
                     </td>
                 </tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Paginación y Resumen de Registros (Checklist Design: Pagination Controls) -->
+    <div class="funeraria-table-footer">
+        <div class="table-pagination-info">
+            Mostrando <strong id="pagDesde">1</strong> a <strong id="pagHasta">4</strong> de <strong id="pagTotal">4</strong> clientes
+        </div>
+        <nav aria-label="Navegación de páginas de clientes">
+            <ul class="funeraria-pagination">
+                <li>
+                    <button type="button" class="page-btn disabled" aria-label="Página anterior" title="Página anterior">
+                        <i class="fa-solid fa-chevron-left small" aria-hidden="true"></i>
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="page-btn active" aria-current="page">1</button>
+                </li>
+                <li>
+                    <button type="button" class="page-btn disabled" aria-label="Página siguiente" title="Página siguiente">
+                        <i class="fa-solid fa-chevron-right small" aria-hidden="true"></i>
+                    </button>
+                </li>
+            </ul>
+        </nav>
     </div>
 </div>
 
@@ -196,25 +253,41 @@
 
 @section Scripts {
     <script>
-        // Filtrado reactivo en tiempo real del lado cliente (SF-020)
+        // Data Table Controller: Búsqueda, Filtros de Estado y Ordenamiento (Checklist.design)
         document.addEventListener('DOMContentLoaded', function () {
             var inputBuscar = document.getElementById('inputBuscarClientes');
-            var tabla = document.getElementById('tablaClientes');
-            if (!inputBuscar || !tabla) return;
-
-            var filas = tabla.querySelectorAll('tbody tr:not(#filaSinResultados)');
+            var btnClear = document.getElementById('btnClearSearch');
+            var btnReset = document.getElementById('btnRestablecerFiltros');
+            var tbody = document.getElementById('tbodyClientes');
             var filaVacia = document.getElementById('filaSinResultados');
+            var contadorResultados = document.getElementById('contadorResultados');
+            var pagDesde = document.getElementById('pagDesde');
+            var pagHasta = document.getElementById('pagHasta');
+            var pagTotal = document.getElementById('pagTotal');
+            var filterPills = document.querySelectorAll('.filter-pill');
+            var sortHeaders = document.querySelectorAll('.th-sortable');
 
-            inputBuscar.addEventListener('input', function () {
-                var termino = this.value.toLowerCase().trim();
+            if (!inputBuscar || !tbody) return;
+
+            var estadoFiltroActivo = 'todos';
+            var ordenActual = { columna: null, ascendente: true };
+
+            function aplicarFiltros() {
+                var termino = inputBuscar.value.toLowerCase().trim();
+                btnClear.style.display = termino.length > 0 ? 'block' : 'none';
+
+                var filas = tbody.querySelectorAll('tr:not(#filaSinResultados)');
                 var visibles = 0;
 
                 filas.forEach(function (fila) {
-                    var contenidoTexto = fila.textContent.toLowerCase();
+                    var textoFila = fila.textContent.toLowerCase();
                     var curp = (fila.getAttribute('data-curp') || '').toLowerCase();
-                    var coincide = contenidoTexto.indexOf(termino) > -1 || curp.indexOf(termino) > -1;
+                    var estadoFila = (fila.getAttribute('data-estado') || '').toLowerCase();
 
-                    if (coincide) {
+                    var coincideTexto = termino === '' || textoFila.indexOf(termino) > -1 || curp.indexOf(termino) > -1;
+                    var coincideEstado = estadoFiltroActivo === 'todos' || estadoFila === estadoFiltroActivo;
+
+                    if (coincideTexto && coincideEstado) {
                         fila.style.display = '';
                         visibles++;
                     } else {
@@ -225,6 +298,96 @@
                 if (filaVacia) {
                     filaVacia.style.display = visibles === 0 ? '' : 'none';
                 }
+
+                // Actualizar contadores
+                if (contadorResultados) {
+                    contadorResultados.textContent = 'Mostrando ' + visibles + ' de ' + filas.length + ' clientes';
+                }
+                if (pagDesde && pagHasta && pagTotal) {
+                    pagDesde.textContent = visibles > 0 ? '1' : '0';
+                    pagHasta.textContent = visibles;
+                    pagTotal.textContent = visibles;
+                }
+            }
+
+            // Evento Input en buscador
+            inputBuscar.addEventListener('input', aplicarFiltros);
+
+            // Botón Limpiar búsqueda
+            if (btnClear) {
+                btnClear.addEventListener('click', function () {
+                    inputBuscar.value = '';
+                    inputBuscar.focus();
+                    aplicarFiltros();
+                });
+            }
+
+            // Botón Restablecer filtros en empty state
+            if (btnReset) {
+                btnReset.addEventListener('click', function () {
+                    inputBuscar.value = '';
+                    estadoFiltroActivo = 'todos';
+                    filterPills.forEach(function (pill) {
+                        pill.classList.toggle('active', pill.getAttribute('data-filter') === 'todos');
+                    });
+                    aplicarFiltros();
+                });
+            }
+
+            // Filtros rápidos por estado
+            filterPills.forEach(function (pill) {
+                pill.addEventListener('click', function () {
+                    filterPills.forEach(function (p) { p.classList.remove('active'); });
+                    this.classList.add('active');
+                    estadoFiltroActivo = this.getAttribute('data-filter') || 'todos';
+                    aplicarFiltros();
+                });
+            });
+
+            // Ordenamiento interactivo por cabeceras (Checklist Design: Sorting)
+            sortHeaders.forEach(function (th) {
+                th.addEventListener('click', function () {
+                    var col = this.getAttribute('data-sort-col');
+                    if (ordenActual.columna === col) {
+                        ordenActual.ascendente = !ordenActual.ascendente;
+                    } else {
+                        ordenActual.columna = col;
+                        ordenActual.ascendente = true;
+                    }
+
+                    // Actualizar iconos de ordenación
+                    sortHeaders.forEach(function (header) {
+                        var icon = header.querySelector('.sort-icon');
+                        if (icon) {
+                            icon.className = 'fa-solid fa-sort sort-icon';
+                        }
+                    });
+                    var currentIcon = this.querySelector('.sort-icon');
+                    if (currentIcon) {
+                        currentIcon.className = ordenActual.ascendente ? 'fa-solid fa-sort-up sort-icon text-dark' : 'fa-solid fa-sort-down sort-icon text-dark';
+                    }
+
+                    // Ordenar elementos en el DOM
+                    var filasArray = Array.from(tbody.querySelectorAll('tr:not(#filaSinResultados)'));
+                    filasArray.sort(function (a, b) {
+                        var valorA = a.getAttribute('data-' + col) || '';
+                        var valorB = b.getAttribute('data-' + col) || '';
+
+                        if (col === 'saldo') {
+                            var numA = parseFloat(valorA) || 0;
+                            var numB = parseFloat(valorB) || 0;
+                            return ordenActual.ascendente ? numA - numB : numB - numA;
+                        }
+
+                        return ordenActual.ascendente 
+                            ? valorA.localeCompare(valorB, 'es', { numeric: true }) 
+                            : valorB.localeCompare(valorA, 'es', { numeric: true });
+                    });
+
+                    filasArray.forEach(function (row) {
+                        tbody.insertBefore(row, filaVacia);
+                    });
+                });
             });
         });
     </script>
