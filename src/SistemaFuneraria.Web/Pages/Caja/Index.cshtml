@@ -1,0 +1,380 @@
+@page
+@model SistemaFuneraria.Web.Pages.Caja.IndexModel
+@{
+    ViewData["Title"] = "Caja y cobranza - Operación Diaria";
+}
+
+<!-- ========================================================
+     1. ENCABEZADO DE PÁGINA (Figma Captura 10)
+     ======================================================== -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+        <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.08em; font-size: 0.75rem;">OPERACIÓN DIARIA</span>
+        <h1 class="fw-bold mt-1 mb-1" style="color: var(--sf-text-dark, #1F2937); font-size: 2.25rem; letter-spacing: -0.02em;">Caja y cobranza</h1>
+        <p class="text-muted mb-0" style="font-size: 1rem;">Registra pagos, abonos a capital y liquidaciones anticipadas.</p>
+    </div>
+
+    <!-- Badge de Estado de Caja (Pill Superior Derecha) -->
+    <div class="d-inline-flex align-items-center gap-2 bg-white px-3 py-2 rounded-4 border shadow-sm" style="min-width: 170px;">
+        <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #10B981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);"></span>
+        <div class="d-flex flex-column">
+            <span class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.15;">Caja abierta</span>
+            <span class="text-muted" style="font-size: 0.72rem; line-height: 1.15;">Desde las 08:02</span>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================
+     2. GRID PRINCIPAL DE 2 COLUMNAS (Figma Captura 10)
+     ======================================================== -->
+<div class="row g-4">
+    <!-- ====================================================
+         COLUMNA IZQUIERDA: Panel "Registrar movimiento" (SF-080)
+         ==================================================== -->
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+            <div class="mb-4">
+                <h2 class="h5 fw-bold mb-1" style="color: var(--sf-text-dark, #1F2937);">Registrar movimiento</h2>
+                <p class="text-muted small mb-0">Localiza el contrato para aplicar un pago.</p>
+            </div>
+
+            <!-- Buscador de Contrato -->
+            <div class="position-relative mb-4">
+                <div class="input-group input-group-lg rounded-3 overflow-hidden border">
+                    <span class="input-group-text bg-white border-0 ps-3 pe-2 text-muted">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" 
+                           id="inputBuscadorContrato" 
+                           class="form-control border-0 ps-1 py-3 text-dark fw-medium" 
+                           placeholder="Buscar por folio de contrato (ej. CTR-2024-0118)..." 
+                           value="@Model.FolioContrato"
+                           aria-label="Localizar contrato"
+                           autocomplete="off" />
+                    <button type="button" 
+                            id="btnLimpiarBuscador" 
+                            class="btn bg-white border-0 text-muted px-3" 
+                            title="Limpiar búsqueda"
+                            onclick="limpiarBuscador()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Cliente Localizado (Elena Vargas) -->
+            <div id="cardClienteLocalizado" class="p-3 mb-4 rounded-3 d-flex align-items-center justify-content-between" style="background-color: #FAF8F5; border: 1px solid #EBE5DC;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" 
+                         style="width: 48px; height: 48px; background-color: #D3C3A8; color: #4B3F2F; font-size: 1rem; flex-shrink: 0;"
+                         id="avatarCliente">
+                        @Model.InicialesCliente
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark fs-6" id="nombreCliente">@Model.ClienteNombre</div>
+                        <div class="text-muted small" id="detalleContrato">@Model.FolioContrato · @Model.UbicacionLote</div>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge rounded-pill fw-semibold px-3 py-2" 
+                          id="badgeEstadoCliente" 
+                          style="background-color: #FEE8E8; color: #B91C1C; border: 1px solid #FCA5A5; font-size: 0.8rem;">
+                        @Model.EstadoCuota
+                    </span>
+                </div>
+            </div>
+
+            <!-- Selector de Tipo de Movimiento (3 Tarjetas Interactivas) -->
+            <div class="row g-3 mb-4">
+                <!-- 1. Mensualidad (Pago ordinario) -->
+                <div class="col-12 col-md-4">
+                    <div id="cardOpcionMensualidad" 
+                         class="card-movimiento active h-100 p-3 rounded-3" 
+                         onclick="seleccionarMovimiento('mensualidad')">
+                        <i class="fa-solid fa-credit-card fs-5 mb-2 icono-movimiento"></i>
+                        <div class="fw-bold titulo-movimiento">Mensualidad</div>
+                        <div class="text-muted small subtitulo-movimiento">Pago ordinario</div>
+                    </div>
+                </div>
+
+                <!-- 2. Abono a capital (Reduce mensualidad) -->
+                <div class="col-12 col-md-4">
+                    <div id="cardOpcionAbono" 
+                         class="card-movimiento h-100 p-3 rounded-3" 
+                         onclick="seleccionarMovimiento('abono')">
+                        <i class="fa-solid fa-arrow-trend-down fs-5 mb-2 icono-movimiento"></i>
+                        <div class="fw-bold titulo-movimiento">Abono a capital</div>
+                        <div class="text-muted small subtitulo-movimiento">Reduce mensualidad</div>
+                    </div>
+                </div>
+
+                <!-- 3. Liquidación (Cierre anticipado) -->
+                <div class="col-12 col-md-4">
+                    <div id="cardOpcionLiquidacion" 
+                         class="card-movimiento h-100 p-3 rounded-3" 
+                         onclick="seleccionarMovimiento('liquidacion')">
+                        <i class="fa-solid fa-check fs-5 mb-2 icono-movimiento"></i>
+                        <div class="fw-bold titulo-movimiento">Liquidación</div>
+                        <div class="text-muted small subtitulo-movimiento">Cierre anticipado</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Cobro (Integrado según Figma Captura 10) -->
+            <form id="formAplicarPago" onsubmit="event.preventDefault(); procesarPago();">
+                <div class="row g-3 mb-3">
+                    <!-- Importe a recibir -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-medium mb-1">Importe a recibir</label>
+                        <div class="input-group rounded-3 overflow-hidden border">
+                            <span class="input-group-text bg-white border-0 text-muted ps-3 pe-1 fw-medium">$</span>
+                            <input type="text" 
+                                   id="inputImporteRecibir" 
+                                   class="form-control border-0 sf-money fw-bold text-dark py-2 ps-1" 
+                                   value="6,248.50" 
+                                   readonly />
+                        </div>
+                    </div>
+
+                    <!-- Método de pago -->
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-medium mb-1">Método de pago</label>
+                        <select id="selectMetodoPago" class="form-select rounded-3 py-2 text-dark fw-medium border">
+                            <option value="Transferencia bancaria" selected>Transferencia bancaria</option>
+                            <option value="Efectivo">Efectivo en ventanilla</option>
+                            <option value="Tarjeta">Tarjeta de Débito / Crédito</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Referencia -->
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-medium mb-1">Referencia</label>
+                    <input type="text" 
+                           id="inputReferencia" 
+                           class="form-control rounded-3 py-2 border" 
+                           placeholder="Folio o últimos 4 dígitos" />
+                </div>
+
+                <!-- Botón Principal Aplicar Pago -->
+                <button type="submit" 
+                        id="btnAplicarPago" 
+                        class="btn w-100 py-3 fw-bold rounded-3 text-white d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                        style="background-color: #4A5B37; border-color: #4A5B37; font-size: 1.05rem;">
+                    <span>Aplicar pago por $6,248.50</span>
+                </button>
+            </form>
+
+            <!-- Alerta Éxito Dinámica -->
+            <div id="alertaPagoExitoso" class="alert alert-success d-none align-items-center justify-content-between rounded-4 shadow-sm mt-4 border-0" role="alert" style="background-color: #E8F5E9; color: #1B5E20;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-check fs-4 text-success"></i>
+                    <div>
+                        <strong id="textoPagoExitoso">¡Pago registrado exitosamente!</strong>
+                        <div class="small" id="subtextoPagoExitoso">Comprobante oficial emitido. Saldo de la cuota actualizado.</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" onclick="document.getElementById('alertaPagoExitoso').classList.add('d-none');"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+         COLUMNA DERECHA: Corte del día & Alertas (Figma Captura 10)
+         ==================================================== -->
+    <div class="col-12 col-lg-4">
+        <!-- Card: Corte del día -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+            <div class="mb-4">
+                <h3 class="h5 fw-bold mb-1" style="color: var(--sf-text-dark, #1F2937);">Corte del día</h3>
+                <p class="text-muted small mb-0">18 de noviembre de 2025</p>
+            </div>
+
+            <div class="d-flex flex-column gap-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center text-muted small">
+                    <span>Saldo inicial</span>
+                    <span class="sf-money text-dark fw-semibold">$2,000.00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center text-muted small">
+                    <span>Pagos recibidos</span>
+                    <span class="fw-semibold text-dark" id="contadorPagosRecibidos">12</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center text-muted small">
+                    <span>Ingresos del día</span>
+                    <span class="sf-money text-dark fw-semibold" id="montoIngresosDia">$74,982.00</span>
+                </div>
+            </div>
+
+            <hr class="my-3 text-muted opacity-25" />
+
+            <div class="d-flex justify-content-between align-items-baseline mb-4">
+                <span class="text-muted fw-medium">Total en caja</span>
+                <span class="sf-money fs-4 fw-bold text-dark" id="montoTotalCaja">$76,982.00</span>
+            </div>
+
+            <button type="button" 
+                    class="btn btn-outline-secondary w-100 py-2 rounded-3 fw-medium text-dark border-secondary-subtle" 
+                    onclick="alert('Resumen de corte del día listo para impresión o cierre de turno.')">
+                Preparar corte
+            </button>
+        </div>
+
+        <!-- Card: Alerta de Cartera Vencida -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex align-items-start gap-3">
+                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
+                     style="width: 42px; height: 42px; background-color: #FDE8E8; color: #DC2626;">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div>
+                    <h4 class="h6 fw-bold mb-1 text-dark">8 pagos requieren atención</h4>
+                    <p class="text-muted small mb-2">Contacta a los clientes con mensualidades vencidas.</p>
+                    <a href="/Clientes" class="fw-semibold small text-decoration-none" style="color: #4A5B37;">
+                        Revisar cartera vencida <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos de las 3 Tarjetas de Selección de Movimiento */
+    .card-movimiento {
+        background-color: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .card-movimiento:hover {
+        border-color: #2D4224;
+        background-color: #FAFBF9;
+    }
+
+    .card-movimiento.active {
+        border: 2px solid #2D4224 !important;
+        background-color: #F4F7F2 !important;
+    }
+
+    .card-movimiento .icono-movimiento {
+        color: #6B7280;
+        transition: color 0.2s ease;
+    }
+
+    .card-movimiento.active .icono-movimiento {
+        color: #2D4224;
+    }
+
+    .card-movimiento .titulo-movimiento {
+        color: #1F2937;
+        font-size: 0.95rem;
+    }
+
+    .card-movimiento.active .titulo-movimiento {
+        color: #2D4224;
+    }
+</style>
+
+<!-- ========================================================
+     VANILLA JS: Conmutador de Movimiento y Búsqueda
+     ======================================================== -->
+<script>
+    let tipoMovimientoActual = 'mensualidad';
+    const montos = {
+        mensualidad: '6,248.50',
+        abono: '10,000.00',
+        liquidacion: '77,893.39'
+    };
+
+    function seleccionarMovimiento(tipo) {
+        tipoMovimientoActual = tipo;
+
+        // Remover active de todas
+        document.getElementById('cardOpcionMensualidad').classList.remove('active');
+        document.getElementById('cardOpcionAbono').classList.remove('active');
+        document.getElementById('cardOpcionLiquidacion').classList.remove('active');
+
+        const inputImporte = document.getElementById('inputImporteRecibir');
+        const btnPago = document.getElementById('btnAplicarPago');
+
+        if (tipo === 'mensualidad') {
+            document.getElementById('cardOpcionMensualidad').classList.add('active');
+            inputImporte.value = montos.mensualidad;
+            inputImporte.readOnly = true;
+            btnPago.innerHTML = '<span>Aplicar pago por $' + montos.mensualidad + '</span>';
+        } else if (tipo === 'abono') {
+            document.getElementById('cardOpcionAbono').classList.add('active');
+            inputImporte.value = montos.abono;
+            inputImporte.readOnly = false; // Permitir al usuario cambiar el importe de abono extraordinario
+            btnPago.innerHTML = '<span>Aplicar abono por $' + inputImporte.value + '</span>';
+        } else if (tipo === 'liquidacion') {
+            document.getElementById('cardOpcionLiquidacion').classList.add('active');
+            inputImporte.value = montos.liquidacion;
+            inputImporte.readOnly = true;
+            btnPago.innerHTML = '<span>Aplicar liquidación por $' + montos.liquidacion + '</span>';
+        }
+    }
+
+    // Actualizar texto del botón si edita el input de abono
+    document.getElementById('inputImporteRecibir')?.addEventListener('input', function(e) {
+        if (tipoMovimientoActual === 'abono') {
+            document.getElementById('btnAplicarPago').innerHTML = '<span>Aplicar abono por $' + e.target.value + '</span>';
+        }
+    });
+
+    function limpiarBuscador() {
+        const input = document.getElementById('inputBuscadorContrato');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    // Buscador interactivo
+    document.getElementById('inputBuscadorContrato')?.addEventListener('keyup', function(e) {
+        const query = e.target.value.trim().toUpperCase();
+        const cardCliente = document.getElementById('cardClienteLocalizado');
+
+        if (query === '' || query.length < 3) {
+            return;
+        }
+
+        if (query.includes('0118') || query.includes('VARGAS')) {
+            document.getElementById('avatarCliente').textContent = 'EV';
+            document.getElementById('nombreCliente').textContent = 'Elena Vargas';
+            document.getElementById('detalleContrato').textContent = 'CTR-2024-0118 · Lote RO-B-027';
+            document.getElementById('badgeEstadoCliente').textContent = '1 vencido';
+            document.getElementById('badgeEstadoCliente').style.backgroundColor = '#FEE8E8';
+            document.getElementById('badgeEstadoCliente').style.color = '#B91C1C';
+            cardCliente.classList.remove('d-none');
+        } else if (query.includes('0189') || query.includes('MENDOZA')) {
+            document.getElementById('avatarCliente').textContent = 'CM';
+            document.getElementById('nombreCliente').textContent = 'Carlos Mendoza';
+            document.getElementById('detalleContrato').textContent = 'CTR-2025-0189 · Lote JN-A-042';
+            document.getElementById('badgeEstadoCliente').textContent = 'Al corriente';
+            document.getElementById('badgeEstadoCliente').style.backgroundColor = '#E8F5E9';
+            document.getElementById('badgeEstadoCliente').style.color = '#1B5E20';
+            cardCliente.classList.remove('d-none');
+        }
+    });
+
+    function procesarPago() {
+        const alerta = document.getElementById('alertaPagoExitoso');
+        const txt = document.getElementById('textoPagoExitoso');
+        const sub = document.getElementById('subtextoPagoExitoso');
+        const monto = document.getElementById('inputImporteRecibir').value;
+        const metodo = document.getElementById('selectMetodoPago').value;
+
+        if (alerta && txt && sub) {
+            txt.textContent = '¡Pago de $' + monto + ' aplicado con éxito!';
+            sub.textContent = 'Método: ' + metodo + ' · Recibo foliado emitido correctamente.';
+            alerta.classList.remove('d-none');
+
+            // Actualizar contadores del Corte del día en vivo
+            const contador = document.getElementById('contadorPagosRecibidos');
+            if (contador) {
+                contador.textContent = (parseInt(contador.textContent || '12') + 1).toString();
+            }
+        }
+    }
+</script>
