@@ -356,44 +356,66 @@ body.funeraria-app {
   font-weight: 400;
 }
 
-/* Botones Funeraria */
-.btn-funeraria-primary {
-  background-color: var(--funeraria-primary);
-  border: 1px solid var(--funeraria-primary);
-  color: #FFFFFF;
-  font-weight: 600;
-  font-size: 0.9rem;
-  padding: 0.65rem 1.25rem;
-  border-radius: 8px;
-  transition: all 0.15s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+/* Botones Funeraria & Serenia */
+.btn.btn-funeraria-primary,
+.btn-funeraria-primary,
+.btn.btn-serenia-primary,
+.btn-serenia-primary {
+  --bs-btn-color: #FFFFFF !important;
+  --bs-btn-bg: #2D4224 !important;
+  --bs-btn-border-color: #2D4224 !important;
+  --bs-btn-hover-color: #FFFFFF !important;
+  --bs-btn-hover-bg: #22341B !important;
+  --bs-btn-hover-border-color: #22341B !important;
+  background-color: #2D4224 !important;
+  border: 1px solid #2D4224 !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  padding: 0.65rem 1.25rem !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease-in-out !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
 }
 
+.btn.btn-funeraria-primary:hover,
 .btn-funeraria-primary:hover,
-.btn-funeraria-primary:focus {
-  background-color: var(--funeraria-primary-hover);
-  border-color: var(--funeraria-primary-hover);
-  color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(45, 66, 36, 0.25);
+.btn.btn-funeraria-primary:focus,
+.btn-funeraria-primary:focus,
+.btn.btn-serenia-primary:hover,
+.btn-serenia-primary:hover,
+.btn.btn-serenia-primary:focus,
+.btn-serenia-primary:focus {
+  background-color: #22341B !important;
+  border-color: #22341B !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(45, 66, 36, 0.3) !important;
 }
 
-.btn-funeraria-secondary {
-  background-color: #FFFFFF;
-  border: 1px solid var(--funeraria-border-light);
-  color: #4A463D;
-  font-weight: 500;
-  font-size: 0.9rem;
-  padding: 0.65rem 1.25rem;
-  border-radius: 8px;
-  transition: all 0.15s ease-in-out;
+.btn.btn-funeraria-secondary,
+.btn-funeraria-secondary,
+.btn.btn-serenia-secondary,
+.btn-serenia-secondary {
+  background-color: #FFFFFF !important;
+  border: 1px solid var(--funeraria-border-light, #E5E1D7) !important;
+  color: #4A463D !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  padding: 0.65rem 1.25rem !important;
+  border-radius: 8px !important;
+  transition: all 0.15s ease-in-out !important;
 }
 
-.btn-funeraria-secondary:hover {
-  background-color: #F8F6F0;
-  color: var(--funeraria-text-dark);
-  border-color: #D5D0C3;
+.btn.btn-funeraria-secondary:hover,
+.btn-funeraria-secondary:hover,
+.btn.btn-serenia-secondary:hover,
+.btn-serenia-secondary:hover {
+  background-color: #F8F6F0 !important;
+  color: var(--funeraria-text-dark, #1E221E) !important;
+  border-color: #D5D0C3 !important;
 }
 
 /* Modal Registrar Nuevo Cliente */
