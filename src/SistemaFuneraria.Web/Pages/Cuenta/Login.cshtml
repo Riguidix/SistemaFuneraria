@@ -359,7 +359,7 @@
                     <!-- Correo Electrónico -->
                     <div class="mb-3">
                         <label asp-for="Input.Email" class="sign-in-label">Correo electrónico</label>
-                        <input asp-for="Input.Email" class="sign-in-input" placeholder="ejemplo@funeraria.mx" autocomplete="email" required />
+                        <input asp-for="Input.Email" id="Input_Email" class="sign-in-input" placeholder="ejemplo@funeraria.mx" autocomplete="email" required />
                         <span asp-validation-for="Input.Email" class="text-danger small mt-1 d-block"></span>
                     </div>
 
@@ -367,7 +367,7 @@
                     <div class="mb-3">
                         <label asp-for="Input.Password" class="sign-in-label">Contraseña</label>
                         <div class="password-input-wrapper">
-                            <input asp-for="Input.Password" class="sign-in-input" placeholder="••••••••" autocomplete="current-password" required />
+                            <input asp-for="Input.Password" id="Input_Password" class="sign-in-input" placeholder="••••••••" autocomplete="current-password" required />
                             <button type="button" class="btn-eye-toggle" id="btnTogglePassword" title="Mostrar u ocultar contraseña">
                                 <i class="fa-solid fa-eye-slash"></i>
                             </button>
@@ -404,19 +404,19 @@
                 <!-- Botones de Acceso Directo de Prueba (1-Clic) -->
                 <div>
                     <!-- 1. Administrador: Andrea -->
-                    <button type="button" class="btn-demo-access btn-demo-role" data-role="admin" title="Cargar credenciales de Administrador">
+                    <button type="button" class="btn-demo-access btn-demo-role" data-role="admin" onclick="cargarCredencialesDemo('admin')" title="Cargar credenciales de Administrador">
                         <i class="fa-solid fa-user-shield me-2 text-success"></i>
                         <span>Acceso directo (Administrador: Andrea)</span>
                     </button>
 
                     <!-- 2. Vendedor: Roberto -->
-                    <button type="button" class="btn-demo-access btn-demo-role" data-role="vendedor" title="Cargar credenciales de Vendedor">
+                    <button type="button" class="btn-demo-access btn-demo-role" data-role="vendedor" onclick="cargarCredencialesDemo('vendedor')" title="Cargar credenciales de Vendedor">
                         <i class="fa-solid fa-user-tie me-2 text-primary"></i>
                         <span>Acceso directo (Vendedor: Roberto)</span>
                     </button>
 
                     <!-- 3. Cajero de Sucursal -->
-                    <button type="button" class="btn-demo-access btn-demo-role" data-role="cajero" title="Cargar credenciales de Cajero">
+                    <button type="button" class="btn-demo-access btn-demo-role" data-role="cajero" onclick="cargarCredencialesDemo('cajero')" title="Cargar credenciales de Cajero">
                         <i class="fa-solid fa-cash-register me-2 text-warning"></i>
                         <span>Acceso directo (Cajero de Sucursal)</span>
                     </button>
@@ -433,6 +433,24 @@
 
     <!-- Scripts -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function cargarCredencialesDemo(role) {
+            var emailInput = document.getElementById('Input_Email');
+            var passwordInput = document.getElementById('Input_Password');
+            if (!emailInput || !passwordInput) return;
+
+            if (role === 'admin') {
+                emailInput.value = 'andrea.morales@funeraria.mx';
+                passwordInput.value = 'Admin2026*';
+            } else if (role === 'vendedor') {
+                emailInput.value = 'roberto.mendez@funeraria.mx';
+                passwordInput.value = 'Ventas2026*';
+            } else if (role === 'cajero') {
+                emailInput.value = 'cajero@funeraria.mx';
+                passwordInput.value = 'Caja2026*';
+            }
+        }
+    </script>
     <script src="~/js/pages/loginPage.js" asp-append-version="true"></script>
 </body>
 </html>
