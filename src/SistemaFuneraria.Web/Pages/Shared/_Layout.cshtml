@@ -18,6 +18,7 @@
     var rutaActual = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
     bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
+    bool esContratos = rutaActual.StartsWith("/Contratos", StringComparison.OrdinalIgnoreCase);
     bool esCaja = rutaActual.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase) || rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
     bool esParametrosUi = rutaActual.StartsWith("/ParametrosUi", StringComparison.OrdinalIgnoreCase);
 }
@@ -68,9 +69,9 @@
                             <span>+ Nueva venta</span>
                         </a>
                     </li>
-                    <!-- 5. Contratos (Inerte) -->
+                    <!-- 5. Contratos (Activo SF-070) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Contratos (No navegable)">
+                        <a href="/Contratos" class="funeraria-nav-item @(esContratos ? "active" : "")" @(esContratos ? "aria-current=\"page\"" : "") title="Contratos">
                             <i class="fa-solid fa-file-lines fa-fw" aria-hidden="true"></i>
                             <span>Contratos</span>
                         </a>
