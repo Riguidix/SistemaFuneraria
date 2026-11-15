@@ -35,3 +35,8 @@ Iniciando la ejecución de pruebas, espere...
 Correctas! - Con error:     0, Superado:     3, Omitido:     0, Total:     3, Duración: 3 ms - SistemaFuneraria.Tests.dll (net8.0)
 Total de la suite: 281 pruebas ejecutadas, 281 aprobadas (100% GREEN).
 ```
+
+### 3. Evidencia Visual Verificada (Cero Fantasía)
+![Pantalla de Inicio de Sesión y Accesos Directos](./vista_login.jpg)
+- **Fidelidad Figma:** Panel memorial verde olivo (`#2D4224`), cita institucional, inputs de credenciales con alternador de visibilidad y accesos directos de 1-clic para Administrador, Vendedor y Cajero.
+
