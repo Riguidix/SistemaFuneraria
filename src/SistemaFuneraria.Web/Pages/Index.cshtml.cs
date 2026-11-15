@@ -14,6 +14,6 @@ public class IndexModel : PageModel
 
     public IActionResult OnGet()
     {
-        return RedirectToPage("/Clientes/Index");
+        return RedirectToPage("/Cuenta/Login");
     }
 }
