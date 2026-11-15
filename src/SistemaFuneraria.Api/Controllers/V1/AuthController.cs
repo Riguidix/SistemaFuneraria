@@ -1,157 +1,126 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using SistemaFuneraria.Application.DTOs.Auth;
+using SistemaFuneraria.Core.Comun;
 
 namespace SistemaFuneraria.Api.Controllers.V1;
 
 /// <summary>
-/// Controlador de autenticación con máquina de estados, bloqueo temporal y mitigación anti-enumeración (SF-023).
+/// Controlador de autenticación con máquina de estados, JWT firmado, bloqueo temporal y mitigación anti-enumeración (SF-023).
 /// </summary>
 [ApiController]
 [Route("api/v1/auth")]
-public class AuthController(UserManager<IdentityUser> userManager) : ApiControllerBase
+public class AuthController(UserManager<IdentityUser> userManager, IConfiguration configuration) : ApiControllerBase
 {
-    private readonly UserManager<IdentityUser> _userManager = userManager;
-
     /// <summary>
     /// Inicia sesión de usuario con control de lockout (5 intentos / 15 minutos) y advertencia preventiva al 3.er intento.
     /// </summary>
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest? request)
     {
         if (request == null || string.IsNullOrWhiteSpace(request.Correo) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return BadRequest(Problem(
+            return Problem(
                 detail: "El correo y la contraseña son requeridos.",
                 statusCode: StatusCodes.Status400BadRequest,
-                title: "Parámetros inválidos"));
+                title: "Parámetros inválidos");
         }
 
-        var user = await _userManager.FindByEmailAsync(request.Correo);
+        var user = await userManager.FindByEmailAsync(request.Correo);
         if (user == null)
         {
-            // Mitigación anti-enumeración: respuesta 401 idéntica a credencial errónea
-            return Unauthorized(new LoginResponseDto(
-                Token: string.Empty,
-                UsuarioId: string.Empty,
-                NombreCompleto: string.Empty,
-                Iniciales: string.Empty,
-                Correo: request.Correo,
-                Rol: string.Empty,
-                Sucursal: "Jardines del Valle",
-                IntentosFallidos: 1,
-                MinutosBloqueoRestantes: null,
-                AdvertenciaSeguridad: null
-            ));
+            return Unauthorized(CrearRespuestaFallida(
+                usuarioId: string.Empty,
+                correo: request.Correo,
+                intentosFallidos: 1));
         }
 
-        if (await _userManager.IsLockedOutAsync(user))
+        if (await userManager.IsLockedOutAsync(user))
         {
-            int minutosRestantes = 15;
-            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
-            {
-                minutosRestantes = Math.Max(1, (int)Math.Ceiling((user.LockoutEnd.Value - DateTimeOffset.UtcNow).TotalMinutes));
-            }
-
-            return StatusCode(StatusCodes.Status423Locked, new LoginResponseDto(
-                Token: string.Empty,
-                UsuarioId: user.Id,
-                NombreCompleto: user.UserName ?? string.Empty,
-                Iniciales: string.Empty,
-                Correo: user.Email ?? request.Correo,
-                Rol: string.Empty,
-                Sucursal: "Jardines del Valle",
-                IntentosFallidos: user.AccessFailedCount,
-                MinutosBloqueoRestantes: minutosRestantes,
-                AdvertenciaSeguridad: $"Cuenta bloqueada temporalmente. Intenta nuevamente en {minutosRestantes} minutos."
-            ));
+            int minutosRestantes = CalcularMinutosBloqueoRestantes(user);
+            return StatusCode(StatusCodes.Status423Locked, CrearRespuestaBloqueada(
+                user,
+                request.Correo,
+                user.AccessFailedCount,
+                minutosRestantes,
+                $"Cuenta bloqueada temporalmente. Intenta nuevamente en {minutosRestantes} minutos."));
         }
 
-        bool esPasswordValido = await _userManager.CheckPasswordAsync(user, request.Password);
+        bool esPasswordValido = await userManager.CheckPasswordAsync(user, request.Password);
         if (!esPasswordValido)
         {
-            await _userManager.AccessFailedAsync(user);
-            bool estaBloqueado = await _userManager.IsLockedOutAsync(user);
-            int intentos = await _userManager.GetAccessFailedCountAsync(user);
+            await userManager.AccessFailedAsync(user);
+            var estaBloqueado = await userManager.IsLockedOutAsync(user);
+            var intentos = await userManager.GetAccessFailedCountAsync(user);
 
             if (estaBloqueado || intentos >= 5)
             {
-                await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddMinutes(15));
-                return StatusCode(StatusCodes.Status423Locked, new LoginResponseDto(
-                    Token: string.Empty,
-                    UsuarioId: user.Id,
-                    NombreCompleto: user.UserName ?? string.Empty,
-                    Iniciales: string.Empty,
-                    Correo: user.Email ?? request.Correo,
-                    Rol: string.Empty,
-                    Sucursal: "Jardines del Valle",
-                    IntentosFallidos: 5,
-                    MinutosBloqueoRestantes: 15,
-                    AdvertenciaSeguridad: "Cuenta bloqueada temporalmente. Intenta nuevamente en 15 minutos."
-                ));
+                await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddMinutes(15));
+                return StatusCode(StatusCodes.Status423Locked, CrearRespuestaBloqueada(
+                    user,
+                    request.Correo,
+                    5,
+                    15,
+                    "Cuenta bloqueada temporalmente. Intenta nuevamente en 15 minutos."));
             }
 
-            string? advertencia = null;
-            if (intentos == 3)
-            {
-                advertencia = "Advertencia: Si alcanzas 5 intentos fallidos tu cuenta será bloqueada temporalmente por seguridad";
-            }
+            var advertencia = intentos == 3
+                ? "Advertencia: Si alcanzas 5 intentos fallidos tu cuenta será bloqueada temporalmente por seguridad"
+                : null;
 
-            return Unauthorized(new LoginResponseDto(
-                Token: string.Empty,
-                UsuarioId: user.Id,
-                NombreCompleto: string.Empty,
-                Iniciales: string.Empty,
-                Correo: user.Email ?? request.Correo,
-                Rol: string.Empty,
-                Sucursal: "Jardines del Valle",
-                IntentosFallidos: intentos,
-                MinutosBloqueoRestantes: null,
-                AdvertenciaSeguridad: advertencia
-            ));
+            return Unauthorized(CrearRespuestaFallida(
+                usuarioId: user.Id,
+                correo: user.Email ?? request.Correo,
+                intentosFallidos: intentos,
+                advertenciaSeguridad: advertencia));
         }
 
-        // Credenciales correctas: resetear contador de fallos
-        await _userManager.ResetAccessFailedCountAsync(user);
+        await userManager.ResetAccessFailedCountAsync(user);
 
-        var roles = await _userManager.GetRolesAsync(user);
-        string rol = roles.FirstOrDefault() ?? "Vendedor";
+        var perfil = await ResolverPerfilAsync(user, request.Correo);
+        if (perfil == null)
+        {
+            return Problem(
+                detail: "El usuario no tiene un rol asignado en el sistema.",
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Acceso denegado");
+        }
 
-        var claims = await _userManager.GetClaimsAsync(user);
-        string nombreCompleto = claims.FirstOrDefault(c => c.Type == "NombreCompleto")?.Value
-            ?? user.UserName
-            ?? "Usuario";
-        string iniciales = claims.FirstOrDefault(c => c.Type == "Iniciales")?.Value
-            ?? (nombreCompleto.Length >= 2 ? nombreCompleto[..2].ToUpperInvariant() : "US");
-        string sucursal = claims.FirstOrDefault(c => c.Type == "Sucursal")?.Value
-            ?? "Jardines del Valle";
-
-        string token = GenerarToken(user.Id, user.Email ?? request.Correo, rol);
+        var token = GenerarTokenJwt(user.Id, perfil.Correo, perfil.Rol);
 
         return Ok(new LoginResponseDto(
             Token: token,
-            UsuarioId: user.Id,
-            NombreCompleto: nombreCompleto,
-            Iniciales: iniciales,
-            Correo: user.Email ?? request.Correo,
-            Rol: rol,
-            Sucursal: sucursal,
+            UsuarioId: perfil.UsuarioId,
+            NombreCompleto: perfil.NombreCompleto,
+            Iniciales: perfil.Iniciales,
+            Correo: perfil.Correo,
+            Rol: perfil.Rol,
+            Sucursal: perfil.Sucursal,
             IntentosFallidos: 0,
             MinutosBloqueoRestantes: null,
-            AdvertenciaSeguridad: null
-        ));
+            AdvertenciaSeguridad: null));
     }
 
     /// <summary>
     /// Recuperación de contraseña con respuesta constante y jitter pseudoaleatorio anti-timing attack (200ms - 600ms).
     /// </summary>
     [HttpPost("olvide-contrasena")]
-    public async Task<IActionResult> OlvideContrasena([FromBody] OlvideContrasenaRequest request)
+    public async Task<IActionResult> OlvideContrasena([FromBody] OlvideContrasenaRequest? request)
     {
-        int jitterMs = Random.Shared.Next(200, 601);
+        if (request == null || string.IsNullOrWhiteSpace(request.Correo))
+        {
+            return Problem(
+                detail: "El correo electrónico es requerido.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Parámetros inválidos");
+        }
+
+        var jitterMs = Random.Shared.Next(200, 601);
         await Task.Delay(jitterMs);
 
         return Ok(new OlvideContrasenaResponseDto(
@@ -167,44 +136,139 @@ public class AuthController(UserManager<IdentityUser> userManager) : ApiControll
     public async Task<IActionResult> Me()
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value;
+            ?? User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
         if (string.IsNullOrEmpty(userId))
         {
-            return Unauthorized(new { mensaje = "No autorizado" });
+            return Problem(
+                detail: "No autorizado.",
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "No autorizado");
         }
 
-        var user = await _userManager.FindByIdAsync(userId);
+        var user = await userManager.FindByIdAsync(userId);
         if (user == null)
         {
-            return NotFound(new { mensaje = "Usuario no encontrado" });
+            return Problem(
+                detail: "Usuario no encontrado.",
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Recurso no encontrado");
         }
 
-        var roles = await _userManager.GetRolesAsync(user);
-        string rol = roles.FirstOrDefault() ?? "Vendedor";
+        var perfil = await ResolverPerfilAsync(user, user.Email ?? string.Empty);
+        if (perfil == null)
+        {
+            return Problem(
+                detail: "El usuario no tiene un rol asignado en el sistema.",
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "Acceso denegado");
+        }
 
-        var claims = await _userManager.GetClaimsAsync(user);
-        string nombreCompleto = claims.FirstOrDefault(c => c.Type == "NombreCompleto")?.Value
-            ?? user.UserName
-            ?? "Usuario";
-        string iniciales = claims.FirstOrDefault(c => c.Type == "Iniciales")?.Value
-            ?? (nombreCompleto.Length >= 2 ? nombreCompleto[..2].ToUpperInvariant() : "US");
-        string sucursal = claims.FirstOrDefault(c => c.Type == "Sucursal")?.Value
-            ?? "Jardines del Valle";
+        return Ok(perfil);
+    }
 
-        return Ok(new UsuarioPerfilDto(
+    private async Task<UsuarioPerfilDto?> ResolverPerfilAsync(IdentityUser user, string correoFallback)
+    {
+        var roles = await userManager.GetRolesAsync(user);
+        var rol = roles.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(rol))
+        {
+            return null;
+        }
+
+        var claims = await userManager.GetClaimsAsync(user);
+        var nombreCompleto = claims.FirstOrDefault(c => c.Type == "NombreCompleto")?.Value
+                             ?? user.UserName
+                             ?? "Usuario";
+        var iniciales = claims.FirstOrDefault(c => c.Type == "Iniciales")?.Value
+                        ?? (nombreCompleto.Length >= 2 ? nombreCompleto[..2].ToUpperInvariant() : "US");
+        var sucursal = claims.FirstOrDefault(c => c.Type == "Sucursal")?.Value
+                       ?? ParametrosNegocio.SucursalPorDefecto;
+
+        return new UsuarioPerfilDto(
             UsuarioId: user.Id,
             NombreCompleto: nombreCompleto,
             Iniciales: iniciales,
-            Correo: user.Email ?? string.Empty,
+            Correo: user.Email ?? correoFallback,
             Rol: rol,
-            Sucursal: sucursal
-        ));
+            Sucursal: sucursal);
     }
 
-    private static string GenerarToken(string userId, string email, string rol)
+    private string GenerarTokenJwt(string userId, string email, string rol)
     {
-        string payload = $"{userId}:{email}:{rol}:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:{Guid.NewGuid():N}";
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes(payload));
+        var jwtSection = configuration.GetSection("Jwt");
+        var key = jwtSection["Key"]
+            ?? throw new InvalidOperationException("La clave de firma 'Jwt:Key' no está configurada.");
+        var issuer = jwtSection["Issuer"] ?? "SistemaFuneraria.Api";
+        var audience = jwtSection["Audience"] ?? "SistemaFuneraria.Web";
+        var expirationMinutes = int.TryParse(jwtSection["ExpirationMinutes"], out var mins) && mins > 0
+            ? mins
+            : 480;
+
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(ClaimTypes.Role, rol),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    private static int CalcularMinutosBloqueoRestantes(IdentityUser user)
+    {
+        if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow)
+        {
+            return Math.Max(1, (int)Math.Ceiling((user.LockoutEnd.Value - DateTimeOffset.UtcNow).TotalMinutes));
+        }
+
+        return 15;
+    }
+
+    private static LoginResponseDto CrearRespuestaFallida(
+        string usuarioId,
+        string correo,
+        int intentosFallidos,
+        string? advertenciaSeguridad = null) =>
+        new(
+            Token: string.Empty,
+            UsuarioId: usuarioId,
+            NombreCompleto: string.Empty,
+            Iniciales: string.Empty,
+            Correo: correo,
+            Rol: string.Empty,
+            Sucursal: ParametrosNegocio.SucursalPorDefecto,
+            IntentosFallidos: intentosFallidos,
+            MinutosBloqueoRestantes: null,
+            AdvertenciaSeguridad: advertenciaSeguridad);
+
+    private static LoginResponseDto CrearRespuestaBloqueada(
+        IdentityUser user,
+        string correoFallback,
+        int intentosFallidos,
+        int minutosRestantes,
+        string mensajeBloqueo) =>
+        new(
+            Token: string.Empty,
+            UsuarioId: user.Id,
+            NombreCompleto: user.UserName ?? string.Empty,
+            Iniciales: string.Empty,
+            Correo: user.Email ?? correoFallback,
+            Rol: string.Empty,
+            Sucursal: ParametrosNegocio.SucursalPorDefecto,
+            IntentosFallidos: intentosFallidos,
+            MinutosBloqueoRestantes: minutosRestantes,
+            AdvertenciaSeguridad: mensajeBloqueo);
 }
