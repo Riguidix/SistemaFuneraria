@@ -13,6 +13,11 @@
     <link rel="stylesheet" href="~/css/funeraria-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
+@{
+    var rutaActual = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
+    bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
+}
 <body class="funeraria-app">
     <div class="funeraria-wrapper">
         <!-- ==========================================
@@ -39,16 +44,16 @@
                             <span>Resumen</span>
                         </a>
                     </li>
-                    <!-- 2. Catálogo de lotes (Inerte) -->
+                    <!-- 2. Catálogo de lotes (Funcional en SF-023) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Catálogo de lotes (No navegable)">
+                        <a href="/Catalogo" class="funeraria-nav-item @(esCatalogo ? "active" : "")" @(esCatalogo ? "aria-current=\"page\"" : "")>
                             <i class="fa-solid fa-book-open fa-fw" aria-hidden="true"></i>
                             <span>Catálogo de lotes</span>
                         </a>
                     </li>
-                    <!-- 3. Clientes (ÚNICO ACTIVO Y FUNCIONAL) -->
+                    <!-- 3. Clientes (Funcional en SF-019 / SF-020) -->
                     <li>
-                        <a href="/Clientes" class="funeraria-nav-item active" aria-current="page">
+                        <a href="/Clientes" class="funeraria-nav-item @(esClientes ? "active" : "")" @(esClientes ? "aria-current=\"page\"" : "")>
                             <i class="fa-solid fa-users fa-fw" aria-hidden="true"></i>
                             <span>Clientes</span>
                         </a>
