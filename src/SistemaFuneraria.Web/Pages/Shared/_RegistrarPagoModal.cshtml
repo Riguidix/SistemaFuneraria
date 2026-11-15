@@ -104,3 +104,34 @@
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        document.addEventListener('DOMContentLoaded', function () {
+            var btn = document.getElementById('btnConfirmarPagoModal');
+            if (!btn || btn.dataset.bound) return;
+            btn.dataset.bound = "true";
+
+            btn.addEventListener('click', function () {
+                var modalEl = document.getElementById('modalRegistrarPago');
+                var cliente = document.getElementById('pagoClienteTitular')?.value || 'Cliente';
+                var cuota = document.getElementById('pagoCuotaLiquidar')?.value || 'Cuota ordinaria';
+
+                if (modalEl && window.bootstrap) {
+                    var modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+                }
+
+                var alerta = document.getElementById('alertaPagoExitoso');
+                if (alerta) {
+                    var txt = document.getElementById('textoPagoExitoso');
+                    if (txt) txt.textContent = '¡Pago de ' + cliente + ' registrado exitosamente!';
+                    alerta.classList.remove('d-none');
+                    alerta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    alert('✓ Pago registrado exitosamente\n\nTitular: ' + cliente + '\nConcepto: ' + cuota + '\nFolio generado: REC-2026-0043');
+                }
+            });
+        });
+    })();
+</script>

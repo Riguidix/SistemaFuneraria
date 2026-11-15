@@ -17,6 +17,7 @@
     var rutaActual = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
     bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
+    bool esCobranza = rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
 }
 <body class="funeraria-app">
     <div class="funeraria-wrapper">
@@ -72,9 +73,9 @@
                             <span>Contratos</span>
                         </a>
                     </li>
-                    <!-- 6. Caja y cobranza (Inerte + Badge Dorado "8") -->
+                    <!-- 6. Caja y cobranza (Funcional Ticket 036) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Caja y cobranza (No navegable)">
+                        <a href="/Cobranza" class="funeraria-nav-item @(esCobranza ? "active" : "")" @(esCobranza ? "aria-current=\"page\"" : "") title="Caja y cobranza">
                             <i class="fa-solid fa-cash-register fa-fw" aria-hidden="true"></i>
                             <span>Caja y cobranza</span>
                             <span class="funeraria-badge-gold">8</span>

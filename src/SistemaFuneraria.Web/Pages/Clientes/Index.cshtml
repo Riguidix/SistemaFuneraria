@@ -113,7 +113,11 @@
                         <span class="badge badge-estado badge-al-corriente">Al corriente</span>
                     </td>
                     <td class="text-end pe-4">
-                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Abrir expediente de Laura Castañeda">
+                        <a href="javascript:void(0)" class="funeraria-action-link btn-abrir-cobro" 
+                           data-folio="CT-2025-089" 
+                           data-cliente="Laura Castañeda" 
+                           data-cuota="Cuota 1 de 24 ($8,710.16)"
+                           title="Registrar pago de Laura Castañeda">
                             <span>Abrir</span>
                             <i class="fa-solid fa-chevron-right ms-1 small" aria-hidden="true"></i>
                         </a>
@@ -142,7 +146,11 @@
                         <span class="badge badge-estado badge-al-corriente">Al corriente</span>
                     </td>
                     <td class="text-end pe-4">
-                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Abrir expediente de Roberto Méndez">
+                        <a href="javascript:void(0)" class="funeraria-action-link btn-abrir-cobro" 
+                           data-folio="CT-2024-112" 
+                           data-cliente="Roberto Méndez" 
+                           data-cuota="Cuota 3 de 18 ($7,523.51)"
+                           title="Registrar pago de Roberto Méndez">
                             <span>Abrir</span>
                             <i class="fa-solid fa-chevron-right ms-1 small" aria-hidden="true"></i>
                         </a>
@@ -171,7 +179,11 @@
                         <span class="badge badge-estado badge-pago-vencido">Pago vencido</span>
                     </td>
                     <td class="text-end pe-4">
-                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Abrir expediente de Elena Vargas">
+                        <a href="javascript:void(0)" class="funeraria-action-link btn-abrir-cobro" 
+                           data-folio="CT-2023-045" 
+                           data-cliente="Elena Vargas" 
+                           data-cuota="Cuota 6 de 12 ($11,245.00)"
+                           title="Registrar pago de Elena Vargas">
                             <span>Abrir</span>
                             <i class="fa-solid fa-chevron-right ms-1 small" aria-hidden="true"></i>
                         </a>
@@ -200,7 +212,11 @@
                         <span class="badge badge-estado badge-en-revision">En revisión</span>
                     </td>
                     <td class="text-end pe-4">
-                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Abrir expediente de Jorge Salinas">
+                        <a href="javascript:void(0)" class="funeraria-action-link btn-abrir-cobro" 
+                           data-folio="CT-2025-014" 
+                           data-cliente="Jorge Salinas" 
+                           data-cuota="Cuota 2 de 48 ($4,890.30)"
+                           title="Registrar pago de Jorge Salinas">
                             <span>Abrir</span>
                             <i class="fa-solid fa-chevron-right ms-1 small" aria-hidden="true"></i>
                         </a>
@@ -251,6 +267,8 @@
 
 @* Modal Reutilizable de Registro de Clientes (SF-019) *@
 <partial name="_NuevoClienteModal" />
+@* Modal Reutilizable de Registro de Pago (Ticket 036) *@
+<partial name="_RegistrarPagoModal" />
 
 @section Scripts {
     <script>
@@ -388,6 +406,30 @@
                     filasArray.forEach(function (row) {
                         tbody.insertBefore(row, filaVacia);
                     });
+                });
+            });
+
+            // Disparador del Modal de Pago desde el enlace "Abrir" de clientes
+            document.querySelectorAll('.btn-abrir-cobro').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var folio = this.getAttribute('data-folio');
+                    var cliente = this.getAttribute('data-cliente');
+                    var cuota = this.getAttribute('data-cuota');
+
+                    var inputFolio = document.getElementById('pagoFolioContrato');
+                    var inputCliente = document.getElementById('pagoClienteTitular');
+                    var inputCuota = document.getElementById('pagoCuotaLiquidar');
+
+                    if (inputFolio) inputFolio.value = folio;
+                    if (inputCliente) inputCliente.value = cliente;
+                    if (inputCuota) inputCuota.value = cuota;
+
+                    var modalEl = document.getElementById('modalRegistrarPago');
+                    if (modalEl && window.bootstrap) {
+                        var modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modalInstance.show();
+                    }
                 });
             });
         });
