@@ -86,4 +86,29 @@ public class ReglasArquitecturaTests
 
         result.IsSuccessful.Should().BeTrue("la capa de infraestructura no debe conocer la capa de presentación.");
     }
+
+    [Fact(DisplayName = "RF-ARCH-07: Web no debe referenciar Infrastructure, EntityFrameworkCore ni Npgsql (SF-019)")]
+    public void Web_NoDebeTenerDependenciaDe_InfrastructureNiPersistencia()
+    {
+        var result = Types.InAssembly(WebAssembly)
+            .ShouldNot()
+            .HaveDependencyOnAny(InfrastructureNamespace, "Microsoft.EntityFrameworkCore", "Npgsql")
+            .GetResult();
+
+        result.IsSuccessful.Should().BeTrue("el cliente Web no debe acceder directamente a infraestructura ni persistencia.");
+
+        var webCsprojPath = Path.GetFullPath(Path.Combine(
+            AppContext.BaseDirectory, "..", "..", "..", "..", "..",
+            "src", "SistemaFuneraria.Web", "SistemaFuneraria.Web.csproj"));
+
+        File.Exists(webCsprojPath).Should().BeTrue($"debe existir el archivo de proyecto en {webCsprojPath}");
+        var csprojContent = File.ReadAllText(webCsprojPath);
+
+        csprojContent.Should().NotContain("SistemaFuneraria.Infrastructure",
+            "SistemaFuneraria.Web no debe referenciar al proyecto Infrastructure.");
+        csprojContent.Should().NotContain("Microsoft.EntityFrameworkCore",
+            "SistemaFuneraria.Web no debe referenciar paquetes de EntityFrameworkCore.");
+        csprojContent.Should().NotContain("Npgsql",
+            "SistemaFuneraria.Web no debe referenciar paquetes de Npgsql.");
+    }
 }
