@@ -837,3 +837,74 @@ body.funeraria-app {
 .text-tabular {
   font-variant-numeric: tabular-nums;
 }
+
+
+/* ==========================================================================
+   COMPONENTES DEL CATÁLOGO DE LOTES (SF-023)
+   ========================================================================== */
+
+/* Tarjetas KPI de Métricas de Inventario */
+.funeraria-kpi-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--funeraria-border-light, #E5E1D7);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.funeraria-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.kpi-label {
+  font-size: 0.85rem;
+  color: #737067;
+  font-weight: 500;
+}
+
+.kpi-value {
+  color: #1E221E;
+  letter-spacing: -0.02em;
+}
+
+.kpi-subtext {
+  font-size: 0.78rem;
+  color: #8E8A80;
+}
+
+/* Selectores Dropdown Funeraria */
+.funeraria-select {
+  border: 1px solid var(--funeraria-border-light, #E5E1D7);
+  border-radius: 10px;
+  background-color: #FFFFFF;
+  color: #2D2A24;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.68rem 2.2rem 0.68rem 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 175px;
+}
+
+.funeraria-select:focus {
+  border-color: var(--funeraria-primary, #2D4224);
+  box-shadow: 0 0 0 3px rgba(45, 66, 36, 0.15);
+  outline: none;
+}
+
+/* Badges específicos para estados de lote */
+.badge-disponible {
+  background-color: #E6F4EA;
+  color: #137333;
+}
+
+.badge-reservado {
+  background-color: #FEF7E0;
+  color: #B06000;
+}
+
+.badge-vendido {
+  background-color: #F1F3F4;
+  color: #5F6368;
+}
