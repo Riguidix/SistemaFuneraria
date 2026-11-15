@@ -111,3 +111,68 @@
     background-color: #17211f;
     box-shadow: 0 0 2px rgba(255, 255, 255, 0.9);
 }
+
+
+/* ========================================================
+   ESTADOS UI: Skeletons Cálidos Shimmer & Banners (SF-027)
+   ======================================================== */
+@keyframes sfShimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.sf-skeleton {
+    background: linear-gradient(90deg, #EFECE6 25%, #FAF8F5 50%, #EFECE6 75%);
+    background-size: 200% 100%;
+    animation: sfShimmer 1.6s infinite ease-in-out;
+    border-radius: var(--sf-radius-sm);
+}
+
+.sf-skeleton-text {
+    height: 14px;
+    border-radius: 4px;
+}
+
+.sf-skeleton-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sf-skeleton-badge {
+    height: 24px;
+    border-radius: 9999px;
+}
+
+.sf-skeleton-button {
+    height: 32px;
+    border-radius: var(--sf-radius-sm);
+}
+
+.sf-skeleton-input {
+    height: 46px;
+    width: 100%;
+}
+
+.sf-skeleton-card {
+    background-color: var(--sf-card-white, #FCFAF7);
+    border: 1px solid var(--sf-border-neutral, #E6DFD3);
+}
+
+.sf-skeleton-row td {
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.sf-empty-state {
+    transition: all 0.2s ease-in-out;
+}
+
+.sf-error-banner {
+    border-radius: var(--sf-radius-md);
+}
