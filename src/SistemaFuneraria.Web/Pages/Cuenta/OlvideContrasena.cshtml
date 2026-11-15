@@ -1,0 +1,141 @@
+@page
+@model SistemaFuneraria.Web.Pages.Cuenta.OlvideContrasenaModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Recuperar Contraseña - Sistema Funerario";
+}
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <!-- Bootstrap 5.3.8 (RNF-06) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='/lib/bootstrap/dist/css/bootstrap.min.css';" />
+    <!-- CDN de Font Awesome 7.3.1 (SF-020 / SF-028) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/funeraria-theme.css" asp-append-version="true" />
+    <style>
+        body.forgot-body {
+            background-color: #F4F1EA;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .forgot-card {
+            width: 100%;
+            max-width: 520px;
+            background: #FFFFFF;
+            border-radius: 1.25rem;
+            box-shadow: 0 12px 36px rgba(45, 66, 36, 0.08);
+            padding: 3rem 2.5rem;
+            margin: 1.5rem;
+        }
+        .form-control-serenia {
+            border: 1px solid #D8D4CA;
+            background: #FFFFFF;
+            border-radius: 0.65rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            color: #1E221E;
+        }
+        .form-control-serenia:focus {
+            border-color: #2D4224;
+            box-shadow: 0 0 0 0.2rem rgba(45, 66, 36, 0.15);
+        }
+        .btn-serenia-primary {
+            background-color: #2D4224 !important;
+            border-color: #2D4224 !important;
+            color: #FFFFFF !important;
+            border-radius: 0.65rem;
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .btn-serenia-primary:hover {
+            background-color: #22341B !important;
+            border-color: #22341B !important;
+        }
+        .brand-seal-sm {
+            width: 44px;
+            height: 44px;
+            background: #CCA352;
+            color: #1A2415;
+            border-radius: 12px;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body class="forgot-body">
+    <div class="forgot-card">
+        <!-- Encabezado con sello institucional -->
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center brand-seal-sm mb-3">S</div>
+            <h1 class="h4 fw-bold mb-1" style="color: #1E221E;">Recuperar acceso</h1>
+            <p class="text-muted small mb-0">
+                Ingresa tu correo institucional y te enviaremos las instrucciones para restablecer tu contraseña.
+            </p>
+        </div>
+
+        @if (Model.SolicitudEnviada && !string.IsNullOrEmpty(Model.MensajeConfirmacion))
+        {
+            <!-- Mensaje uniforme seguro (RNF-01, RNF-03) -->
+            <div class="alert alert-serenia-gold d-flex align-items-start gap-3 p-3 mb-4 rounded-3" role="alert" style="background-color: #FBF6EC; border: 1px solid #C59D52; color: #7A5814;">
+                <i class="fa-solid fa-circle-check mt-1 fs-5" style="color: #CCA352;"></i>
+                <div class="small">
+                    <strong>Solicitud procesada:</strong>
+                    <div class="mt-1">@Model.MensajeConfirmacion</div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <a href="/Cuenta/Login" class="btn btn-serenia-primary w-100 d-inline-flex align-items-center justify-content-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Volver a iniciar sesión</span>
+                </a>
+            </div>
+        }
+        else
+        {
+            <form method="post" novalidate>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label small fw-semibold text-secondary">
+                        <i class="fa-solid fa-envelope me-1 text-muted"></i> Correo electrónico registrado
+                    </label>
+                    <input asp-for="Email" class="form-control form-control-serenia" placeholder="ejemplo@funeraria.mx" autocomplete="email" required />
+                    <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
+                </div>
+
+                <button type="submit" class="btn btn-serenia-primary w-100 d-flex align-items-center justify-content-center gap-2 mb-3">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Enviar instrucciones</span>
+                </button>
+
+                <div class="text-center">
+                    <a href="/Cuenta/Login" class="small fw-semibold text-decoration-none" style="color: #2D4224;">
+                        <i class="fa-solid fa-arrow-left me-1"></i> Regresar al inicio de sesión
+                    </a>
+                </div>
+            </form>
+        }
+
+        <div class="mt-4 pt-3 border-top text-center" style="border-color: #E5E1D7 !important;">
+            <span class="text-muted" style="font-size: 0.75rem;">
+                Sistema Funerario · Gestión Memorial · Sucursal Jardines del Valle
+            </span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
