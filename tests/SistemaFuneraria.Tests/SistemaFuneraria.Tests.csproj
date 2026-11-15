@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\src\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj" />
     <ProjectReference Include="..\..\src\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\SistemaFuneraria.Web\SistemaFuneraria.Web.csproj" />
+    <ProjectReference Include="..\..\src\SistemaFuneraria.Api\SistemaFuneraria.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
