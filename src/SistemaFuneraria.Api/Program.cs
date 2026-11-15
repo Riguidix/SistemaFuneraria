@@ -1,5 +1,8 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Application.Servicios.Simulador;
@@ -21,6 +24,30 @@ builder.Services.AddIdentityCore<IdentityUser>(options =>
 })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
+
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSection["Key"]
+    ?? throw new InvalidOperationException("La clave de firma 'Jwt:Key' no está configurada.");
+var jwtIssuer = jwtSection["Issuer"] ?? "SistemaFuneraria.Api";
+var jwtAudience = jwtSection["Audience"] ?? "SistemaFuneraria.Web";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IClienteService, ClienteService>();
@@ -53,6 +80,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(corsPolicy);
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
