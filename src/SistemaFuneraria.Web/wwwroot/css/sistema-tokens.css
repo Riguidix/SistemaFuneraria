@@ -38,8 +38,8 @@
 
 /* Clases de utilidad para tokens de color */
 .color-swatch-box {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: var(--sf-radius-sm);
     flex-shrink: 0;
 }
@@ -48,19 +48,66 @@
     background-color: #F8F9FA;
     border: 1px solid #E9ECEF;
     border-radius: var(--sf-radius-md);
-    padding: 0.875rem 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
+    padding: 1rem;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .color-swatch-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
 }
 
 .token-code {
     font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     font-size: 0.75rem;
+}
+
+/* ========================================================
+   Barra de Matices y Sombras Estilo HTML Color Codes
+   ======================================================== */
+.color-shades-strip {
+    height: 22px;
+    border-radius: 9999px;
+    overflow: hidden;
+    display: flex;
+    width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+    background-color: #FFFFFF;
+}
+
+.shade-slice {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+}
+
+.shade-slice:hover {
+    filter: brightness(1.2);
+    z-index: 2;
+}
+
+.shade-slice.active-base {
+    position: relative;
+    z-index: 1;
+}
+
+.active-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+
+.active-dot.dark-dot {
+    background-color: #17211f;
+    box-shadow: 0 0 2px rgba(255, 255, 255, 0.9);
 }
