@@ -8,6 +8,11 @@ namespace SistemaFuneraria.Core.Comun;
 /// </summary>
 public static class ParametrosNegocio
 {
+    public const string RolAdministrador = "Administrador";
+    public const string RolVendedor = "Vendedor";
+    public const string RolCajero = "Cajero";
+    public const string SucursalPorDefecto = "Jardines del Valle";
+
     public static readonly IReadOnlyList<int> PlazosAutorizados = new ReadOnlyCollection<int>([12, 18, 24, 48]);
     public static readonly IReadOnlyList<int> EnganchesAutorizados = new ReadOnlyCollection<int>([10, 20, 30]);
     public static readonly IReadOnlyList<decimal> PreciosLotesAutorizados = new ReadOnlyCollection<decimal>([120000.00m, 150000.00m, 180000.00m]);
