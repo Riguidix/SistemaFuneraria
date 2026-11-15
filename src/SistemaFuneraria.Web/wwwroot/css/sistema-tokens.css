@@ -1,0 +1,66 @@
+/**
+ * Sistema Funerario (Gestión Memorial)
+ * Hoja Central de Tokens de Diseño (Design System - SF-025 / Captura 13)
+ */
+
+:root {
+    /* 1. Muestras Oficiales Figma Captura 13 */
+    --forest: #173f3a;
+    --forest-2: #245c53;
+    --gold: #c59d52;
+    --rose: #a84f4b;
+    --canvas: #f4f6f3;
+    --ink: #17211f;
+
+    /* 2. Paleta Activa de la Web Funeraria */
+    --sf-primary-olive: #2D4224;      /* Verde olivo profundo de botones y marca */
+    --sf-sidebar-green: #485635;      /* Verde olivo suave del sidebar */
+    --sf-bg-cream: #F4F1EA;           /* Fondo cálido canvas de la aplicación */
+    --sf-card-white: #FCFAF7;         /* Superficie de tarjetas */
+    --sf-border-neutral: #E6DFD3;     /* Bordes y divisores suaves */
+    --sf-text-dark: #1F2937;          /* Texto principal */
+    --sf-text-muted: #6B7280;         /* Texto secundario y kickers */
+
+    /* 3. Tipografía y Radios */
+    --sf-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --sf-radius-sm: 8px;
+    --sf-radius-md: 12px;
+    --sf-radius-lg: 16px;
+    --sf-radius-xl: 24px;
+}
+
+/* Utilidad para cifras monetarias formateadas es-MX con números tabulares */
+.sf-money {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.01em;
+}
+
+/* Clases de utilidad para tokens de color */
+.color-swatch-box {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--sf-radius-sm);
+    flex-shrink: 0;
+}
+
+.color-swatch-card {
+    background-color: #F8F9FA;
+    border: 1px solid #E9ECEF;
+    border-radius: var(--sf-radius-md);
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.color-swatch-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.token-code {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.75rem;
+}

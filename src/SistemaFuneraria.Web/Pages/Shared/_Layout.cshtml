@@ -9,7 +9,8 @@
     <!-- CDN de Font Awesome (SF-020) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <!-- Hoja de estilos del tema Funeraria (SF-019 / SF-020) -->
+    <!-- Hoja de estilos del tema Funeraria (SF-019 / SF-020) y Tokens Oficiales (SF-025) -->
+    <link rel="stylesheet" href="~/css/sistema-tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/funeraria-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
@@ -18,6 +19,7 @@
     bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
     bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
     bool esCobranza = rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
+    bool esParametrosUi = rutaActual.StartsWith("/ParametrosUi", StringComparison.OrdinalIgnoreCase);
 }
 <body class="funeraria-app">
     <div class="funeraria-wrapper">
@@ -100,9 +102,9 @@
                             <span>Configuración</span>
                         </a>
                     </li>
-                    <!-- 9. Parámetros UI (Inerte) -->
+                    <!-- 9. Parámetros UI (Activo SF-025) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Parámetros UI (No navegable)">
+                        <a href="/ParametrosUi" class="funeraria-nav-item @(esParametrosUi ? "active" : "")" @(esParametrosUi ? "aria-current=\"page\"" : "") title="Parámetros UI">
                             <i class="fa-solid fa-sliders fa-fw" aria-hidden="true"></i>
                             <span>Parámetros UI</span>
                         </a>
