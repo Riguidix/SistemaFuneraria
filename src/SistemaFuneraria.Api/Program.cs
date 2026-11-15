@@ -5,6 +5,7 @@ using SistemaFuneraria.Application.Servicios.Simulador;
 using SistemaFuneraria.Infrastructure.Persistencia;
 
 var builder = WebApplication.CreateBuilder(args);
+const string corsPolicy = "FunerariaWebPolicy";
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("La cadena de conexión 'DefaultConnection' no está configurada.");
@@ -16,7 +17,18 @@ builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbConte
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ISimuladorService, SimuladorService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsPolicy, policy =>
+    {
+        policy.WithOrigins("http://localhost:5080", "https://localhost:7080")
+              .WithHeaders("Authorization", "Content-Type")
+              .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -28,8 +40,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors(corsPolicy);
 app.UseHttpsRedirection();
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
