@@ -1,29 +1,28 @@
 # MODELO DE DATOS Y DIAGRAMA ENTIDAD-RELACIÓN (ERD)
-## Sistema de Venta y Financiamiento de Lotes Funerarios
+## Sistema de Venta y Financiamiento de Lotes Funerarios · Sistema Funerario
 
 | Metadato | Detalle |
 |---|---|
-| **Proyecto** | Sistema de Venta y Financiamiento de Lotes Funerarios |
-| **Materia / Contexto** | Estándares y Métricas para el Desarrollo de Software |
+| **Proyecto** | **Sistema Funerario** — Gestión Memorial (Sucursal *Jardines del Valle*) |
 | **Documento** | Especificación de Arquitectura de Persistencia y ERD Oficial |
-| **Versión del Modelo** | 1.1 (Calibrado con PM · 3 Hallazgos Resueltos) |
+| **Versión del Modelo** | **2.0** (Alineado 1:1 con `SistemaFuneraria.Api`, 13 Pantallas Figma y Backlog `SF-001`–`SF-100`) |
 | **Motor de Base de Datos** | PostgreSQL 16 Alpine (Docker Compose) |
-| **Mapeador ORM** | Entity Framework Core 8 (Npgsql.EntityFrameworkCore.PostgreSQL) |
-| **Líder DBA / Persistencia** | Senior DBA & Site Reliability Engineer |
-| **Fecha de Aprobación** | 07 de Noviembre de 2026 |
+| **Mapeador ORM** | Entity Framework Core 8 (`Npgsql.EntityFrameworkCore.PostgreSQL`) |
+| **Responsable de Carril DB** | Gustavo Lucio (Infraestructura / DBA) & Reydescel (Tech Lead) |
+| **Fecha de Actualización** | 14 de Noviembre de 2026 |
 
 ---
 
 ### 1. Propósito y Filosofía del Modelo de Datos
 
-Este documento define la arquitectura de base de datos relacional para el sistema de comercialización y cobranza de lotes funerarios. Está diseñado bajo la premisa de **cero incidencias no programadas (resiliencia para operar sin interrupciones a las 2:00 AM)**, cumpliendo con:
+Este documento define la arquitectura de base de datos relacional del **Sistema Funerario**, alojada exclusivamente tras el servidor `SistemaFuneraria.Api` (el cliente `SistemaFuneraria.Web` jamás accede directo a PostgreSQL). Está diseñado bajo las siguientes garantías de ingeniería:
 
-1. **Integridad Financiera Absoluta (RNF-02):** Precisión decimal estricta mediante `NUMERIC(14,2)` en base de datos y `decimal` de 128 bits en C#. Cero tolerancia a errores de punto flotante.
-2. **Idempotencia y Prevención de Doble Cobro (RNF-04, ST-04):** Llave única UUID `clave_idempotencia` en pagos para evitar cobros duplicados por concurrencia de cajeros o reintentos de red.
-3. **Control de Concurrencia Optimista:** Token de concurrencia nativo de PostgreSQL (`xmin`) en contratos de financiamiento para evitar condiciones de carrera al actualizar saldos insolutos.
-4. **Auditoría e Integridad Referencial Estricta:** Vínculos foráneos hacia usuarios de Identity (`AspNetUsers`), separando el rol de venta (`vendedor_id`) del rol de cobranza (`cajero_id`).
-5. **Trazabilidad Contable Completa (RN-09):** Registro explícito de `descuento_aplicado` en liquidaciones anticipadas (10% de ahorro sobre intereses futuros).
-6. **Catálogo de Productos Desacoplado (RN-01):** Relación 1:N entre el catálogo fijo de lotes y las transacciones de venta, permitiendo comercializar de forma ilimitada los 3 modelos autorizados ($120k, $150k, $180k).
+1. **Integridad Financiera Absoluta (`RNF-02`):** Precisión decimal estricta mediante `NUMERIC(18,2)` en base de datos y el Value Object `Dinero` (`decimal` de 128 bits) en C#. Cero tolerancia a errores de punto flotante.
+2. **Idempotencia y Prevención de Doble Cobro (`RNF-04`, `ST-04`):** Llave única `clave_idempotencia` en `pagos` para evitar cobros duplicados por doble clic en ventanilla o reintentos de red del wrapper `fetch()`.
+3. **Control de Concurrencia Optimista (`xmin`):** Token de concurrencia nativo de PostgreSQL (`xmin`) en `lotes` y `financiamientos` para evitar condiciones de carrera al vender un lote o actualizar saldos insolutos.
+4. **Catálogo de Lotes Individualizado (Figma Captura 2 y Wizard):** Cada lote físico tiene su propia clave única (`JN-A-042`, `JC-C-118`, `RO-B-027`, etc.), ubicación (`Seccion`, `AndadorFila`), capacidad (`2`, `3` o `4` gavetas), precio y estado (`Disponible`, `Reservado`, `Vendido`, `Mantenimiento`), protegido con un índice único filtrado en `ventas` para impedir doble venta activa.
+5. **Auditoría RBAC y Seguridad de Acceso (`RNF-03`, `RNF-09`):** Vínculos foráneos hacia `AspNetUsers` con los 3 roles oficiales (`Administrador`, `Vendedor`, `Cajero`) y soporte nativo de Identity para bloqueo temporal (`lockout_end`, `access_failed_count`).
+6. **Parametrización de Sucursal (Figma Captura 12):** Tabla `configuracion_sucursales` para administrar los datos operativos de la sucursal y las banderas de notificaciones.
 
 ---
 
@@ -33,9 +32,10 @@ Este documento define la arquitectura de base de datos relacional para el sistem
 erDiagram
     ASPNET_USERS ||--o{ VENTAS : "registra como vendedor (1:N)"
     ASPNET_USERS ||--o{ PAGOS : "cobra en caja (1:N)"
-    LOTES ||--o{ VENTAS : "producto comercializado (1:N)"
+    LOTES ||--o{ VENTAS : "lote comercializado (1:N con 1 activa)"
     CLIENTES ||--o{ VENTAS : "adquiere (1:N)"
-    VENTAS ||--o| FINANCIAMIENTOS : "origina (1:0..1)"
+    VENTAS ||--o| FINANCIAMIENTOS : "origina si es credito (1:0..1)"
+    VENTAS ||--o{ PAGOS : "recibe pagos (1:N)"
     FINANCIAMIENTOS ||--|{ MENSUALIDADES : "desglosa en (1:N)"
     FINANCIAMIENTOS ||--o{ PAGOS : "recibe cobranza (1:N)"
     MENSUALIDADES ||--o| PAGOS : "aplica pago ordinario (1:0..1)"
@@ -43,16 +43,23 @@ erDiagram
     ASPNET_USERS {
         varchar(450) id PK
         varchar(256) user_name
-        varchar(256) email
-        varchar(50) role "Vendedor / Cajero"
+        varchar(256) email UK
+        varchar(150) nombre_completo
+        varchar(50) role "Administrador / Vendedor / Cajero"
+        boolean activo
+        int access_failed_count "Bloqueo al 5to intento"
+        timestamptz lockout_end "15 minutos"
     }
 
     LOTES {
-        varchar(10) id PK "LOT-02, LOT-03, LOT-04"
-        varchar(50) nombre "Básico, Familiar, Ampliado"
+        uuid id PK
+        varchar(20) clave UK "JN-A-042, JC-C-118, RO-B-027"
+        varchar(60) seccion "Jardín Norte, Jardín Central, Robles, Las Magnolias"
+        varchar(60) andador_fila "Andador A · Fila 4"
         int gavetas "2, 3, 4"
-        numeric(14_2) precio_contado "$120k, $150k, $180k"
-        boolean is_active "Estado del SKU en catálogo"
+        numeric(18_2) precio_contado "$120k, $150k, $180k"
+        varchar(20) estado "Disponible / Reservado / Vendido / Mantenimiento"
+        uint xmin "Token Concurrencia PostgreSQL"
     }
 
     CLIENTES {
@@ -61,58 +68,81 @@ erDiagram
         varchar(255) correo UK
         varchar(100) nombre
         varchar(100) apellidos
-        varchar(10) telefono "10 dígitos numéricos"
-        text direccion
+        varchar(15) telefono "10 dígitos"
+        text direccion "Opcional en modal rápido"
+        varchar(20) estado_cliente "AlCorriente / PagoVencido / EnRevision"
+        boolean activo "Baja lógica Admin"
         timestamptz created_at
     }
 
     VENTAS {
         uuid id PK
+        varchar(20) folio_contrato UK "CTR-YYYY-XXXX (Sequence)"
         uuid cliente_id FK
-        varchar(10) lote_id FK "Catálogo 1:N"
-        varchar(450) vendedor_id FK "Usuario Identity Vendedor"
-        varchar(20) tipo_venta "Contado / Financiado"
-        numeric(14_2) monto_total
+        uuid lote_id FK "Unique filtrado WHERE estado <> Cancelado"
+        varchar(450) vendedor_id FK "AspNetUsers"
+        varchar(20) modalidad "Contado / Financiado"
+        numeric(18_2) precio_pactado
+        varchar(20) estado "Activo / Liquidado / EnRevision / Cancelado"
+        text motivo_cancelacion "Nullable"
         timestamptz fecha_venta
-        varchar(20) estado "Completada / Cancelada"
     }
 
     FINANCIAMIENTOS {
         uuid id PK
         uuid venta_id FK_UK "Relación 1:1 con Venta"
-        numeric(14_2) enganche "10%, 20% o 30%"
-        numeric(14_2) capital_financiado "Precio - Enganche"
+        numeric(5_2) porcentaje_enganche "10, 20, 30"
+        numeric(18_2) monto_enganche
+        numeric(18_2) capital_financiado "Precio - Enganche"
         int plazo_meses "12, 18, 24, 48"
-        numeric(5_4) tasa_anual "0.1600, 0.1800, 0.2000, 0.2400"
-        numeric(14_2) saldo_insoluto_actual
-        varchar(20) estado "Activo / Liquidado"
+        numeric(5_4) tasa_interes_anual "0.1600, 0.1800, 0.2000, 0.2400"
+        numeric(18_2) cuota_mensual_actual
+        numeric(18_2) saldo_insoluto
+        varchar(20) estado "Activo / EnMora / Liquidado / Cancelado"
         uint xmin "Token Concurrencia Optimista PostgreSQL"
     }
 
     MENSUALIDADES {
         uuid id PK
         uuid financiamiento_id FK
-        int numero_periodo "1 a n"
-        numeric(14_2) saldo_inicial
-        numeric(14_2) interes
-        numeric(14_2) capital_amortizado
-        numeric(14_2) cuota
-        numeric(14_2) saldo_final
+        int numero_cuota "1 a n"
         date fecha_vencimiento
+        numeric(18_2) saldo_inicial_periodo
+        numeric(18_2) capital_programado
+        numeric(18_2) interes_programado
+        numeric(18_2) monto_total_cuota
+        numeric(18_2) saldo_final_periodo
         varchar(20) estado "Pendiente / Pagada / Vencida"
+        timestamptz fecha_pago "Nullable"
     }
 
     PAGOS {
         uuid id PK
         varchar(20) folio UK "PAG-2026-000001 (Sequence)"
-        uuid financiamiento_id FK
-        uuid mensualidad_id FK_NULLABLE "Null si es Abono/Liquidacion"
-        varchar(450) cajero_id FK "Usuario Identity Cajero"
-        uuid clave_idempotencia UK "Prevención Doble Cobro"
-        varchar(20) tipo_pago "Enganche/Ordinario/Abono/Liquidacion"
-        numeric(14_2) monto "Efectivo real cobrado en caja"
-        numeric(14_2) descuento_aplicado "Bonificación 10% RN-09"
+        uuid venta_id FK
+        uuid financiamiento_id FK_NULLABLE
+        uuid mensualidad_id FK_NULLABLE "Null si es Enganche/Contado/Abono/Liquidacion"
+        varchar(450) cajero_id FK "AspNetUsers"
+        varchar(25) tipo_pago "Enganche/Contado/Mensualidad/AbonoCapital/Liquidacion"
+        varchar(25) metodo_pago "Efectivo/TransferenciaBancaria/Tarjeta"
+        varchar(60) referencia "Obligatoria si Transferencia/Tarjeta"
+        numeric(18_2) monto_total
+        numeric(18_2) monto_capital
+        numeric(18_2) monto_interes
+        numeric(18_2) saldo_anterior
+        numeric(18_2) saldo_posterior
+        varchar(64) clave_idempotencia UK "Prevención Doble Cobro"
         timestamptz fecha_pago
+    }
+
+    CONFIGURACION_SUCURSALES {
+        uuid id PK
+        varchar(120) nombre_comercial "Jardines del Valle"
+        varchar(20) telefono_atencion
+        varchar(150) correo_operativo
+        text direccion
+        boolean recordatorios_pago
+        boolean resumen_diario_caja
     }
 ```
 
@@ -120,125 +150,150 @@ erDiagram
 
 ### 3. Diccionario Detallado de Datos
 
-#### 3.1 Tabla: `lotes` (Catálogo Inmutable de Productos)
-Representa los tres SKUs comercializables de acuerdo con la regla RN-01.
+#### 3.1 Tabla: `lotes` (`SF-039`, `SF-040`)
+Representa el inventario físico de lotes del catálogo (*Captura 2 de Figma* y Paso 2 del Wizard).
 
 | Columna | Tipo PostgreSQL | Tipo .NET | Nulo | Restricciones / Índices | Descripción Funcional |
 |---|---|---|:---:|---|---|
-| `id` | `VARCHAR(10)` | `string` | NO | `PRIMARY KEY` | Clave fija (`LOT-02`, `LOT-03`, `LOT-04`). |
-| `nombre` | `VARCHAR(50)` | `string` | NO | — | Denominación comercial (Básico, Familiar, Ampliado). |
-| `gavetas` | `INTEGER` | `int` | NO | `CHECK (gavetas IN (2, 3, 4))` | Capacidad de descanso del lote funerario. |
-| `precio_contado`| `NUMERIC(14,2)`| `decimal` | NO | `CHECK (precio_contado > 0)` | Precio de lista ($120,000, $150,000, $180,000 MXN). |
-| `is_active` | `BOOLEAN` | `bool` | NO | `DEFAULT TRUE` | Bandera de activación del producto. |
+| `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Identificador único del lote. |
+| `clave` | `VARCHAR(20)` | `string` | NO | `UNIQUE`, `ix_lotes_clave` | Clave física (`JN-A-042`, `JC-C-118`, `RO-B-027`). |
+| `seccion` | `VARCHAR(60)` | `string` | NO | `ix_lotes_filtros` | Sección (`Jardín Norte`, `Jardín Central`, `Robles`, `Las Magnolias`). |
+| `andador_fila` | `VARCHAR(60)` | `string` | NO | — | Ubicación detallada (`Andador A · Fila 4`). |
+| `gavetas` | `INTEGER` | `int` | NO | `CHECK (gavetas IN (2, 3, 4))` | Capacidad de descanso (`2`, `3` o `4` gavetas). |
+| `precio_contado`| `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (precio_contado > 0)` | Precio de lista (`$120,000`, `$150,000`, `$180,000` MXN). |
+| `estado` | `VARCHAR(20)` | `EstadoLote` | NO | `CHECK (estado IN ('Disponible','Reservado','Vendido','Mantenimiento'))` | Estado comercial actual. |
+| `xmin` | `XMIN (uint)` | `uint` | NO | `System Column` | Concurrency token optimista nativo. |
 
-#### 3.2 Tabla: `clientes`
-Almacena el padrón de compradores con validaciones estrictas de unicidad e identidad.
+#### 3.2 Tabla: `clientes` (`SF-031`, `SF-032`)
+Almacena el padrón de titulares con validaciones estrictas de unicidad e identidad (*Capturas 3 y 4 de Figma*).
 
 | Columna | Tipo PostgreSQL | Tipo .NET | Nulo | Restricciones / Índices | Descripción Funcional |
-|---|---|---|:---:|---|---|
+|---|---|---|---|---|---|
 | `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Identificador único universal. |
-| `curp` | `VARCHAR(18)` | `string` | NO | `UNIQUE`, `ix_clientes_curp` | Clave Única de Registro de Población oficial. |
-| `correo` | `VARCHAR(255)`| `string` | NO | `UNIQUE`, `ix_clientes_correo`| Correo electrónico para notificaciones. |
-| `nombre` | `VARCHAR(100)`| `string` | NO | — | Nombres del titular. |
-| `apellidos` | `VARCHAR(100)`| `string` | NO | — | Apellidos paterno y materno. |
-| `telefono` | `VARCHAR(10)` | `string` | NO | `CHECK (telefono ~ '^[0-9]{10}$')` | Teléfono a 10 dígitos obligatorios. |
-| `direccion` | `TEXT` | `string` | NO | — | Domicilio completo del cliente. |
+| `curp` | `VARCHAR(18)` | `string` | NO | `UNIQUE`, `ix_clientes_curp` | Clave Única de Registro de Población oficial (18 chars). |
+| `correo` | `VARCHAR(255)`| `string` | NO | `UNIQUE`, `ix_clientes_correo` | Correo electrónico del titular. |
+| `nombre` | `VARCHAR(100)`| `string` | NO | — | Nombre(s) del titular. |
+| `apellidos` | `VARCHAR(100)`| `string` | NO | `ix_clientes_nombre` | Apellidos paterno y materno. |
+| `telefono` | `VARCHAR(15)` | `string` | NO | — | Teléfono a 10 dígitos obligatorios. |
+| `estado_cliente` | `VARCHAR(20)` | `EstadoCliente` | NO | `DEFAULT 'AlCorriente'` | `AlCorriente`, `PagoVencido`, `EnRevision`. |
+| `activo` | `BOOLEAN` | `bool` | NO | `DEFAULT TRUE` | Permite baja lógica por `Administrador`. |
 | `created_at` | `TIMESTAMPTZ` | `DateTimeOffset` | NO | `DEFAULT NOW()` | Fecha y hora UTC de alta en sistema. |
 
-#### 3.3 Tabla: `ventas`
-Encabeza toda operación comercial cerrada por un vendedor.
+#### 3.3 Tabla: `ventas` (`SF-057`, `SF-059`)
+Encabeza toda operación comercial cerrada por un vendedor (*Capturas 8 y 9 de Figma*).
 
 | Columna | Tipo PostgreSQL | Tipo .NET | Nulo | Restricciones / Índices | Descripción Funcional |
-|---|---|---|:---:|---|---|
-| `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Folio interno único de la venta. |
-| `cliente_id` | `UUID` | `Guid` | NO | `FK -> clientes(id)`, `ix_ventas_cliente_id` | Cliente comprador. |
-| `lote_id` | `VARCHAR(10)` | `string` | NO | `FK -> lotes(id)`, `ix_ventas_lote_id` | Producto del catálogo (Relación 1:N). |
-| `vendedor_id` | `VARCHAR(450)`| `string` | NO | `FK -> AspNetUsers(Id)`, `ix_ventas_vendedor_id`| Vendedor de Identity que cerró la venta. |
-| `tipo_venta` | `VARCHAR(20)` | `string` | NO | `CHECK (tipo_venta IN ('Contado', 'Financiado'))` | Modalidad comercial pactada. |
-| `monto_total` | `NUMERIC(14,2)`| `decimal` | NO | `CHECK (monto_total > 0)` | Importe total convenido de la operación. |
+|---|---|---|---|---|---|
+| `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Identificador interno de la venta. |
+| `folio_contrato` | `VARCHAR(20)` | `string` | NO | `UNIQUE`, `ix_ventas_folio` | Folio comercial (`CTR-2025-0189`, vía `seq_contratos_folio`). |
+| `cliente_id` | `UUID` | `Guid` | NO | `FK -> clientes(id)`, `ix_ventas_cliente_id` | Cliente titular. |
+| `lote_id` | `UUID` | `Guid` | NO | `FK -> lotes(id)`, Índice único filtrado activo | Lote comercializado (sólo 1 venta no cancelada por lote). |
+| `vendedor_id` | `VARCHAR(450)`| `string` | NO | `FK -> AspNetUsers(Id)`, `ix_ventas_vendedor_id` | Usuario Identity que cerró la venta. |
+| `modalidad` | `VARCHAR(20)` | `ModalidadVenta` | NO | `CHECK (modalidad IN ('Contado', 'Financiado'))` | Modalidad comercial pactada. |
+| `precio_pactado` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (precio_pactado > 0)` | Importe total convenido de la operación. |
+| `estado` | `VARCHAR(20)` | `EstadoVenta` | NO | `CHECK (estado IN ('Activo','Liquidado','EnRevision','Cancelado'))` | Estado operativo y legal del contrato. |
+| `motivo_cancelacion` | `TEXT` | `string?` | SÍ | — | Motivo obligatorio cuando Admin cancela. |
 | `fecha_venta` | `TIMESTAMPTZ` | `DateTimeOffset` | NO | `DEFAULT NOW()`, `ix_ventas_fecha` | Fecha y hora del cierre de venta. |
-| `estado` | `VARCHAR(20)` | `string` | NO | `DEFAULT 'Completada'` | Estado legal de la venta. |
 
-#### 3.4 Tabla: `financiamientos`
+#### 3.4 Tabla: `financiamientos` (`SF-058`, `SF-059`)
 Gobierna el crédito otorgado, amortización y saldo deudor.
 
 | Columna | Tipo PostgreSQL | Tipo .NET | Nulo | Restricciones / Índices | Descripción Funcional |
-|---|---|---|:---:|---|---|
-| `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Identificador único del contrato de crédito. |
+|---|---|---|---|---|---|
+| `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Identificador único del financiamiento. |
 | `venta_id` | `UUID` | `Guid` | NO | `FK -> ventas(id) UNIQUE` | Venta que dio origen al crédito (1:1). |
-| `enganche` | `NUMERIC(14,2)`| `decimal` | NO | `CHECK (enganche > 0)` | Monto pagado por enganche (10%, 20% o 30%). |
-| `capital_financiado`| `NUMERIC(14,2)`| `decimal` | NO | `CHECK (capital_financiado > 0)` | Monto insoluto original a amortizar. |
-| `plazo_meses`| `INTEGER` | `int` | NO | `CHECK (plazo_meses IN (12, 18, 24, 48))` | Plazo acordado en meses. |
-| `tasa_anual` | `NUMERIC(5,4)` | `decimal` | NO | `CHECK (tasa_anual IN (0.1600, 0.1800, 0.2000, 0.2400))` | Tasa de interés anual inmutable. |
-| `saldo_insoluto_actual`| `NUMERIC(14,2)`| `decimal` | NO | `CHECK (saldo_insoluto_actual >= 0)` | Capital pendiente a la fecha. |
-| `estado` | `VARCHAR(20)` | `string` | NO | `CHECK (estado IN ('Activo', 'Liquidado'))` | Estado de exigibilidad del crédito. |
+| `porcentaje_enganche` | `NUMERIC(5,2)` | `decimal` | NO | `CHECK (porcentaje_enganche IN (10, 20, 30))` | Porcentaje seleccionado en Paso 3 (`ParametrosNegocio`). |
+| `monto_enganche` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (monto_enganche > 0)` | Monto pagado por enganche. |
+| `capital_financiado`| `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (capital_financiado > 0)` | Monto insoluto original a amortizar. |
+| `plazo_meses`| `INTEGER` | `int` | NO | `CHECK (plazo_meses IN (12, 18, 24, 48))` | Plazo acordado en meses (`ParametrosNegocio`). |
+| `tasa_interes_anual` | `NUMERIC(5,4)` | `decimal` | NO | `CHECK (tasa_interes_anual IN (0.1600, 0.1800, 0.2000, 0.2400))` | Tasa de interés anual fija indexada al plazo. |
+| `cuota_mensual_actual` | `NUMERIC(18,2)` | `Dinero` | NO | `CHECK (cuota_mensual_actual > 0)` | Cuota ordinaria vigente (actualizada tras abonos). |
+| `saldo_insoluto`| `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (saldo_insoluto >= 0)` | Capital pendiente a la fecha. |
+| `estado` | `VARCHAR(20)` | `EstadoFinanciamiento` | NO | `CHECK (estado IN ('Activo','EnMora','Liquidado','Cancelado'))` | Estado de exigibilidad del crédito. |
 | `xmin` | `XMIN (uint)` | `uint` | NO | `System Column` | Concurrency token optimista nativo. |
 
-#### 3.5 Tabla: `mensualidades`
-Almacena el calendario financiero proyectado periodo a periodo.
+#### 3.5 Tabla: `mensualidades` (`SF-058`, `SF-059`)
+Almacena el calendario financiero proyectado cuota a cuota.
 
 | Columna | Tipo PostgreSQL | Tipo .NET | Nulo | Restricciones / Índices | Descripción Funcional |
-|---|---|---|:---:|---|---|
+|---|---|---|---|---|---|
 | `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Identificador único de la mensualidad. |
-| `financiamiento_id`| `UUID` | `Guid` | NO | `FK -> financiamientos(id) ON DELETE CASCADE`| Contrato padre al que pertenece la cuota. |
-| `numero_periodo` | `INTEGER` | `int` | NO | `CHECK (numero_periodo >= 1)` | Número de cuota periódica ($1 \dots n$). |
-| `saldo_inicial`| `NUMERIC(14,2)`| `decimal` | NO | `CHECK (saldo_inicial >= 0)` | Deuda antes de aplicar la cuota. |
-| `interes` | `NUMERIC(14,2)`| `decimal` | NO | `CHECK (interes >= 0)` | Interés del periodo ($Saldo \times i$). |
-| `capital_amortizado`| `NUMERIC(14,2)`| `decimal`| NO | `CHECK (capital_amortizado >= 0)` | Amortización aplicada al principal. |
-| `cuota` | `NUMERIC(14,2)`| `decimal` | NO | `CHECK (cuota > 0)` | Importe total exigible en el periodo. |
-| `saldo_final` | `NUMERIC(14,2)`| `decimal` | NO | `CHECK (saldo_final >= 0)` | Saldo posterior a la cuota ($0.00 en $n$). |
+| `financiamiento_id`| `UUID` | `Guid` | NO | `FK -> financiamientos(id)` | Contrato padre al que pertenece la cuota. |
+| `numero_cuota` | `INTEGER` | `int` | NO | `CHECK (numero_cuota >= 1)` | Número de cuota periódica ($1 \dots n$). |
 | `fecha_vencimiento`| `DATE` | `DateOnly` | NO | `ix_mensualidades_vencimiento` | Fecha límite para cubrir el pago sin retraso. |
-| `estado` | `VARCHAR(20)` | `string` | NO | `CHECK (estado IN ('Pendiente', 'Pagada', 'Vencida'))` | Estado administrativo de cobro. |
+| `saldo_inicial_periodo`| `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (saldo_inicial_periodo >= 0)` | Deuda antes de aplicar la cuota. |
+| `capital_programado`| `NUMERIC(18,2)`| `Dinero`| NO | `CHECK (capital_programado >= 0)` | Amortización aplicada al principal. |
+| `interes_programado` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (interes_programado >= 0)` | Interés del periodo ($Saldo \times i$). |
+| `monto_total_cuota` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (monto_total_cuota > 0)` | Importe total exigible en el periodo. |
+| `saldo_final_periodo` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (saldo_final_periodo >= 0)` | Saldo posterior a la cuota ($0.00 en $n$). |
+| `estado` | `VARCHAR(20)` | `EstadoMensualidad` | NO | `CHECK (estado IN ('Pendiente', 'Pagada', 'Vencida'))` | Estado administrativo de cobro. |
+| `fecha_pago` | `TIMESTAMPTZ` | `DateTimeOffset?` | SÍ | — | Fecha exacta en que se cubrió la cuota. |
 
-#### 3.6 Tabla: `pagos`
-Libro mayor de ingresos en caja con auditoría contable.
+#### 3.6 Tabla: `pagos` (`SF-075`, `SF-076`)
+Libro mayor de ingresos en caja con auditoría contable (*Captura 10 de Figma*).
 
 | Columna | Tipo PostgreSQL | Tipo .NET | Nulo | Restricciones / Índices | Descripción Funcional |
-|---|---|---|:---:|---|---|
+|---|---|---|---|---|---|
 | `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Identificador universal del movimiento. |
 | `folio` | `VARCHAR(20)` | `string` | NO | `UNIQUE`, `ix_pagos_folio` | Folio oficial imprimible (`PAG-2026-XXXXXX`). |
-| `financiamiento_id`| `UUID` | `Guid` | NO | `FK -> financiamientos(id)`, `ix_pagos_financiamiento_id`| Crédito impactado por el ingreso. |
-| `mensualidad_id` | `UUID` | `Guid` | SÍ | `FK -> mensualidades(id)`, `ix_pagos_mensualidad_id` | Cuota saldada (nulo en abono/liquidación). |
+| `venta_id` | `UUID` | `Guid` | NO | `FK -> ventas(id)`, `ix_pagos_venta_id` | Contrato impactado. |
+| `financiamiento_id`| `UUID` | `Guid?` | SÍ | `FK -> financiamientos(id)`, `ix_pagos_financiamiento_id` | Crédito impactado (nulo en contado). |
+| `mensualidad_id` | `UUID` | `Guid?` | SÍ | `FK -> mensualidades(id)`, `ix_pagos_mensualidad_id` | Cuota saldada (nulo en abono/liquidación/contado). |
 | `cajero_id` | `VARCHAR(450)`| `string` | NO | `FK -> AspNetUsers(Id)`, `ix_pagos_cajero_id` | Cajero de Identity receptor del pago. |
-| `clave_idempotencia`| `UUID` | `Guid` | NO | `UNIQUE`, `ix_pagos_idempotencia` | Token de seguridad contra cobros duplicados. |
-| `tipo_pago` | `VARCHAR(20)` | `string` | NO | `CHECK (tipo_pago IN ('Enganche', 'Ordinario', 'AbonoCapital', 'Liquidacion'))` | Concepto del ingreso en caja. |
-| `monto` | `NUMERIC(14,2)`| `decimal` | NO | `CHECK (monto > 0)` | Dinero real efectivamente cobrado. |
-| `descuento_aplicado`| `NUMERIC(14,2)`| `decimal`| NO | `DEFAULT 0.00`, `CHECK (descuento_aplicado >= 0)` | Bonificación comercial del 10% (RN-09). |
+| `tipo_pago` | `VARCHAR(25)` | `TipoPago` | NO | `CHECK (tipo_pago IN ('Enganche','Contado','Mensualidad','AbonoCapital','Liquidacion'))` | Concepto del ingreso en caja. |
+| `metodo_pago` | `VARCHAR(25)` | `MetodoPago` | NO | `CHECK (metodo_pago IN ('Efectivo','TransferenciaBancaria','Tarjeta'))` | Medio de pago recibido en ventanilla. |
+| `referencia` | `VARCHAR(60)` | `string?` | SÍ | — | Folio o últimos 4 dígitos (obligatorio si no es efectivo). |
+| `monto_total` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (monto_total > 0)` | Dinero real efectivamente cobrado. |
+| `monto_capital` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (monto_capital >= 0)` | Porción aplicada a capital. |
+| `monto_interes` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (monto_interes >= 0)` | Porción aplicada a interés. |
+| `saldo_anterior` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (saldo_anterior >= 0)` | Saldo insoluto previo al movimiento. |
+| `saldo_posterior` | `NUMERIC(18,2)`| `Dinero` | NO | `CHECK (saldo_posterior >= 0)` | Saldo insoluto posterior al movimiento. |
+| `clave_idempotencia`| `VARCHAR(64)` | `string` | NO | `UNIQUE`, `ix_pagos_clave_idempotencia` | Token UUID v4 de seguridad contra cobros duplicados. |
 | `fecha_pago` | `TIMESTAMPTZ` | `DateTimeOffset` | NO | `DEFAULT NOW()`, `ix_pagos_fecha` | Marca de tiempo inmutable del cobro. |
+
+#### 3.7 Tabla: `configuracion_sucursales` (`SF-091`)
+Almacena los parámetros operativos de la sucursal (*Captura 12 de Figma*).
+
+| Columna | Tipo PostgreSQL | Tipo .NET | Nulo | Restricciones / Índices | Descripción Funcional |
+|---|---|---|---|---|---|
+| `id` | `UUID` | `Guid` | NO | `PRIMARY KEY` | Identificador de la sucursal. |
+| `nombre_comercial` | `VARCHAR(120)` | `string` | NO | — | Nombre mostrado en Topbar (`Jardines del Valle`). |
+| `telefono_atencion` | `VARCHAR(20)` | `string` | NO | — | Teléfono de sucursal (`55 4120 9800`). |
+| `correo_operativo` | `VARCHAR(150)` | `string` | NO | — | Correo operativo (`operacion@sistemafunerario.mx`). |
+| `direccion` | `TEXT` | `string` | NO | — | Dirección física de la sucursal. |
+| `recordatorios_pago` | `BOOLEAN` | `bool` | NO | `DEFAULT TRUE` | Switch de avisos previos al vencimiento. |
+| `resumen_diario_caja` | `BOOLEAN` | `bool` | NO | `DEFAULT TRUE` | Switch de envío de corte al cierre del turno. |
 
 ---
 
 ### 4. Matriz de Índices de Alto Rendimiento
 
-Para asegurar que el motor de base de datos no ejecute escaneos secuenciales destructivos bajo carga, se configuran los siguientes índices:
-
 ```sql
--- 1. Unicidad de Clientes
+-- 1. Lotes y prevención de doble venta activa
+CREATE UNIQUE INDEX ix_lotes_clave ON lotes (clave);
+CREATE INDEX ix_lotes_filtros ON lotes (seccion, estado, gavetas);
+CREATE UNIQUE INDEX uq_ventas_lote_activo ON ventas (lote_id) WHERE estado <> 'Cancelado';
+
+-- 2. Unicidad y búsqueda de Clientes
 CREATE UNIQUE INDEX ix_clientes_curp ON clientes (curp);
 CREATE UNIQUE INDEX ix_clientes_correo ON clientes (correo);
-
--- 2. Búsqueda de Clientes en Interfaz (Trigramas / Pattern matching)
 CREATE INDEX ix_clientes_apellidos_nombre ON clientes (apellidos text_pattern_ops, nombre text_pattern_ops);
 
--- 3. Llaves Foráneas de Ventas
+-- 3. Ventas y Contratos
+CREATE UNIQUE INDEX ix_ventas_folio ON ventas (folio_contrato);
 CREATE INDEX ix_ventas_cliente_id ON ventas (cliente_id);
-CREATE INDEX ix_ventas_lote_id ON ventas (lote_id);
 CREATE INDEX ix_ventas_vendedor_id ON ventas (vendedor_id);
 CREATE INDEX ix_ventas_fecha ON ventas (fecha_venta DESC);
 
--- 4. Contratos y Cuotas
+-- 4. Financiamientos y Cuotas
 CREATE UNIQUE INDEX uq_financiamientos_venta_id ON financiamientos (venta_id);
-CREATE UNIQUE INDEX uq_mensualidades_periodo ON mensualidades (financiamiento_id, numero_periodo);
+CREATE UNIQUE INDEX uq_mensualidades_cuota ON mensualidades (financiamiento_id, numero_cuota);
+CREATE INDEX ix_mensualidades_mora_parcial ON mensualidades (fecha_vencimiento) WHERE estado = 'Pendiente';
 
--- 5. Índice Parcial Crítico: Detección Instantánea de Mora / Vencimientos (CP-09, RF-14)
--- Escanea únicamente cuotas pendientes, ignorando el 95% de la tabla ya pagada
-CREATE INDEX ix_mensualidades_mora_parcial 
-ON mensualidades (fecha_vencimiento) 
-WHERE estado = 'Pendiente';
-
--- 6. Caja e Idempotencia
-CREATE UNIQUE INDEX uq_pagos_idempotencia ON pagos (clave_idempotencia);
-CREATE UNIQUE INDEX uq_pagos_folio ON pagos (folio);
+-- 5. Caja e Idempotencia
+CREATE UNIQUE INDEX ix_pagos_clave_idempotencia ON pagos (clave_idempotencia);
+CREATE UNIQUE INDEX ix_pagos_folio ON pagos (folio);
+CREATE INDEX ix_pagos_venta_id ON pagos (venta_id);
 CREATE INDEX ix_pagos_financiamiento_id ON pagos (financiamiento_id);
 CREATE INDEX ix_pagos_cajero_id ON pagos (cajero_id);
 CREATE INDEX ix_pagos_fecha ON pagos (fecha_pago DESC);
@@ -246,41 +301,35 @@ CREATE INDEX ix_pagos_fecha ON pagos (fecha_pago DESC);
 
 ---
 
-### 5. Secuencia de Folios Segura (Zero-Contention)
-
-Para cumplir con el requerimiento de folio contable sin bloquear la tabla `pagos`:
+### 5. Secuencias de Folios Seguras (Zero-Contention)
 
 ```sql
--- Secuencia PostgreSQL nativa
-CREATE SEQUENCE seq_pagos_folio START WITH 1 INCREMENT BY 1 NO CYCLE;
+-- Secuencia para folios de contrato (CTR-YYYY-XXXX)
+CREATE SEQUENCE seq_contratos_folio START WITH 190 INCREMENT BY 1 NO CYCLE;
 
--- Expresión por defecto aplicada en EF Core (SF-035)
--- Genera: PAG-2026-000001, PAG-2026-000002, etc.
-ALTER TABLE pagos ALTER COLUMN folio 
-SET DEFAULT CONCAT('PAG-', TO_CHAR(NOW(), 'YYYY'), '-', LPAD(nextval('seq_pagos_folio')::text, 6, '0'));
+-- Secuencia para folios de recibos de caja (PAG-YYYY-XXXXXX)
+CREATE SEQUENCE seq_pagos_folio START WITH 1 INCREMENT BY 1 NO CYCLE;
 ```
 
 ---
 
 ### 6. Configuración de Concurrencia Optimista en EF Core (`xmin`)
 
-Para el contrato de financiamiento (`SF-031`), la configuración en Fluent API asegura la protección contra concurrencia sin sobrecarga de triggers:
-
 ```csharp
-// FinanciamientoConfiguration.cs
+// FinanciamientoConfiguration.cs (SF-059)
 public class FinanciamientoConfiguration : IEntityTypeConfiguration<Financiamiento>
 {
     public void Configure(EntityTypeBuilder<Financiamiento> builder)
     {
         builder.ToTable("financiamientos");
-
         builder.HasKey(f => f.Id);
 
         // Mapeo del concurrency token nativo de PostgreSQL
-        builder.UseXminAsConcurrencyVersion();
+        builder.Property(f => f.VersionFila).IsRowVersion();
 
-        builder.Property(f => f.SaldoInsolutoActual)
-               .HasPrecision(14, 2)
+        builder.Property(f => f.SaldoInsoluto)
+               .HasConversion(d => d.Monto, m => Dinero.Desde(m))
+               .HasPrecision(18, 2)
                .IsRequired();
 
         builder.HasOne<Venta>()
@@ -290,20 +339,3 @@ public class FinanciamientoConfiguration : IEntityTypeConfiguration<Financiamien
     }
 }
 ```
-
----
-
-### 7. Trazabilidad de Requisitos PRD Cubiertos por el ERD
-
-| Requisito PRD | Entidad / Columna en ERD | Mecanismo de Garantía Técnica |
-|---|---|---|
-| **RN-01 (3 Lotes fijos)** | `lotes` (ID, Precio) | Seeder con 3 filas inmutables + FK `Restrict`. |
-| **RN-02 (Venta asociada)**| `ventas` (`cliente_id`, `lote_id`) | Claves foráneas obligatorias `NOT NULL`. |
-| **RN-04 / RN-05 (Límites)**| `financiamientos` (`plazo_meses`, `enganche`) | Check constraints de valores autorizados en DDL. |
-| **RN-08 (Abono Capital)**| `pagos` + `financiamientos.saldo_insoluto_actual` | Transacción ACID con token `xmin`. |
-| **RN-09 (Liquidación 10%)**| `pagos.descuento_aplicado` | Auditoría de bonificación del 10% en intereses. |
-| **RN-10 (Vencida $0 mora)**| `mensualidades.estado` | Índice parcial sobre `fecha_vencimiento`. |
-| **RN-11 (No negativos)** | Check constraints monetarios | `CHECK (monto > 0)` y `CHECK (saldo >= 0)`. |
-| **RNF-02 (Precisión)** | Columnas de dinero | Tipo `NUMERIC(14,2)` universal. |
-| **RNF-03 (RBAC Identity)** | `ventas.vendedor_id`, `pagos.cajero_id` | Integridad referencial con `AspNetUsers`. |
-| **RNF-04 (ACID & Idemp)** | `pagos.clave_idempotencia` | Índice `UNIQUE` + Aislamiento en EF Core. |
