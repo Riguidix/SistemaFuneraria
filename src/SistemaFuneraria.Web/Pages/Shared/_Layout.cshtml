@@ -22,6 +22,7 @@
     bool esContratos = rutaActual.StartsWith("/Contratos", StringComparison.OrdinalIgnoreCase);
     bool esCaja = rutaActual.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase) || rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
     bool esParametrosUi = rutaActual.StartsWith("/ParametrosUi", StringComparison.OrdinalIgnoreCase);
+    bool esReportes = rutaActual.StartsWith("/Reportes", StringComparison.OrdinalIgnoreCase);
 }
 <body class="funeraria-app">
     <div class="funeraria-wrapper">
@@ -90,9 +91,9 @@
                 <!-- SECCIÓN: ADMINISTRACIÓN -->
                 <div class="funeraria-nav-section-title">ADMINISTRACIÓN</div>
                 <ul class="funeraria-nav-list" role="navigation">
-                    <!-- 7. Reportes (Inerte) -->
+                    <!-- 7. Reportes (Activo SF-090 · Captura 11) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Reportes (No navegable)">
+                        <a href="/Reportes" class="funeraria-nav-item @(esReportes ? "active" : "")" @(esReportes ? "aria-current=\"page\"" : "") title="Reportes">
                             <i class="fa-solid fa-chart-line fa-fw" aria-hidden="true"></i>
                             <span>Reportes</span>
                         </a>
