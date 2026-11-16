@@ -1,10 +1,12 @@
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SistemaFuneraria.Api.Controllers.V1;
@@ -57,9 +59,20 @@ public class IniciarSesionUsuarioTests : IDisposable
         _serviceProvider.Dispose();
     }
 
+    private static IConfiguration CrearConfiguracionJwt() =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Jwt:Key"] = "SistemaFuneraria-Test-Jwt-Signing-Key-2026-32Chars!",
+                ["Jwt:Issuer"] = "SistemaFuneraria.Api",
+                ["Jwt:Audience"] = "SistemaFuneraria.Web",
+                ["Jwt:ExpirationMinutes"] = "60"
+            })
+            .Build();
+
     private AuthController CrearController(ClaimsPrincipal? user = null)
     {
-        var controller = new AuthController(_userManager);
+        var controller = new AuthController(_userManager, CrearConfiguracionJwt());
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext
@@ -291,5 +304,43 @@ public class IniciarSesionUsuarioTests : IDisposable
         perfil.Iniciales.Should().Be("AM");
         perfil.Rol.Should().Be("Administrador");
         perfil.Sucursal.Should().Be("Jardines del Valle");
+    }
+
+    [Fact(DisplayName = "SF-023: Login exitoso debe emitir un JWT firmado válido con claims sub y role")]
+    public async Task Login_ConCredencialesValidas_DebeEmitirJwtFirmadoConClaimsDeRolYSub()
+    {
+        const string email = "jwt.test@sistemafunerario.mx";
+        const string password = "Password123!";
+        var user = await CrearUsuarioDemoAsync(email, password);
+        var controller = CrearController();
+
+        var result = await controller.Login(new LoginRequest(email, password));
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        var dto = okResult.Value.Should().BeOfType<LoginResponseDto>().Subject;
+
+        var handler = new JwtSecurityTokenHandler();
+        handler.CanReadToken(dto.Token).Should().BeTrue();
+        var jwt = handler.ReadJwtToken(dto.Token);
+
+        jwt.Issuer.Should().Be("SistemaFuneraria.Api");
+        jwt.Audiences.Should().Contain("SistemaFuneraria.Web");
+        jwt.Claims.Should().Contain(c => c.Type == JwtRegisteredClaimNames.Sub && c.Value == user.Id);
+        jwt.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == "Administrador");
+    }
+
+    [Fact(DisplayName = "SF-023: Usuario sin rol asignado debe ser rechazado con 403 Forbidden (fail-closed)")]
+    public async Task Login_ConUsuarioSinRolAsignado_DebeRetornar403Forbidden()
+    {
+        const string email = "sinrol@sistemafunerario.mx";
+        const string password = "Password123!";
+        var user = new IdentityUser { UserName = email, Email = email, EmailConfirmed = true };
+        var createResult = await _userManager.CreateAsync(user, password);
+        createResult.Succeeded.Should().BeTrue();
+
+        var controller = CrearController();
+        var result = await controller.Login(new LoginRequest(email, password));
+
+        var objectResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
     }
 }

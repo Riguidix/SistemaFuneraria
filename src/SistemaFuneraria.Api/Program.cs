@@ -1,5 +1,8 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Application.Servicios.Simulador;
@@ -22,6 +25,30 @@ builder.Services.AddIdentityCore<IdentityUser>(options =>
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
 
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSection["Key"]
+    ?? throw new InvalidOperationException("La clave de firma 'Jwt:Key' no está configurada.");
+var jwtIssuer = jwtSection["Issuer"] ?? "SistemaFuneraria.Api";
+var jwtAudience = jwtSection["Audience"] ?? "SistemaFuneraria.Web";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromMinutes(1)
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ISimuladorService, SimuladorService>();
@@ -39,18 +66,49 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Sistema Funeraria API",
+        Version = "v1",
+    });
+});
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+        if (db.Database.IsRelational())
+        {
+            await db.Database.MigrateAsync();
+        }
+    
+        await IdentitySeed.SeedAsync(app.Services);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Error al migrar o sembrar la base de datos en Development.");
+    }
+
+    app.UseSwagger(options =>
+    {
+        options.SerializeAsV2 = true;
+    });
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Sistema Funeraria");
+    });
 }
 
 app.UseCors(corsPolicy);
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

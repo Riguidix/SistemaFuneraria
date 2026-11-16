@@ -3,79 +3,197 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Sistema Funerario</title>
+    <title>@ViewData["Title"] - Funeraria</title>
     <!-- Bootstrap 5.3.8 (RNF-06) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='/lib/bootstrap/dist/css/bootstrap.min.css';" />
+    <!-- CDN de Font Awesome (SF-020) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <!-- Hoja de estilos del tema Funeraria (SF-019 / SF-020) y Tokens Oficiales (SF-025) -->
+    <link rel="stylesheet" href="~/css/sistema-tokens.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/funeraria-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="d-flex flex-column min-vh-100 bg-light">
-    <header role="banner">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm" aria-label="Navegación principal">
-            <div class="container">
-                <a class="navbar-brand fw-bold tracking-wide" asp-page="/Index">
-                    <span class="text-warning">✦</span> Sistema Funerario
+@{
+    var rutaActual = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
+    bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
+    bool esContratos = rutaActual.StartsWith("/Contratos", StringComparison.OrdinalIgnoreCase);
+    bool esCaja = rutaActual.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase) || rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
+    bool esParametrosUi = rutaActual.StartsWith("/ParametrosUi", StringComparison.OrdinalIgnoreCase);
+}
+<body class="funeraria-app">
+    <div class="funeraria-wrapper">
+        <!-- ==========================================
+             SIDEBAR LATERAL FUNERARIA (CAPA 1)
+             ========================================== -->
+        <aside class="funeraria-sidebar" aria-label="Navegación principal Funeraria">
+            <div>
+                <!-- Logotipo e Identidad de Marca Funeraria -->
+                <a href="/Clientes" class="funeraria-brand mb-3">
+                    <div class="funeraria-brand-icon" aria-hidden="true">F</div>
+                    <div>
+                        <div class="funeraria-brand-title">Funeraria</div>
+                        <div class="funeraria-brand-subtitle">Gestión memorial</div>
+                    </div>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
-                        aria-controls="navbarMain" aria-expanded="false" aria-label="Alternar navegación">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarMain">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Index">Inicio</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Catalogo/Index">Catálogo de Lotes</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Clientes/Index">Clientes</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Ventas/Nueva">Nueva Venta</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-page="/Caja/Index">Caja y Cobranza</a>
-                        </li>
-                    </ul>
-                    <span class="navbar-text small text-secondary">
-                        Moneda Oficial: <strong class="text-light">MXN ($)</strong>
-                    </span>
+
+                <!-- SECCIÓN: OPERACIÓN -->
+                <div class="funeraria-nav-section-title">OPERACIÓN</div>
+                <ul class="funeraria-nav-list" role="navigation">
+                    <!-- 1. Resumen (Inerte) -->
+                    <li>
+                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Resumen (No navegable)">
+                            <i class="fa-solid fa-table-cells-large fa-fw" aria-hidden="true"></i>
+                            <span>Resumen</span>
+                        </a>
+                    </li>
+                    <!-- 2. Catálogo de lotes (Funcional en SF-023) -->
+                    <li>
+                        <a href="/Catalogo" class="funeraria-nav-item @(esCatalogo ? "active" : "")" @(esCatalogo ? "aria-current=\"page\"" : "")>
+                            <i class="fa-solid fa-book-open fa-fw" aria-hidden="true"></i>
+                            <span>Catálogo de lotes</span>
+                        </a>
+                    </li>
+                    <!-- 3. Clientes (Funcional en SF-019 / SF-020) -->
+                    <li>
+                        <a href="/Clientes" class="funeraria-nav-item @(esClientes ? "active" : "")" @(esClientes ? "aria-current=\"page\"" : "")>
+                            <i class="fa-solid fa-users fa-fw" aria-hidden="true"></i>
+                            <span>Clientes</span>
+                        </a>
+                    </li>
+                    <!-- 4. + Nueva venta (Inerte) -->
+                    <li>
+                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Nueva venta (No navegable)">
+                            <i class="fa-solid fa-circle-plus fa-fw" aria-hidden="true"></i>
+                            <span>+ Nueva venta</span>
+                        </a>
+                    </li>
+                    <!-- 5. Contratos (Activo SF-070) -->
+                    <li>
+                        <a href="/Contratos" class="funeraria-nav-item @(esContratos ? "active" : "")" @(esContratos ? "aria-current=\"page\"" : "") title="Contratos">
+                            <i class="fa-solid fa-file-lines fa-fw" aria-hidden="true"></i>
+                            <span>Contratos</span>
+                        </a>
+                    </li>
+                    <!-- 6. Caja y cobranza (Figma Captura 10 · SF-080) -->
+                    <li>
+                        <a href="/Caja" class="funeraria-nav-item @(esCaja ? "active" : "")" @(esCaja ? "aria-current=\"page\"" : "") title="Caja y cobranza">
+                            <i class="fa-solid fa-cash-register fa-fw" aria-hidden="true"></i>
+                            <span>Caja y cobranza</span>
+                            <span class="funeraria-badge-gold">8</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- SECCIÓN: ADMINISTRACIÓN -->
+                <div class="funeraria-nav-section-title">ADMINISTRACIÓN</div>
+                <ul class="funeraria-nav-list" role="navigation">
+                    <!-- 7. Reportes (Inerte) -->
+                    <li>
+                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Reportes (No navegable)">
+                            <i class="fa-solid fa-chart-line fa-fw" aria-hidden="true"></i>
+                            <span>Reportes</span>
+                        </a>
+                    </li>
+                    <!-- 8. Configuración (Inerte) -->
+                    <li>
+                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Configuración (No navegable)">
+                            <i class="fa-solid fa-gear fa-fw" aria-hidden="true"></i>
+                            <span>Configuración</span>
+                        </a>
+                    </li>
+                    <!-- 9. Parámetros UI (Activo SF-025) -->
+                    <li>
+                        <a href="/ParametrosUi" class="funeraria-nav-item @(esParametrosUi ? "active" : "")" @(esParametrosUi ? "aria-current=\"page\"" : "") title="Parámetros UI">
+                            <i class="fa-solid fa-sliders fa-fw" aria-hidden="true"></i>
+                            <span>Parámetros UI</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Pie de Sidebar: Tarjeta Visual de Soporte -->
+            <div>
+                <a href="#" class="funeraria-support-card" onclick="return false;" title="Guía operativa y soporte Funeraria">
+                    <div class="funeraria-support-icon">?</div>
+                    <div>
+                        <div class="funeraria-support-title">¿Necesitas ayuda?</div>
+                        <div class="funeraria-support-sub">Consulta la guía operativa</div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right ms-auto text-white-50" aria-hidden="true"></i>
+                </a>
+            </div>
+        </aside>
+
+        <!-- ==========================================
+             ÁREA PRINCIPAL DE CONTENIDO (CAPA 1)
+             ========================================== -->
+        <div class="funeraria-main-container">
+            <!-- Top Navbar Funeraria -->
+            <header class="funeraria-top-navbar" role="banner">
+                <!-- Selector de Sucursal -->
+                <div class="funeraria-branch-picker">
+                    <span class="funeraria-branch-kicker">SUCURSAL</span>
+                    <div class="funeraria-branch-selector" title="Cambiar sucursal">
+                        <span>Jardines del Valle</span>
+                        <i class="fa-solid fa-chevron-down ms-1 small" aria-hidden="true"></i>
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
 
-    <div class="container my-4 flex-grow-1">
-        @if (TempData["MensajeExito"] != null)
-        {
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                @TempData["MensajeExito"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-            </div>
-        }
-        @if (TempData["MensajeError"] != null)
-        {
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                @TempData["MensajeError"]
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-            </div>
-        }
+                <!-- Notificaciones y Perfil de Usuario -->
+                <div class="funeraria-top-actions">
+                    <!-- Campana de notificaciones con badge -->
+                    <a href="#" class="funeraria-btn-icon-capsule" onclick="return false;" aria-label="Notificaciones" title="Notificaciones (1 nueva)">
+                        <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                        <span class="funeraria-notification-dot" aria-hidden="true"></span>
+                    </a>
 
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+                    <!-- Perfil de Usuario Funeraria -->
+                    <div class="funeraria-user-profile" title="Perfil de usuario">
+                        <div class="funeraria-avatar-am" aria-hidden="true">AM</div>
+                        <div>
+                            <div class="funeraria-user-name">Andrea Morales</div>
+                            <div class="funeraria-user-role">Administradora</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down ms-1 text-muted small" aria-hidden="true"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Cuerpo Principal / Vistas de Razor Pages -->
+            <main role="main" class="funeraria-page-body">
+                @if (TempData["MensajeExito"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+                        <strong>✓</strong> @TempData["MensajeExito"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                }
+                @if (TempData["MensajeError"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show border-0 rounded-3 shadow-sm mb-4" role="alert">
+                        <strong>!</strong> @TempData["MensajeError"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
-    <footer class="border-top py-3 text-muted bg-white mt-auto" role="contentinfo">
-        <div class="container d-flex flex-wrap justify-content-between align-items-center">
-            <span class="small">&copy; @DateTime.Now.Year - Sistema de Venta y Financiamiento de Lotes Funerarios</span>
-            <span class="badge bg-dark-subtle text-dark border small">Cultura: es-MX ($#,##0.00)</span>
-        </div>
-    </footer>
+    <!-- Botón Flotante de Ayuda Rápida (Esquina inferior derecha) -->
+    <a href="#" class="funeraria-fab-help" onclick="return false;" title="Ayuda y soporte Funeraria" aria-label="Ayuda">
+        ?
+    </a>
 
     <!-- Bootstrap 5.3.8 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/lib/bootstrap/dist/js/bootstrap.bundle.min.js';"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Kit Reutilizable de Estados UI (SF-027) -->
+    <partial name="_UiStatesPartial" />
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
