@@ -1,0 +1,460 @@
+@page
+@model SistemaFuneraria.Web.Pages.ParametrosUiModel
+@{
+    ViewData["Title"] = "Parámetros UI - Design System";
+}
+
+<!-- Encabezado de Página -->
+<div class="mb-4">
+    <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.08em; font-size: 0.75rem;">DESIGN SYSTEM</span>
+    <h1 class="fw-bold mt-1 mb-1" style="color: var(--sf-text-dark, #1F2937); font-size: 2.25rem; letter-spacing: -0.02em;">Parámetros UI</h1>
+    <p class="text-muted mb-0" style="font-size: 1rem;">Inventario visual de la paleta activa institucional, escala tonal con color base al centro y tipografía.</p>
+</div>
+
+<!-- Notificación Flotante: Color Copiado -->
+<div id="toastCopiado" class="toast align-items-center text-white border-0 position-fixed bottom-0 end-0 m-4 shadow-lg rounded-pill d-none" role="alert" style="background-color: #1F2937; z-index: 1060; padding: 0.4rem 1.25rem;">
+    <div class="d-flex align-items-center gap-2 small">
+        <i class="fa-solid fa-check text-success"></i>
+        <span>Color copiado: <strong id="hexCopiadoTexto">#FFFFFF</strong></span>
+    </div>
+</div>
+
+<!-- ========================================================
+     SECCIÓN 1: Colores del Tema Activo Web (Serenia Funeraria)
+     Cada color con su tira de matices (Tintes - Base en centro - Sombras)
+     ======================================================== -->
+<div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4 bg-white">
+    <div class="mb-4">
+        <h2 class="h5 fw-bold mb-1" style="color: var(--sf-text-dark, #1F2937);">Colores del Tema Activo Web (Serenia Funeraria)</h2>
+        <p class="text-muted small mb-0">Cada color de la aplicación posicionado exactamente al centro de su escala tonal, acompañado de sus tintes más claros (izquierda) y sombras más oscuras (derecha). Haz clic en cualquier matiz para copiar su código HEX.</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- 1. Verde Olivo Primario -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="color-swatch-card d-flex flex-column justify-content-between h-100 p-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="color-swatch-box shadow-sm" style="background-color: var(--sf-primary-olive, #2D4224);" title="#2D4224"></div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">Verde Olivo Primario</div>
+                        <div class="text-muted token-code">--sf-primary-olive</div>
+                        <div class="token-code fw-semibold text-truncate" style="color: #2D4224;">#2D4224</div>
+                    </div>
+                </div>
+
+                <!-- Barra de 11 Matices (HTML Color Codes): Base en el centro con punto -->
+                <div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">
+                        <span>Tintes (+claros)</span>
+                        <span class="fw-semibold text-dark">Base (#2D4224)</span>
+                        <span>Sombras (+oscuros)</span>
+                    </div>
+                    <div class="color-shades-strip" title="Escala tonal: Verde Olivo Primario">
+                        <div class="shade-slice" style="background-color: #eaf0e8;" title="#eaf0e8 (Tinte +80%)" onclick="copiarColor('#eaf0e8')"></div>
+                        <div class="shade-slice" style="background-color: #cadbc7;" title="#cadbc7 (Tinte +60%)" onclick="copiarColor('#cadbc7')"></div>
+                        <div class="shade-slice" style="background-color: #a9c5a5;" title="#a9c5a5 (Tinte +40%)" onclick="copiarColor('#a9c5a5')"></div>
+                        <div class="shade-slice" style="background-color: #86ad80;" title="#86ad80 (Tinte +25%)" onclick="copiarColor('#86ad80')"></div>
+                        <div class="shade-slice" style="background-color: #5c8654;" title="#5c8654 (Tinte +12%)" onclick="copiarColor('#5c8654')"></div>
+                        <!-- COLOR BASE EN EL CENTRO -->
+                        <div class="shade-slice active-base" style="background-color: #2D4224;" title="Color Base: #2D4224" onclick="copiarColor('#2D4224')">
+                            <span class="active-dot"></span>
+                        </div>
+                        <div class="shade-slice" style="background-color: #273a20;" title="#273a20 (Sombra -12%)" onclick="copiarColor('#273a20')"></div>
+                        <div class="shade-slice" style="background-color: #202f1a;" title="#202f1a (Sombra -25%)" onclick="copiarColor('#202f1a')"></div>
+                        <div class="shade-slice" style="background-color: #192414;" title="#192414 (Sombra -40%)" onclick="copiarColor('#192414')"></div>
+                        <div class="shade-slice" style="background-color: #11180d;" title="#11180d (Sombra -60%)" onclick="copiarColor('#11180d')"></div>
+                        <div class="shade-slice" style="background-color: #080c07;" title="#080c07 (Sombra -80%)" onclick="copiarColor('#080c07')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Verde Sidebar -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="color-swatch-card d-flex flex-column justify-content-between h-100 p-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="color-swatch-box shadow-sm" style="background-color: var(--sf-sidebar-green, #485635);" title="#485635"></div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">Verde Sidebar</div>
+                        <div class="text-muted token-code">--sf-sidebar-green</div>
+                        <div class="token-code fw-semibold text-truncate" style="color: #485635;">#485635</div>
+                    </div>
+                </div>
+
+                <!-- Barra de 11 Matices: Base en el centro -->
+                <div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">
+                        <span>Tintes (+claros)</span>
+                        <span class="fw-semibold text-dark">Base (#485635)</span>
+                        <span>Sombras (+oscuros)</span>
+                    </div>
+                    <div class="color-shades-strip" title="Escala tonal: Verde Sidebar">
+                        <div class="shade-slice" style="background-color: #edf1eb;" title="#edf1eb (Tinte +80%)" onclick="copiarColor('#edf1eb')"></div>
+                        <div class="shade-slice" style="background-color: #d2decb;" title="#d2decb (Tinte +60%)" onclick="copiarColor('#d2decb')"></div>
+                        <div class="shade-slice" style="background-color: #b6c9aa;" title="#b6c9aa (Tinte +40%)" onclick="copiarColor('#b6c9aa')"></div>
+                        <div class="shade-slice" style="background-color: #98b287;" title="#98b287 (Tinte +25%)" onclick="copiarColor('#98b287')"></div>
+                        <div class="shade-slice" style="background-color: #708b5d;" title="#708b5d (Tinte +12%)" onclick="copiarColor('#708b5d')"></div>
+                        <!-- COLOR BASE EN EL CENTRO -->
+                        <div class="shade-slice active-base" style="background-color: #485635;" title="Color Base: #485635" onclick="copiarColor('#485635')">
+                            <span class="active-dot"></span>
+                        </div>
+                        <div class="shade-slice" style="background-color: #3f4b2e;" title="#3f4b2e (Sombra -12%)" onclick="copiarColor('#3f4b2e')"></div>
+                        <div class="shade-slice" style="background-color: #353f27;" title="#353f27 (Sombra -25%)" onclick="copiarColor('#353f27')"></div>
+                        <div class="shade-slice" style="background-color: #29311e;" title="#29311e (Sombra -40%)" onclick="copiarColor('#29311e')"></div>
+                        <div class="shade-slice" style="background-color: #1c2114;" title="#1c2114 (Sombra -60%)" onclick="copiarColor('#1c2114')"></div>
+                        <div class="shade-slice" style="background-color: #0e110a;" title="#0e110a (Sombra -80%)" onclick="copiarColor('#0e110a')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Fondo Crema Memorial -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="color-swatch-card d-flex flex-column justify-content-between h-100 p-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="color-swatch-box border shadow-sm" style="background-color: var(--sf-bg-cream, #F4F1EA); border-color: #E6DFD3 !important;" title="#F4F1EA"></div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">Fondo Crema Memorial</div>
+                        <div class="text-muted token-code">--sf-bg-cream</div>
+                        <div class="token-code fw-semibold text-truncate text-muted">#F4F1EA</div>
+                    </div>
+                </div>
+
+                <!-- Barra de 11 Matices: Base en el centro -->
+                <div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">
+                        <span>Tintes (+claros)</span>
+                        <span class="fw-semibold text-dark">Base (#F4F1EA)</span>
+                        <span>Sombras (+oscuros)</span>
+                    </div>
+                    <div class="color-shades-strip" title="Escala tonal: Fondo Crema Memorial">
+                        <div class="shade-slice" style="background-color: #ffffff;" title="#ffffff (Tinte +80%)" onclick="copiarColor('#ffffff')"></div>
+                        <div class="shade-slice" style="background-color: #fdfcfb;" title="#fdfcfb (Tinte +60%)" onclick="copiarColor('#fdfcfb')"></div>
+                        <div class="shade-slice" style="background-color: #fbfaf7;" title="#fbfaf7 (Tinte +40%)" onclick="copiarColor('#fbfaf7')"></div>
+                        <div class="shade-slice" style="background-color: #f8f7f2;" title="#f8f7f2 (Tinte +25%)" onclick="copiarColor('#f8f7f2')"></div>
+                        <div class="shade-slice" style="background-color: #f6f4ee;" title="#f6f4ee (Tinte +12%)" onclick="copiarColor('#f6f4ee')"></div>
+                        <!-- COLOR BASE EN EL CENTRO (punto oscuro) -->
+                        <div class="shade-slice active-base border" style="background-color: #F4F1EA;" title="Color Base: #F4F1EA" onclick="copiarColor('#F4F1EA')">
+                            <span class="active-dot dark-dot"></span>
+                        </div>
+                        <div class="shade-slice" style="background-color: #dcd7cc;" title="#dcd7cc (Sombra -12%)" onclick="copiarColor('#dcd7cc')"></div>
+                        <div class="shade-slice" style="background-color: #bebaae;" title="#bebaae (Sombra -25%)" onclick="copiarColor('#bebaae')"></div>
+                        <div class="shade-slice" style="background-color: #9a968a;" title="#9a968a (Sombra -40%)" onclick="copiarColor('#9a968a')"></div>
+                        <div class="shade-slice" style="background-color: #706c61;" title="#706c61 (Sombra -60%)" onclick="copiarColor('#706c61')"></div>
+                        <div class="shade-slice" style="background-color: #434038;" title="#434038 (Sombra -80%)" onclick="copiarColor('#434038')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Card Superficie -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="color-swatch-card d-flex flex-column justify-content-between h-100 p-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="color-swatch-box border shadow-sm" style="background-color: var(--sf-card-white, #FCFAF7); border-color: #E6DFD3 !important;" title="#FCFAF7"></div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">Card Superficie</div>
+                        <div class="text-muted token-code">--sf-card-white</div>
+                        <div class="token-code fw-semibold text-truncate text-muted">#FCFAF7</div>
+                    </div>
+                </div>
+
+                <!-- Barra de 11 Matices: Base en el centro -->
+                <div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">
+                        <span>Tintes (+claros)</span>
+                        <span class="fw-semibold text-dark">Base (#FCFAF7)</span>
+                        <span>Sombras (+oscuros)</span>
+                    </div>
+                    <div class="color-shades-strip" title="Escala tonal: Card Superficie">
+                        <div class="shade-slice" style="background-color: #ffffff;" title="#ffffff (Tinte +80%)" onclick="copiarColor('#ffffff')"></div>
+                        <div class="shade-slice" style="background-color: #ffffff;" title="#ffffff (Tinte +60%)" onclick="copiarColor('#ffffff')"></div>
+                        <div class="shade-slice" style="background-color: #fefefe;" title="#fefefe (Tinte +40%)" onclick="copiarColor('#fefefe')"></div>
+                        <div class="shade-slice" style="background-color: #fdfdfc;" title="#fdfdfc (Tinte +25%)" onclick="copiarColor('#fdfdfc')"></div>
+                        <div class="shade-slice" style="background-color: #fcfbfa;" title="#fcfbfa (Tinte +12%)" onclick="copiarColor('#fcfbfa')"></div>
+                        <!-- COLOR BASE EN EL CENTRO -->
+                        <div class="shade-slice active-base border" style="background-color: #FCFAF7;" title="Color Base: #FCFAF7" onclick="copiarColor('#FCFAF7')">
+                            <span class="active-dot dark-dot"></span>
+                        </div>
+                        <div class="shade-slice" style="background-color: #e0deda;" title="#e0deda (Sombra -12%)" onclick="copiarColor('#e0deda')"></div>
+                        <div class="shade-slice" style="background-color: #c0beb8;" title="#c0beb8 (Sombra -25%)" onclick="copiarColor('#c0beb8')"></div>
+                        <div class="shade-slice" style="background-color: #9c9993;" title="#9c9993 (Sombra -40%)" onclick="copiarColor('#9c9993')"></div>
+                        <div class="shade-slice" style="background-color: #726f68;" title="#726f68 (Sombra -60%)" onclick="copiarColor('#726f68')"></div>
+                        <div class="shade-slice" style="background-color: #44413b;" title="#44413b (Sombra -80%)" onclick="copiarColor('#44413b')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Borde Neutro -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="color-swatch-card d-flex flex-column justify-content-between h-100 p-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="color-swatch-box border shadow-sm" style="background-color: var(--sf-border-neutral, #E6DFD3); border-color: #D1D5DB !important;" title="#E6DFD3"></div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">Borde Neutro</div>
+                        <div class="text-muted token-code">--sf-border-neutral</div>
+                        <div class="token-code fw-semibold text-truncate text-muted">#E6DFD3</div>
+                    </div>
+                </div>
+
+                <!-- Barra de 11 Matices: Base en el centro -->
+                <div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">
+                        <span>Tintes (+claros)</span>
+                        <span class="fw-semibold text-dark">Base (#E6DFD3)</span>
+                        <span>Sombras (+oscuros)</span>
+                    </div>
+                    <div class="color-shades-strip" title="Escala tonal: Borde Neutro">
+                        <div class="shade-slice" style="background-color: #faf8f6;" title="#faf8f6 (Tinte +80%)" onclick="copiarColor('#faf8f6')"></div>
+                        <div class="shade-slice" style="background-color: #f4efe9;" title="#f4efe9 (Tinte +60%)" onclick="copiarColor('#f4efe9')"></div>
+                        <div class="shade-slice" style="background-color: #eee8de;" title="#eee8de (Tinte +40%)" onclick="copiarColor('#eee8de')"></div>
+                        <div class="shade-slice" style="background-color: #eae3d8;" title="#eae3d8 (Tinte +25%)" onclick="copiarColor('#eae3d8')"></div>
+                        <div class="shade-slice" style="background-color: #e8e1d5;" title="#e8e1d5 (Tinte +12%)" onclick="copiarColor('#e8e1d5')"></div>
+                        <!-- COLOR BASE EN EL CENTRO -->
+                        <div class="shade-slice active-base border" style="background-color: #E6DFD3;" title="Color Base: #E6DFD3" onclick="copiarColor('#E6DFD3')">
+                            <span class="active-dot dark-dot"></span>
+                        </div>
+                        <div class="shade-slice" style="background-color: #ccc4b6;" title="#ccc4b6 (Sombra -12%)" onclick="copiarColor('#ccc4b6')"></div>
+                        <div class="shade-slice" style="background-color: #afa697;" title="#afa697 (Sombra -25%)" onclick="copiarColor('#afa697')"></div>
+                        <div class="shade-slice" style="background-color: #8d8475;" title="#8d8475 (Sombra -40%)" onclick="copiarColor('#8d8475')"></div>
+                        <div class="shade-slice" style="background-color: #665d50;" title="#665d50 (Sombra -60%)" onclick="copiarColor('#665d50')"></div>
+                        <div class="shade-slice" style="background-color: #3b3429;" title="#3b3429 (Sombra -80%)" onclick="copiarColor('#3b3429')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Texto Principal -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="color-swatch-card d-flex flex-column justify-content-between h-100 p-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="color-swatch-box shadow-sm" style="background-color: var(--sf-text-dark, #1F2937);" title="#1F2937"></div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">Texto Principal</div>
+                        <div class="text-muted token-code">--sf-text-dark</div>
+                        <div class="token-code fw-semibold text-truncate" style="color: #1F2937;">#1F2937</div>
+                    </div>
+                </div>
+
+                <!-- Barra de 11 Matices: Base en el centro -->
+                <div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">
+                        <span>Tintes (+claros)</span>
+                        <span class="fw-semibold text-dark">Base (#1F2937)</span>
+                        <span>Sombras (+oscuros)</span>
+                    </div>
+                    <div class="color-shades-strip" title="Escala tonal: Texto Principal">
+                        <div class="shade-slice" style="background-color: #d9dde2;" title="#d9dde2 (Tinte +80%)" onclick="copiarColor('#d9dde2')"></div>
+                        <div class="shade-slice" style="background-color: #b4bcc6;" title="#b4bcc6 (Tinte +60%)" onclick="copiarColor('#b4bcc6')"></div>
+                        <div class="shade-slice" style="background-color: #8a97a7;" title="#8a97a7 (Tinte +40%)" onclick="copiarColor('#8a97a7')"></div>
+                        <div class="shade-slice" style="background-color: #5f7084;" title="#5f7084 (Tinte +25%)" onclick="copiarColor('#5f7084')"></div>
+                        <div class="shade-slice" style="background-color: #3a4b5f;" title="#3a4b5f (Tinte +12%)" onclick="copiarColor('#3a4b5f')"></div>
+                        <!-- COLOR BASE EN EL CENTRO -->
+                        <div class="shade-slice active-base" style="background-color: #1F2937;" title="Color Base: #1F2937" onclick="copiarColor('#1F2937')">
+                            <span class="active-dot"></span>
+                        </div>
+                        <div class="shade-slice" style="background-color: #1a232f;" title="#1a232f (Sombra -12%)" onclick="copiarColor('#1a232f')"></div>
+                        <div class="shade-slice" style="background-color: #161c26;" title="#161c26 (Sombra -25%)" onclick="copiarColor('#161c26')"></div>
+                        <div class="shade-slice" style="background-color: #11161e;" title="#11161e (Sombra -40%)" onclick="copiarColor('#11161e')"></div>
+                        <div class="shade-slice" style="background-color: #0b0e14;" title="#0b0e14 (Sombra -60%)" onclick="copiarColor('#0b0e14')"></div>
+                        <div class="shade-slice" style="background-color: #05070a;" title="#05070a (Sombra -80%)" onclick="copiarColor('#05070a')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Texto Secundario -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="color-swatch-card d-flex flex-column justify-content-between h-100 p-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="color-swatch-box shadow-sm" style="background-color: var(--sf-text-muted, #6B7280);" title="#6B7280"></div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-dark text-truncate" style="font-size: 0.95rem;">Texto Secundario</div>
+                        <div class="text-muted token-code">--sf-text-muted</div>
+                        <div class="token-code fw-semibold text-truncate text-muted">#6B7280</div>
+                    </div>
+                </div>
+
+                <!-- Barra de 11 Matices: Base en el centro -->
+                <div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.7rem; margin-bottom: 4px;">
+                        <span>Tintes (+claros)</span>
+                        <span class="fw-semibold text-dark">Base (#6B7280)</span>
+                        <span>Sombras (+oscuros)</span>
+                    </div>
+                    <div class="color-shades-strip" title="Escala tonal: Texto Secundario">
+                        <div class="shade-slice" style="background-color: #e9eaed;" title="#e9eaed (Tinte +80%)" onclick="copiarColor('#e9eaed')"></div>
+                        <div class="shade-slice" style="background-color: #cfd3d9;" title="#cfd3d9 (Tinte +60%)" onclick="copiarColor('#cfd3d9')"></div>
+                        <div class="shade-slice" style="background-color: #b2b7c1;" title="#b2b7c1 (Tinte +40%)" onclick="copiarColor('#b2b7c1')"></div>
+                        <div class="shade-slice" style="background-color: #949aa7;" title="#949aa7 (Tinte +25%)" onclick="copiarColor('#949aa7')"></div>
+                        <div class="shade-slice" style="background-color: #7c8390;" title="#7c8390 (Tinte +12%)" onclick="copiarColor('#7c8390')"></div>
+                        <!-- COLOR BASE EN EL CENTRO -->
+                        <div class="shade-slice active-base" style="background-color: #6B7280;" title="Color Base: #6B7280" onclick="copiarColor('#6B7280')">
+                            <span class="active-dot"></span>
+                        </div>
+                        <div class="shade-slice" style="background-color: #595f6c;" title="#595f6c (Sombra -12%)" onclick="copiarColor('#595f6c')"></div>
+                        <div class="shade-slice" style="background-color: #4a505b;" title="#4a505b (Sombra -25%)" onclick="copiarColor('#4a505b')"></div>
+                        <div class="shade-slice" style="background-color: #393e47;" title="#393e47 (Sombra -40%)" onclick="copiarColor('#393e47')"></div>
+                        <div class="shade-slice" style="background-color: #262a31;" title="#262a31 (Sombra -60%)" onclick="copiarColor('#262a31')"></div>
+                        <div class="shade-slice" style="background-color: #131519;" title="#131519 (Sombra -80%)" onclick="copiarColor('#131519')"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================
+     SECCIÓN 2: Tipografía, Jerarquía y Cifras Monetarias
+     ======================================================== -->
+<div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4 bg-white">
+    <div class="mb-4">
+        <h2 class="h5 fw-bold mb-1" style="color: var(--sf-text-dark, #1F2937);">Tipografía, Jerarquía y Utilidades de Cifras</h2>
+        <p class="text-muted small mb-0">Pesos tipográficos oficiales Inter, escala de encabezados y formateo tabular monetario es-MX.</p>
+    </div>
+
+    <!-- Bloque 1: Pesos de Fuente -->
+    <div class="mb-5">
+        <h3 class="h6 fw-bold text-uppercase text-muted mb-3" style="letter-spacing: 0.05em; font-size: 0.8rem;">Pesos de Fuente (Inter)</h3>
+        <div class="p-4 rounded-3 border bg-light bg-opacity-50">
+            <div class="row g-3 align-items-center mb-3 pb-3 border-bottom">
+                <div class="col-12 col-md-3">
+                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Regular (400)</span>
+                </div>
+                <div class="col-12 col-md-9">
+                    <p class="mb-0 fw-normal" style="font-size: 1.05rem;">"El servicio y la memoria familiar con dignidad."</p>
+                </div>
+            </div>
+
+            <div class="row g-3 align-items-center mb-3 pb-3 border-bottom">
+                <div class="col-12 col-md-3">
+                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Medium (500)</span>
+                </div>
+                <div class="col-12 col-md-9">
+                    <p class="mb-0 fw-medium" style="font-size: 1.05rem;">"Gestión de contratos, expedientes y titularidad."</p>
+                </div>
+            </div>
+
+            <div class="row g-3 align-items-center mb-3 pb-3 border-bottom">
+                <div class="col-12 col-md-3">
+                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Semi-bold (600)</span>
+                </div>
+                <div class="col-12 col-md-9">
+                    <p class="mb-0 fw-semibold" style="font-size: 1.05rem;">"Módulos operativos y parámetros de configuración."</p>
+                </div>
+            </div>
+
+            <div class="row g-3 align-items-center">
+                <div class="col-12 col-md-3">
+                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Bold (700)</span>
+                </div>
+                <div class="col-12 col-md-9">
+                    <p class="mb-0 fw-bold" style="font-size: 1.05rem;">"Sistema Funerario — Serenia Memorial."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bloque 2: Escala de Encabezados -->
+    <div class="mb-5">
+        <h3 class="h6 fw-bold text-uppercase text-muted mb-3" style="letter-spacing: 0.05em; font-size: 0.8rem;">Escala de Encabezados y Texto</h3>
+        <div class="p-4 rounded-3 border bg-light bg-opacity-50">
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-baseline border-bottom pb-2">
+                    <h1 class="mb-0 fw-bold">Encabezado H1 (2.25rem · 36px)</h1>
+                    <span class="text-muted small">Títulos de vista principal</span>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-baseline border-bottom pb-2">
+                    <h2 class="mb-0 fw-bold">Encabezado H2 (1.75rem · 28px)</h2>
+                    <span class="text-muted small">Secciones principales</span>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-baseline border-bottom pb-2">
+                    <h3 class="mb-0 fw-semibold">Encabezado H3 (1.375rem · 22px)</h3>
+                    <span class="text-muted small">Subsecciones y tarjetas</span>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-baseline border-bottom pb-2">
+                    <h4 class="mb-0 fw-semibold">Encabezado H4 (1.125rem · 18px)</h4>
+                    <span class="text-muted small">Títulos de modales y widgets</span>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-baseline border-bottom pb-2">
+                    <p class="mb-0">Cuerpo de Texto Body (1rem · 16px) — Tipografía legible y confortable para lectura continua.</p>
+                    <span class="text-muted small">Párrafos y tablas</span>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-baseline">
+                    <small class="text-muted">Texto Small / Kicker (0.875rem · 14px) — Metadatos, etiquetas y avisos sutiles.</small>
+                    <span class="text-muted small">Metadatos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bloque 3: Utilidad Monetaria .sf-money -->
+    <div>
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h3 class="h6 fw-bold text-uppercase text-muted mb-0" style="letter-spacing: 0.05em; font-size: 0.8rem;">Utilidad Monetaria .sf-money (Números Tabulares es-MX)</h3>
+            <span class="badge bg-success-subtle text-success border border-success-subtle">font-variant-numeric: tabular-nums</span>
+        </div>
+        <p class="text-muted small mb-3">Permite que las columnas de importes alineen perfectamente sus dígitos y puntos decimales sin saltos visuales.</p>
+
+        <div class="table-responsive rounded-3 border bg-white">
+            <table class="table align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">CONCEPTO FINANCIERO</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th class="text-end pe-4">IMPORTE FORMATEADO (.sf-money)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ps-4 fw-semibold text-dark">Precio de Lista / Saldo Total</td>
+                        <td class="text-muted small">Lote memorial 3 gavetas Jardín Norte</td>
+                        <td class="text-end pe-4">
+                            <span class="sf-money fw-bold text-success fs-5">$127,500.00 MXN</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 fw-semibold text-dark">Cuota Mensual Ordinaria</td>
+                        <td class="text-muted small">Mensualidad francesa 1 de 24 plazo fijo</td>
+                        <td class="text-end pe-4">
+                            <span class="sf-money fw-semibold text-dark fs-5">$8,710.16 MXN</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 fw-semibold text-dark">Cartera Vencida / Saldo en Mora</td>
+                        <td class="text-muted small">Acumulado con 0 recargo moratorio (RN-10)</td>
+                        <td class="text-end pe-4">
+                            <span class="sf-money fw-bold text-danger fs-5">$76,180.40 MXN</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 fw-semibold text-dark">Abono Extraordinario a Capital</td>
+                        <td class="text-muted small">100% amortizado a capital insoluto</td>
+                        <td class="text-end pe-4">
+                            <span class="sf-money fw-semibold text-primary fs-5">$10,000.00 MXN</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copiarColor(hex) {
+        if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(hex).catch(() => {});
+        }
+        const toast = document.getElementById('toastCopiado');
+        const txt = document.getElementById('hexCopiadoTexto');
+        if (toast && txt) {
+            txt.textContent = hex;
+            toast.classList.remove('d-none');
+            clearTimeout(window.__copiarToastTimer);
+            window.__copiarToastTimer = setTimeout(() => {
+                toast.classList.add('d-none');
+            }, 2500);
+        }
+    }
+</script>
