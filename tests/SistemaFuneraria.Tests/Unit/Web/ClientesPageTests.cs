@@ -32,4 +32,16 @@ public class ClientesPageTests
         html.Should().Contain("Exportar directorio");
         html.Should().NotContain("_RegistrarPagoModal");
     }
+
+    [Fact(DisplayName = "SF-035: El modal _NuevoClienteModal debe existir y estar vinculado en Clientes/Index")]
+    public void NuevoClienteModal_DebeExistirYUsarseEnClientesIndex()
+    {
+        var raiz = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var modalPath = Path.Combine(raiz, "src", "SistemaFuneraria.Web", "Pages", "Shared", "_NuevoClienteModal.cshtml");
+        var vistaPath = Path.Combine(raiz, "src", "SistemaFuneraria.Web", "Pages", "Clientes", "Index.cshtml");
+
+        File.Exists(modalPath).Should().BeTrue();
+        File.ReadAllText(modalPath).Should().Contain("modalNuevoCliente");
+        File.ReadAllText(vistaPath).Should().Contain("<partial name=\"_NuevoClienteModal\" />");
+    }
 }
