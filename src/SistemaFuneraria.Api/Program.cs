@@ -66,7 +66,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Sistema Funeraria API",
+        Version = "v1",
+    });
+});
 
 var app = builder.Build();
 
@@ -74,12 +81,18 @@ await IdentitySeed.SeedAsync(app.Services);
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger(options =>
+    {
+        options.SerializeAsV2 = true;
+    });
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Sistema Funeraria");
+    });
 }
 
 app.UseCors(corsPolicy);
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
