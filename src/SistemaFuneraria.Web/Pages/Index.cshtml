@@ -1,0 +1,47 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Panel Principal";
+    decimal ejemploLoteBasico = 120000.00m;
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-12 text-center py-4 bg-white rounded shadow-sm border">
+        <h1 class="h2 fw-bold text-dark mb-2">Sistema de Venta y Financiamiento de Lotes Funerarios</h1>
+        <p class="text-secondary lead mb-0">Gestión de catálogo, cotizaciones con amortización francesa y control de cobranza.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Catálogo de Lotes</h5>
+                <p class="card-text text-muted">Consulta de planes disponibles: 2, 3 y 4 gavetas con precios fijos de lista.</p>
+                <div class="p-3 bg-light rounded text-center mb-3">
+                    <span class="small text-muted d-block">Precio base (2 gavetas):</span>
+                    <span class="fs-4 text-success fw-bold formato-moneda">@ejemploLoteBasico.ToString("C")</span>
+                </div>
+                <a asp-page="/Catalogo/Index" class="btn btn-outline-dark w-100">Ver Catálogo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Venta y Financiamiento</h5>
+                <p class="card-text text-muted">Wizard guiado de venta en 4 pasos: contado o crédito con enganche flexible y plazos a 12, 18, 24 o 48 meses.</p>
+                <a asp-page="/Ventas/Nueva" class="btn btn-dark w-100 mt-4">Iniciar Venta</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title text-dark">Módulo de Caja</h5>
+                <p class="card-text text-muted">Cobro de mensualidades ordinarias, abonos extraordinarios a capital y liquidación anticipada con 10% de descuento.</p>
+                <a asp-page="/Caja/Index" class="btn btn-outline-secondary w-100 mt-4">Acceder a Caja</a>
+            </div>
+        </div>
+    </div>
+</div>

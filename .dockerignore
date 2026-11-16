@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+.git/
+.github/
+.agents/
+.idea/
+.vs/
+docs/
+tests/
+ux-engine-kit/
+*.user
+*.suo

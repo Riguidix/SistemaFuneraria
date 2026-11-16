@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Backlog Maestro Oficial (55 tickets SF-001 a SF-055)"
+    url: "https://github.com/Riguidix/SistemaFuneraria/blob/dev/docs/08-backlog.md"
+    about: "Consulta los 55 tickets atómicos con especificación BDD, Story Points y archivos exactos a modificar."
+  - name: "Manual de Flujo de Trabajo (GitFlow, TDD y Blast Radius)"
+    url: "https://github.com/Riguidix/SistemaFuneraria/blob/dev/docs/workflow.md"
+    about: "Revisa la guía operativa para ramas de trabajo, Conventional Commits y subida de evidencias TDD."

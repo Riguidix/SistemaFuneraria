@@ -1,0 +1,2402 @@
+# BACKLOG MAESTRO DE INGENIERÍA · EDICIÓN SISTEMA FUNERARIO FIGMA, API REST, WRAPPER JS & CRUDS ADMIN (SF-001 A SF-100)
+## Sistema de Venta y Financiamiento de Lotes Funerarios ("Sistema Funerario · Gestión Memorial")
+
+| Metadato | Detalle Operativo |
+|---|---|
+| **Proyecto** | Sistema de Venta y Financiamiento de Lotes Funerarios — **Sistema Funerario · Gestión Memorial (Sucursal Jardines del Valle)** |
+| **Materia** | Estándares y Métricas para el Desarrollo de Software (V&V Formal) |
+| **Ventana Operativa** | Viernes 06 de Noviembre al Miércoles 25 de Noviembre de 2026 (**Code Freeze: 23 Nov 18:00**) |
+| **Arquitectura** | **Clean Architecture de 6 Proyectos** (.NET 8 / EF Core 8 / PostgreSQL 16 / **Servidor `SistemaFuneraria.Api`** + **Cliente `SistemaFuneraria.Web` con Fetch API Wrapper** + **Design System Figma "Sistema Funerario" en Bootstrap 5.3.8**) |
+| **Roles y Gobernanza RBAC** | **3 Roles Oficiales:** `Administrador` (CRUD completo de Lotes, Clientes, Ventas/Contratos, Usuarios/Roles, Configuración de Sucursal y Reportes), `Vendedor` (Resumen, Catálogo, Clientes, Wizard Nueva Venta y Contratos) y `Cajero` (Caja y Cobranza, Corte del Día y Contratos) |
+| **Identidad Visual Figma** | Tokens CSS Oficiales (*Captura 13*): `--forest: #173f3a`, `--forest-2: #245c53`, `--gold: #c59d52`, `--rose: #a84f4b`, `--canvas: #f4f6f3`, `--ink: #17211f`, fondo crema cálido y tipografía numérica `tabular-nums` |
+| **Volumen Total** | **100 Tickets Atómicos (`SF-001` a `SF-100`)** · **18 Completados en `dev` (`v0.1.0`)** + **82 Fichas Técnicas BDD Guiadas para Trainees (`SF-019` a `SF-100`)** |
+| **Escala de Milestones** | **10 Versiones SemVer Continuas sin Saltos:** `v0.1.0` $\rightarrow$ `v0.2.0` $\rightarrow$ `v0.3.0` $\rightarrow$ `v0.4.0` $\rightarrow$ `v0.5.0` $\rightarrow$ `v0.6.0` $\rightarrow$ `v0.7.0` $\rightarrow$ `v0.8.0` $\rightarrow$ `v0.9.0` $\rightarrow$ `v1.0.0` |
+| **Regla de Blast Radius** | **$\le 250$ Líneas de Código efectivas (LOCs)** por Pull Request (máximo absoluto: 300 LOCs) |
+
+---
+
+## 1. Arquitectura de 6 Proyectos + Mapeo 1:1 de las 13 Capturas de Figma ("Sistema Funerario")
+
+```mermaid
+flowchart TD
+    subgraph CLIENTE["CAPA CLIENTE (SistemaFuneraria.Web — Vistas Razor Figma 'Sistema Funerario' + Fetch API Wrapper)"]
+        UI["13 Pantallas Figma 'Sistema Funerario · Gestión Memorial'<br>Login · Resumen · Catálogo · Clientes (+Modal) · Nueva Venta (Wizard 1-4)<br>Contratos · Caja y Cobranza · Reportes · Configuración · Parámetros UI"]
+        WRAP["API Wrapper Vanilla JS (wwwroot/js/api/*.js)<br>apiClient.js + authApi · clientesApi · catalogoApi · simuladorApi<br>ventasApi · contratosApi · cobranzaApi · dashboardApi · adminApi"]
+        UI --> WRAP
+    end
+
+    subgraph SERVIDOR["CAPA SERVIDOR (SistemaFuneraria.Api — Controladores REST /api/v1/*)"]
+        API["Controladores REST (/api/v1/*)<br>Auth · UsuariosAdmin · Clientes · Catalogo · Simulador<br>Ventas · Contratos · Cobranza · DashboardReportes · Configuracion"]
+        APP["SistemaFuneraria.Application<br>Servicios IXxxService, DTOs Record y Resultado&lt;T&gt;"]
+        CORE["SistemaFuneraria.Core<br>Entidades DDD, Folios CTR/PAG y Motores Matemáticos (0 NuGets)"]
+        INFRA["SistemaFuneraria.Infrastructure<br>EF Core 8 + PostgreSQL 16 (numeric(14,2), xmin, seq_pagos_folio)"]
+        API --> APP
+        API --> INFRA
+        INFRA --> APP
+        APP --> CORE
+    end
+
+    WRAP ==>|"HTTP JSON (CORS + Bearer JWT)"| API
+```
+
+### 1.1 Inventario Oficial de Pantallas del Figma ("Sistema Funerario") Cubiertas en el Backlog
+
+| # Captura Figma | Pantalla / Componente en "Sistema Funerario" | Ruta en `SistemaFuneraria.Web` | Endpoint(s) en `SistemaFuneraria.Api` | Tickets Asignados |
+|:---:|---|---|---|---|
+| **Login** *(Nuevo)* | **Inicio de Sesión "Sistema Funerario" + Bloqueo al 5.º Intento & Jitter** | `/Cuenta/Login` y `/Cuenta/OlvideContrasena` | `POST /api/v1/auth/login`, `POST /forgot-password` | `SF-023`, `SF-024`, `SF-028` |
+| **Captura 13** | **Design System: Parámetros UI y Variables CSS Oficiales** (`--forest`, `--forest-2`, `--gold`, `--rose`, `--canvas`, `--ink`) | `/ParametrosUi` + `wwwroot/css/sistema-tokens.css` | N/A (Estático + Inventario UI) | `SF-025`, `SF-027` |
+| **Capturas 1–6** | **Layout Maestro "Sistema Funerario"**: Sidebar verde olivo (`OPERACIÓN` y `ADMINISTRACIÓN`) + Topbar (`Sucursal Jardines del Valle`, campana, `AM Andrea Morales · Administradora`) | `Pages/Shared/_Layout.cshtml`, `_SidebarPartial.cshtml`, `_TopbarPartial.cshtml` | `GET /api/v1/auth/me`, `GET /health` | `SF-026`, `SF-030` |
+| **Captura 1** | **Resumen (Dashboard Operativo)**: Saludo dinámico, 4 KPI Cards (`Ventas del mes`, `Cobranza mensual`, `Contratos activos`, `Pagos vencidos`), barras `Ventas y cobranza (6m)`, dona `Disponibilidad (64)` y tabla `Actividad reciente` | `/Resumen` (`Pages/Index.cshtml`) | `GET /api/v1/dashboard/resumen` | `SF-089`, `SF-090` |
+| **Captura 2** | **Catálogo de Lotes (Inventario)**: Buscador, filtros por sección (`Jardín Norte`, `Jardín Central`, `Robles`, `Las Magnolias`) y estado (`Disponible`, `Reservado`, `Vendido`), 3 KPI Cards, tabla (`JN-A-042`, `JC-C-118`, `RO-B-027`) + **CRUD Admin** | `/Catalogo/Index` | `GET/POST/PUT/DELETE /api/v1/catalogo` | `SF-039` a `SF-047` |
+| **Captura 3** | **Clientes (Relaciones)**: Buscador por nombre/teléfono/CURP, botón `Exportar directorio`, tabla con avatar de iniciales (`LC`, `RM`, `EV`, `JS`), contratos activos, saldo actual, último pago, estado (`Al corriente`, `Pago vencido`, `En revisión`) + **CRUD Admin** | `/Clientes/Index` | `GET/POST/PUT/DELETE /api/v1/clientes` | `SF-031` a `SF-034`, `SF-036` a `SF-038` |
+| **Captura 4** | **Modal `Registrar nuevo cliente` (y Edición)**: Formulario modal en 2 columnas (`Nombre(s)`, `Apellidos`, `Teléfono`, `CURP`, `Correo electrónico`) con botones `Cancelar` y `Guardar cliente` | Modal en `/Clientes/Index` | `POST /api/v1/clientes`, `PUT /api/v1/clientes/{id}` | `SF-035` |
+| **Captura 5** | **Nueva Venta — Paso 1 (`1. Cliente · Datos del titular`) + Panel Derecho `RESUMEN DE COTIZACIÓN` con cuadrícula de gavetas (`A, B, 42...`) y badge `Borrador guardado`** | `/Ventas/Nueva` (Paso 1) | `GET /api/v1/clientes?filtro=...` | `SF-050`, `SF-051` |
+| **Captura 6** | **Nueva Venta — Paso 2 (`2. Lote · Selección`)**: Tarjetas horizontales seleccionables (`JN-A-042 $120,000`, `JC-C-118 $150,000`, `RO-E-081 $180,000`) sincronizadas con el panel `RESUMEN DE COTIZACIÓN` | `/Ventas/Nueva` (Paso 2) | `GET /api/v1/catalogo?estado=Disponible` | `SF-052` |
+| **Captura 7** | **Nueva Venta — Paso 3 (`3. Financiamiento · Plan de pago`)**: Botones `Crédito` / `Contado`, selects `Enganche` (`20% · $24,000.00`) y `Plazo` (`24 meses · 20% anual`), banner verde `Mensualidad estimada` y modal de tabla de amortización | `/Ventas/Nueva` (Paso 3) | `POST /api/v1/simulador/cotizar` | `SF-048`, `SF-049`, `SF-053` a `SF-056` |
+| **Captura 8** | **Nueva Venta — Paso 4 (`4. Confirmación · Resumen`)**: Grid 2x2 (`Cliente`, `Lote`, `Precio/Enganche`, `Financiamiento`), checkbox `Confirmo que los datos fueron revisados con el cliente` y botón `✓ Generar contrato` | `/Ventas/Nueva` (Paso 4) | `POST /api/v1/ventas/contado`, `POST /api/v1/ventas/financiada` | `SF-062`, `SF-063`, `SF-068` |
+| **Captura 9** | **Contratos (Cartera)**: 4 KPI Cards (`Activos`, `Al corriente`, `Con atraso`, `Liquidados este año`), buscador, 4 tabs (`Todos`, `Activos`, `Vencidos`, `Liquidados`), tabla (`CTR-2025-0189`) + **CRUD Admin** | `/Contratos/Index` y `/Contratos/Detalle` | `GET /api/v1/contratos`, `PUT/DELETE /api/v1/ventas/{id}` | `SF-064`, `SF-069` a `SF-074` |
+| **Captura 10** | **Caja y Cobranza (Operación Diaria)**: Badge `● Caja abierta`, buscador `CTR-2024-0118`, card de cliente con badge `1 vencido`, **3 tarjetas selectoras (`Mensualidad`, `Abono a capital`, `Liquidación`)**, método de pago, referencia, botón `Aplicar pago`, card `Corte del día` y alerta `8 pagos requieren atención` | `/Caja/Index` y `/Caja/Recibo` | `/api/v1/cobranza/pagos-ordinarios`, `/abonos`, `/liquidacion`, `/corte-del-dia` | `SF-075` a `SF-088` |
+| **Captura 11** | **Reportes (Análisis)**: Filtros `Periodo` y `Sucursal`, botón `Descargar reporte`, 3 KPIs (`Conversión 32.8%`, `Ticket promedio $147,420`, `Índice de morosidad 6.2%`), barras `Ventas por tipo de lote` y dona `Meta mensual (81%)` | `/Reportes/Index` | `GET /api/v1/reportes/indicadores` | `SF-089`, `SF-091` |
+| **Captura 12** | **Configuración (Administración)**: Menú vertical (`Datos de la sucursal`, **`Usuarios y roles` [CRUD Admin]**, `Planes y tasas`, `Notificaciones`, `Integraciones`), formulario de sucursal y switches operativos | `/Configuracion/Index` | `/api/v1/admin/configuracion`, `/api/v1/admin/usuarios` | `SF-029`, `SF-092` |
+
+---
+
+## 2. Matriz de los 5 Carriles (Trainees Guiados + Rescate Operativo de Edgar)
+
+| Carril | Integrante | Fortaleza Real | Responsabilidad Exacta en el Backlog (`SF-019` a `SF-100`) |
+|---|---|---|---|
+| **Tech Lead & Fullstack Senior** | **Reydescel Rodríguez** (`@Riguidix`) | Fullstack Senior & Arquitecto | Scaffold de `SistemaFuneraria.Api`, `ApiControllerBase`, `ProblemDetails`, CORS, motor `apiClient.js`, transacciones ACID críticas (`Venta Financiada`, `Pago Ordinario` con `xmin`) y **Gate Final de Merge**. |
+| **Carril 1: BD & Backend Dominio/Infra** | **Gustavo Lucio** (`@Galucio-97`) | Base de Datos y Backend | Entidades DDD en `Core` (`Lote` con clave/sección, `Venta` con folio `CTR-YYYY-XXXX`, `Financiamiento`, `Mensualidad`, `Pago` con método/referencia), calculadoras (`AbonoCapital`, `Liquidacion`, `EvaluadorVencimientos`), configuraciones EF Core, migraciones PostgreSQL 16 y seeds. |
+| **Carril 2: Backend Application, API Controllers & JS Wrappers** | **Guillermo Sandoval** (`@MemoSndvl`) | Backend y Frontend | Servicios `Application` (`IXxxService`, incluyendo los **CRUDs de Administrador** de Clientes, Lotes, Contratos, Usuarios y Configuración), **Controladores REST (`Controllers/V1/*Controller.cs`)** y **Módulos del API Wrapper en JS (`wwwroot/js/api/*Api.js`)**. |
+| **Carril 3: Frontend & Diseño UI/UX Figma "Sistema Funerario"** | **Juan Romero** (`@juancarlosrdzromero-cmd`) | Frontend y Diseño UI/UX | Implementación pixel-perfect de las **13 Capturas de Figma ("Sistema Funerario") + Login**: variables CSS (`--forest`, `--gold`, `--rose`, `--canvas`, `--ink`), Sidebar/Topbar, Modales CRUD y los 5 estados visuales en Razor Pages. |
+| **Carril 4: DevOps, QA HTTP & Guardián de Evidencias** | **Edgar Acevedo** (`@EdgarAcevedoSempai`) | DevOps y QA (Guiado paso a paso) | Dueño de: 1) Workflows CI/CD y validador de evidencias en GitHub Actions, 2) `/health` y scripts de ejecución dual API+Web, 3) **Suites de Integración HTTP (`WebApplicationFactory`) para cada controlador y casos `CP-01..10` / `ST-01..04`**, y 4) **Revisor de Pase 1 obligatorio de `Red_Test.md` / `Green_Test.md` en cada PR** + **Cierre de cada Milestone (`v0.2.0` a `v1.0.0`)**. |
+
+---
+
+## 3. Mapa de los 10 Milestones SemVer Continuos (`v0.1.0` $\rightarrow$ `v1.0.0` Sin Saltos)
+
+| Milestone | Ventana | Nombre del Hito | Entregables Clave (API + Wrapper + Figma "Sistema Funerario" + CRUDs Admin) | Tickets | Gate QA (Edgar) |
+|:---:|:---:|---|---|:---:|:---:|
+| **`v0.1.0`** *(En `dev`)* | 06–12 Nov | **M1: Cimientos, Motor Financiero TDD y Base Clientes** | Solución base, motor francés certificado (36 combinaciones) y dominio/servicio inicial de `Cliente`. | `SF-001` a `SF-018` (18) | `SF-014` ✅ |
+| **`v0.2.0`** | 14–15 Nov | **M2: Servidor `SistemaFuneraria.Api`, Auth + Bloqueo/Jitter, Fetch Wrapper, CRUD Usuarios Admin & Layout Figma "Sistema Funerario" (Captura 13)** | Proyecto `Api`, CORS, `ProblemDetails`, Identity con 3 roles (`Administrador`, `Vendedor`, `Cajero`), `AuthController` (login con bloqueo al 5.º intento y jitter), `UsuariosAdminController`, `apiClient.js`, pantalla `/ParametrosUi` (*Captura 13*), Layout "Sistema Funerario" (Sidebar + Topbar) y `/Cuenta/Login`. | `SF-019` a `SF-030` (12) | **`SF-030`** |
+| **`v0.3.0`** | 15–16 Nov | **M3: Módulo de Clientes E2E + Modal Figma (Capturas 3 y 4) + CRUD Administrador** | CRUD completo en `ClienteService` y `ClientesController` (`GET`, `POST`, `PUT`, `DELETE` Admin, `GET /exportar`), `clientesApi.js`, pantalla Figma `/Clientes/Index` (*Captura 3*), Modal `Registrar nuevo cliente` (*Captura 4*) y expediente con edición/baja Admin. | `SF-031` a `SF-038` (8) | **`SF-038`** |
+| **`v0.4.0`** | 16–17 Nov | **M4: Inventario y Catálogo de Lotes Figma (Captura 2) + CRUD Administrador (`CP-01`)** | Entidad `Lote` con `Clave` (`JN-A-042`), `Seccion` (`Jardín Norte`, `Jardín Central`, `Robles`, `Las Magnolias`), `Gavetas` (`2, 3, 4`), `PrecioContado` (`$120k, $150k, $180k`) y `EstadoLote` (`Disponible`, `Reservado`, `Vendido`), `CatalogoController` (lectura + CRUD Admin), `catalogoApi.js` y pantalla Figma `/Catalogo/Index` (*Captura 2*). | `SF-039` a `SF-047` (9) | **`SF-047`** |
+| **`v0.5.0`** | 17–18 Nov | **M5: Motor Simulador API (`CP-03..06`, `CP-10`) y Wizard Figma "Nueva Venta" Pasos 1, 2 y 3 + Panel Resumen con Mapa de Gavetas (Capturas 5, 6 y 7)** | `SimuladorController`, `simuladorApi.js`, Panel derecho `RESUMEN DE COTIZACIÓN` con grilla de gavetas (`A, B, 42...`) y `Borrador guardado`, Paso 1 (`Cliente` — *Captura 5*), Paso 2 (`Lote` — *Captura 6*), Paso 3 (`Financiamiento` Crédito/Contado — *Captura 7*) y suites HTTP `CP-03..06` y `CP-10`. | `SF-048` a `SF-056` (9) | **`SF-055` y `SF-056`** |
+| **`v0.6.0`** | 18–19 Nov | **M6: Núcleo de Ventas (`CTR-YYYY-XXXX`), Paso 4 del Wizard Figma (Captura 8), Venta de Contado (`CP-02` / `ST-01`) y CRUD Ventas Admin** | Entidades `Venta` (`CTR-2025-XXXX`), `Financiamiento` (`xmin`) y `Mensualidad`, `VentasController` Contado + CRUD Admin (`PUT /estado`, `DELETE`), `ventasApi.js`, Paso 4 `Confirma la operación` (*Captura 8*) con botón `✓ Generar contrato` y comprobante de contado. | `SF-057` a `SF-065` (9) | **`SF-065`** |
+| **`v0.7.0`** | 19–20 Nov | **M7: Venta Financiada ACID y Pantalla Figma "Contratos / Cartera" (Captura 9)** | `RegistrarVentaFinanciadaAsync` ACID, `POST /api/v1/ventas/financiada`, `ContratosController` (`/api/v1/contratos` con 4 KPIs y filtros `Todos`, `Activos`, `Vencidos`, `Liquidados`), `contratosApi.js`, pantalla Figma `/Contratos/Index` (*Captura 9*) y Carátula/Detalle de Contrato con acciones Admin. | `SF-066` a `SF-074` (9) | **`SF-074`** |
+| **`v0.8.0`** | 20–21 Nov | **M8: Motor de Cobranza, Corte del Día y Pantalla Figma "Caja y Cobranza" (Captura 10 — `ST-04`)** | Entidad `Pago` (con `Folio` `PAG-2026-XXXXXX`, `MetodoPago`, `Referencia` y `ClaveIdempotencia`), `CobranzaService.RegistrarPagoOrdinarioAsync` ACID + `xmin`, `CobranzaController`, `cobranzaApi.js`, pantalla Figma `/Caja/Index` (*Captura 10*: buscador `CTR-...`, 3 tarjetas `Mensualidad`/`Abono`/`Liquidación`, `Corte del día` y alerta de vencidos) y `/Caja/Recibo`. | `SF-075` a `SF-083` (9) | **`SF-083`** |
+| **`v0.9.0`** *(Code Freeze)* | 21–23 Nov | **M9: Abono a Capital (`CP-07`), Liquidación (`CP-08`), Mora `$0.00` (`CP-09`) y Pantallas Figma "Resumen" (Captura 1), "Reportes" (Captura 11) y "Configuración" (Captura 12)** | Flujos de `Abono a capital` y `Liquidación` en `/Caja/Index` (*Captura 10*), `EvaluadorVencimientos` (`TimeProvider`, `$0.00` mora), Dashboard `/Resumen` (*Captura 1*), `/Reportes/Index` (*Captura 11*) y `/Configuracion/Index` (*Captura 12* con `Datos de la sucursal` y `Usuarios y roles`). **CODE FREEZE 23 Nov 18:00.** | `SF-084` a `SF-094` (11) | **`SF-093` y `SF-094`** |
+| **`v1.0.0`** *(Go-Live)* | 24–25 Nov | **M10: Hardening N+1, Auditoría de las 13 Vistas Figma "Sistema Funerario", 100 Evidencias TDD y Release `v1.0.0`** | Optimización EF Core, auditoría visual y WCAG 2.2 AA contra las 13 capturas de Figma, regresión CI 100% verde, UAT E2E (`ST-01..04` + CRUDs Admin), auditoría de las 100 carpetas `docs/evidencias/SF-XXX/` y liberación `v1.0.0` en `main`. | `SF-095` a `SF-100` (6) | **`SF-097` y `SF-099`** |
+
+---
+
+## 4. Índice Maestro de los 100 Tickets (`SF-001` a `SF-100`)
+
+| ID | Título del Ticket | Versión | Capa / Captura Figma | SP | Prioridad | Asignado | Revisor QA (Pase 1) | Dependencias |
+|---|---|:---:|---|:---:|:---:|---|---|---|
+| **SF-001** | Scaffold de solución Clean Architecture (.NET 8, 5 proyectos iniciales, Directory.Build.props) | `v0.1.0` | Infra | 3 | P0 | Reydescel | Edgar | — *(En `dev`)* |
+| **SF-002** | Docker Compose con PostgreSQL 16 y scripts de inicialización | `v0.1.0` | Infra | 2 | P0 | Gustavo | Edgar | — *(En `dev`)* |
+| **SF-003** | Configuración de xUnit, FluentAssertions y tests de arquitectura en verde | `v0.1.0` | QA-Test | 2 | P0 | Guillermo | Edgar | SF-001 *(En `dev`)* |
+| **SF-004** | Layout Razor Pages base, Bootstrap 5.3.8 y cultura es-MX global | `v0.1.0` | Web-UI | 3 | P1 | Juan | Edgar | SF-001 *(En `dev`)* |
+| **SF-005** | Catálogo de Parámetros de Negocio inmutable en Core (RNF-05, RN-01, RN-04, RN-05) | `v0.1.0` | Core | 2 | P1 | Gustavo | Edgar | SF-001 *(En `dev`)* |
+| **SF-006** | Value Object `Dinero` con precisión decimal y operaciones sobrecargadas | `v0.1.0` | Core | 2 | P1 | Reydescel | Edgar | SF-001 *(En `dev`)* |
+| **SF-007** | Patrón `Resultado` y `Resultado<T>` canónico en Application.Comun | `v0.1.0` | App | 2 | P0 | Guillermo | Edgar | SF-001 *(En `dev`)* |
+| **SF-008** | RED & GREEN: `CalculadoraFinanciamiento.CalcularEnganche` (CP-03, RN-04) | `v0.1.0` | Core | 2 | P1 | Gustavo | Edgar | SF-005 *(En `dev`)* |
+| **SF-009** | RED & GREEN: `CalculadoraFinanciamiento.ObtenerTasaMensual` (CP-04, RN-05, RN-06) | `v0.1.0` | Core | 2 | P1 | Juan | Edgar | SF-005 *(En `dev`)* |
+| **SF-010** | RED & GREEN: Fórmula amortización francesa `CalculadoraFinanciamiento.CalcularCuota` (CP-05) | `v0.1.0` | Core | 3 | P1 | Gustavo | Edgar | SF-008, SF-009 *(En `dev`)* |
+| **SF-011** | RED & GREEN: `GeneradorAmortizacion` con absorción al centavo en cuota $n$ y saldo $0.00 (CP-06) | `v0.1.0` | Core | 3 | P0 | Reydescel | Edgar | SF-010 *(En `dev`)* |
+| **SF-012** | Suite xUnit automatizada para el Oráculo de 36 Combinaciones (`[Theory]` con CSV) | `v0.1.0` | QA-Test | 3 | P0 | Edgar | Reydescel | SF-011 *(En `dev`)* |
+| **SF-013** | Contrato `ISimuladorService` y DTOs en Application con tests unitarios en memoria | `v0.1.0` | App | 3 | P1 | Guillermo | Edgar | SF-007, SF-011 *(En `dev`)* |
+| **SF-014** | Certificación Milestone 1: Verificación de 36 combinaciones en CI y Tag `v0.1.0` | `v0.1.0` | QA-Test | 1 | P0 | Reydescel | Edgar | SF-012, SF-013 *(En `dev`)* |
+| **SF-015** | Entidad de dominio `Cliente` con invariantes y constructor protegido en Core | `v0.1.0` | Core | 2 | P1 | Gustavo | Edgar | SF-001 *(En `dev`)* |
+| **SF-016** | Mapeo EF Core `ClienteConfiguration`, índices (CURP, Correo) y migración inicial | `v0.1.0` | Infra | 3 | P1 | Reydescel | Edgar | SF-002, SF-015 *(En `dev`)* |
+| **SF-017** | Contrato `IClienteService` y DTOs planos (`RegistrarClienteRequest`, `ClienteDto`) | `v0.1.0` | App | 2 | P1 | Guillermo | Edgar | SF-007, SF-015 *(En `dev`)* |
+| **SF-018** | Implementación de `ClienteService` con validaciones de CURP y teléfono de 10 dígitos | `v0.1.0` | App | 3 | P1 | Reydescel | Edgar | SF-016, SF-017 *(En `dev`)* |
+| **SF-019** | Creación del 6.º proyecto `SistemaFuneraria.Api`, desacoplamiento de `Web` y regla de arquitectura | `v0.2.0` | Api/Arch | 3 | P0 | Reydescel | Edgar | SF-018 |
+| **SF-020** | Clase base `ApiControllerBase`, mapeo de `Resultado<T>` a `ProblemDetails` RFC 7807 y política CORS | `v0.2.0` | Api | 2 | P0 | Reydescel | Edgar | SF-019 |
+| **SF-021** | Integración de `IdentityDbContext` en `AppDbContext` y migración PostgreSQL `AspNet*` | `v0.2.0` | Infra-DB | 2 | P0 | Gustavo | Edgar | SF-016 |
+| **SF-022** | Seeder `IdentitySeed` con 3 Roles (`Administrador`, `Vendedor`, `Cajero`) y cuenta `Andrea Morales` | `v0.2.0` | Infra/Api | 2 | P0 | Gustavo | Edgar | SF-021 |
+| **SF-023** | `AuthController` (`POST /api/v1/auth/login` con bloqueo 15m al 5.º intento, jitter en `/forgot-password` y `/me`) | `v0.2.0` | App/Api | 3 | P0 | Guillermo | Edgar | SF-020, SF-022 |
+| **SF-024** | Motor `wwwroot/js/api/apiClient.js` (Fetch Wrapper con Bearer JWT y `ProblemDetails`) y `authApi.js` | `v0.2.0` | Web-JS | 3 | P0 | Reydescel | Edgar | SF-020, SF-023 |
+| **SF-025** | Pantalla Figma `/ParametrosUi` (*Captura 13*) y hoja `sistema-tokens.css` (`--forest`, `--gold`, `--rose`, `--canvas`, `--ink`) | `v0.2.0` | Figma Cap. 13 | 2 | P1 | Juan | Edgar | SF-004 |
+| **SF-026** | Layout Maestro Figma "Sistema Funerario · Gestión Memorial" (*Capturas 1–6*): Sidebar verde olivo y Topbar `Jardines del Valle` | `v0.2.0` | Figma Cap. 1 | 3 | P1 | Juan | Edgar | SF-025 |
+| **SF-027** | Kit reutilizable de los 5 Estados UI en "Sistema Funerario" (Empty, Skeleton, Error Banner, Toast y Modal redondeado) | `v0.2.0` | Figma UI Kit | 2 | P1 | Juan | Edgar | SF-026 |
+| **SF-028** | Pantalla Figma `/Cuenta/Login` y `/OlvideContrasena`: Alerta al 3.er fallo, contador de bloqueo al 5.º y redirección | `v0.2.0` | Figma Login | 2 | P0 | Juan | Edgar | SF-024, SF-027 |
+| **SF-029** | CRUD de Usuarios y Roles para `Administrador`: `UsuariosAdminController` (`/api/v1/admin/usuarios`) y `adminApi.js` | `v0.2.0` | Api/Admin | 2 | P1 | Guillermo | Edgar | SF-023, SF-024 |
+| **SF-030** | DevOps & QA Gate `v0.2.0`: Endpoint `/health`, GitHub Action validador de evidencias y Test HTTP de Auth/Lockout | `v0.2.0` | DevOps/QA | 2 | P0 | Edgar | Reydescel | SF-023, SF-029 |
+| **SF-031** | Ampliación CRUD en `Cliente` e `IClienteService` (`Buscar`, `Crear`, `Actualizar`, `EliminarAdmin` y resumen de cartera) | `v0.3.0` | Core/App | 2 | P1 | Guillermo | Edgar | SF-018 |
+| **SF-032** | Controlador REST `ClientesController` (`GET`, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}` Admin y `GET /exportar`) | `v0.3.0` | Api/CRUD | 2 | P1 | Guillermo | Edgar | SF-020, SF-031 |
+| **SF-033** | Módulo Wrapper `wwwroot/js/api/clientesApi.js` (`listar`, `obtener`, `registrar`, `actualizar`, `eliminar`, `exportar`) | `v0.3.0` | Web-JS | 2 | P1 | Guillermo | Edgar | SF-024, SF-032 |
+| **SF-034** | Pantalla Figma `/Clientes/Index` (*Captura 3*): Buscador, botón `Exportar directorio` y tabla con avatares y badges | `v0.3.0` | Figma Cap. 3 | 3 | P1 | Juan | Edgar | SF-027, SF-033 |
+| **SF-035** | Modal Figma `Registrar nuevo cliente` y Edición (*Captura 4*): Formulario en 2 columnas con validación y guardado `fetch` | `v0.3.0` | Figma Cap. 4 | 2 | P1 | Juan | Edgar | SF-034 |
+| **SF-036** | Drawer de Expediente de Cliente al pulsar `Abrir` en `/Clientes` + botones CRUD (`Editar` / `Eliminar`) para `Administrador` | `v0.3.0` | Figma Cap. 3 | 2 | P1 | Juan | Edgar | SF-035 |
+| **SF-037** | Descarga de archivo CSV en botón `Exportar directorio` y estados Empty/Skeleton/Error en `/Clientes/Index` | `v0.3.0` | Figma Cap. 3 | 1 | P2 | Juan | Edgar | SF-034 |
+| **SF-038** | QA Gate `v0.3.0`: Suite HTTP para CRUD completo de `/api/v1/clientes` (incluyendo permisos Admin y BVA) + Tag `v0.3.0` | `v0.3.0` | QA-Test | 2 | P0 | Edgar | Reydescel | SF-032, SF-036 |
+| **SF-039** | Entidad `Lote` en `Core` con `Clave` (`JN-A-042`), `Seccion`, `Ubicacion`, `Gavetas` (`2,3,4`), `Precio` (`RN-01`) y `EstadoLote` | `v0.4.0` | Core | 2 | P0 | Gustavo | Edgar | SF-005 |
+| **SF-040** | `LoteConfiguration`, Seeder `HasData` con lotes de `Jardines del Valle` (*Captura 2*) y migración PostgreSQL | `v0.4.0` | Infra-DB | 2 | P0 | Gustavo | Edgar | SF-021, SF-039 |
+| **SF-041** | `ICatalogoService` y `CatalogoService`: KPIs de inventario, filtros por sección/estado y CRUD de Lotes para `Administrador` | `v0.4.0` | App/CRUD | 2 | P1 | Guillermo | Edgar | SF-040 |
+| **SF-042** | Controlador REST `CatalogoController` (`GET /api/v1/catalogo` con filtros/KPIs y `POST`, `PUT`, `DELETE` para `Administrador`) | `v0.4.0` | Api/CRUD | 2 | P1 | Guillermo | Edgar | SF-020, SF-041 |
+| **SF-043** | Módulo Wrapper `wwwroot/js/api/catalogoApi.js` (filtros de inventario, KPIs y operaciones CRUD de `Administrador`) | `v0.4.0` | Web-JS | 2 | P1 | Guillermo | Edgar | SF-024, SF-042 |
+| **SF-044** | Pantalla Figma `/Catalogo/Index` (*Captura 2* — Parte 1): Buscador, selects de Sección/Estado y 3 KPI Cards (`64`, `$120,000`, `Jardín Norte`) | `v0.4.0` | Figma Cap. 2 | 2 | P1 | Juan | Edgar | SF-027, SF-043 |
+| **SF-045** | Pantalla Figma `/Catalogo/Index` (*Captura 2* — Parte 2): Tabla de lotes (`JN-A-042`, `JC-C-118`, `RO-B-027`), estados y paginador | `v0.4.0` | Figma Cap. 2 | 2 | P1 | Juan | Edgar | SF-044 |
+| **SF-046** | Modal CRUD de Lotes en `/Catalogo/Index` exclusivo para `Administrador` (Alta, Edición de ubicación/estado y Baja lógica) | `v0.4.0` | Figma Cap. 2 | 2 | P1 | Juan | Edgar | SF-045 |
+| **SF-047** | QA Gate `v0.4.0`: Certificación HTTP de `CP-01` (precios fijos 2, 3 y 4 gavetas, filtros y CRUD Admin) + Tag `v0.4.0` | `v0.4.0` | QA-Test | 2 | P0 | Edgar | Reydescel | SF-042, SF-046 |
+| **SF-048** | Blindaje de límites en `SimuladorService.Simular` (`CP-10`: rechazo de 15% y 36m) y fecha de primer pago | `v0.5.0` | App | 2 | P0 | Guillermo | Edgar | SF-013 |
+| **SF-049** | Controlador REST `SimuladorController` (`POST /api/v1/simulador/cotizar`) y `wwwroot/js/api/simuladorApi.js` | `v0.5.0` | Api/JS | 2 | P0 | Guillermo | Edgar | SF-024, SF-048 |
+| **SF-050** | Componente Figma Panel Derecho `RESUMEN DE COTIZACIÓN` (*Capturas 5–8*) con grilla visual de gavetas (`A, B, 42...`) y `Borrador guardado` | `v0.5.0` | Figma Cap. 5-8 | 3 | P1 | Juan | Edgar | SF-049 |
+| **SF-051** | Pantalla Figma `/Ventas/Nueva` — Paso 1 `1. Cliente · Datos del titular` (*Captura 5*): Buscador de cliente o captura rápida | `v0.5.0` | Figma Cap. 5 | 2 | P1 | Juan | Edgar | SF-033, SF-050 |
+| **SF-052** | Pantalla Figma `/Ventas/Nueva` — Paso 2 `2. Lote · Selección` (*Captura 6*): Cards horizontales (`JN-A-042`, `JC-C-118`, `RO-E-081`) | `v0.5.0` | Figma Cap. 6 | 2 | P1 | Juan | Edgar | SF-043, SF-051 |
+| **SF-053** | Pantalla Figma `/Ventas/Nueva` — Paso 3 `3. Financiamiento · Plan de pago` (*Captura 7*): Toggle `Crédito`/`Contado`, selects y banner mensualidad | `v0.5.0` | Figma Cap. 7 | 3 | P1 | Juan | Edgar | SF-049, SF-052 |
+| **SF-054** | Modal de Tabla de Amortización Completa (`CP-06`, 6 columnas `tabular-nums` y saldo `$0.00`) y alertas `CP-10` en el Paso 3 | `v0.5.0` | Figma Cap. 7 | 2 | P1 | Juan | Edgar | SF-053 |
+| **SF-055** | Suite HTTP en `Tests` para `/api/v1/simulador/cotizar` validando `CP-03`, `CP-04`, `CP-05` y `CP-06` contra CSV | `v0.5.0` | QA-Test | 2 | P0 | Edgar | Gustavo | SF-049 |
+| **SF-056** | QA Gate `v0.5.0`: Suite HTTP de fronteras inválidas `CP-10` (`EP-04..06`, `EP-11..12`, `BVA-01..10`) y Tag `v0.5.0` | `v0.5.0` | QA-Test | 2 | P0 | Edgar | Reydescel | SF-054, SF-055 |
+| **SF-057** | Entidad `Venta` en `Core` con `FolioContrato` (`CTR-YYYY-XXXX`), `EstadoVenta` (`Completada`, `EnRevision`, `Cancelada`) y `RN-02`/`RN-03` | `v0.6.0` | Core | 2 | P0 | Gustavo | Edgar | SF-039 |
+| **SF-058** | Entidades `Financiamiento` y `Mensualidad` en `Core` con generación de calendario francés y estados de cartera | `v0.6.0` | Core | 3 | P0 | Gustavo | Edgar | SF-011, SF-057 |
+| **SF-059** | Configuraciones `VentaConfiguration` (`seq_contratos_folio`), `FinanciamientoConfiguration` (`xmin`) y `MensualidadConfiguration` + Migración | `v0.6.0` | Infra-DB | 3 | P0 | Gustavo | Edgar | SF-040, SF-058 |
+| **SF-060** | `IVentaService` y `VentaService.RegistrarVentaContadoAsync` (`RN-03`: lote pasa a `Vendido`, saldo `$0.00`, sin amortización) | `v0.6.0` | App | 2 | P0 | Guillermo | Edgar | SF-059 |
+| **SF-061** | Controlador `VentasController` (`POST /api/v1/ventas/contado`, `GET /{id}`) y wrapper `wwwroot/js/api/ventasApi.js` | `v0.6.0` | Api/JS | 2 | P0 | Guillermo | Edgar | SF-024, SF-060 |
+| **SF-062** | Pantalla Figma `/Ventas/Nueva` — Paso 4 `4. Confirmación · Resumen` (*Captura 8*): Grid 2x2, checkbox de revisión y botón `✓ Generar contrato` | `v0.6.0` | Figma Cap. 8 | 2 | P1 | Juan | Edgar | SF-054, SF-061 |
+| **SF-063** | Emisión de Venta de Contado desde el Paso 4 y vista de Comprobante/Carátula Imprimible (`@media print` — `CP-02`) | `v0.6.0` | Figma Cap. 8 | 2 | P1 | Juan | Edgar | SF-062 |
+| **SF-064** | CRUD Administrativo de Ventas/Contratos en `VentaService` y `VentasController` (`PUT /api/v1/ventas/{id}` y `DELETE` Admin) | `v0.6.0` | App/Api CRUD | 2 | P1 | Guillermo | Edgar | SF-061 |
+| **SF-065** | QA Gate `v0.6.0`: Prueba E2E HTTP de `CP-02` / `ST-01` (Venta Contado $150k sin tabla ni intereses) y Tag `v0.6.0` | `v0.6.0` | QA-Test | 2 | P0 | Edgar | Reydescel | SF-063, SF-064 |
+| **SF-066** | Implementación `VentaService.RegistrarVentaFinanciadaAsync` con transacción ACID (`Venta` + `Financiamiento` + $n$ `Mensualidades` + `Lote`) | `v0.7.0` | App/ACID | 3 | P0 | Reydescel | Edgar | SF-059, SF-060 |
+| **SF-067** | Endpoint `POST /api/v1/ventas/financiada` en `VentasController` y método `registrarFinanciada` en `ventasApi.js` | `v0.7.0` | Api/JS | 2 | P0 | Guillermo | Edgar | SF-061, SF-066 |
+| **SF-068** | Conexión del Paso 4 (`✓ Generar contrato` en modalidad `Crédito`) con `ventasApi.registrarFinanciada` y Carátula de Contrato | `v0.7.0` | Figma Cap. 8 | 2 | P1 | Juan | Edgar | SF-063, SF-067 |
+| **SF-069** | Servicio y Controlador `ContratosController` (`GET /api/v1/contratos`) con los 4 KPIs de Cartera y filtros (`Todos`/`Activos`/`Vencidos`/`Liquidados`) | `v0.7.0` | App/Api | 2 | P1 | Guillermo | Edgar | SF-066 |
+| **SF-070** | Módulo Wrapper `wwwroot/js/api/contratosApi.js` (consulta de KPIs, filtros de cartera y acciones CRUD de `Administrador`) | `v0.7.0` | Web-JS | 2 | P1 | Guillermo | Edgar | SF-024, SF-069 |
+| **SF-071** | Pantalla Figma `/Contratos/Index` (*Captura 9* — Parte 1): 4 KPI Cards (`Activos`, `Al corriente`, `Con atraso`, `Liquidados`) y 4 Tabs de filtro | `v0.7.0` | Figma Cap. 9 | 2 | P1 | Juan | Edgar | SF-027, SF-070 |
+| **SF-072** | Pantalla Figma `/Contratos/Index` (*Captura 9* — Parte 2): Tabla de contratos (`CTR-2025-0189`), badges de estado y botones `Detalle` / `Cobrar` | `v0.7.0` | Figma Cap. 9 | 2 | P1 | Juan | Edgar | SF-071 |
+| **SF-073** | Vista/Drawer `/Contratos/Detalle` con tabla de amortización, historial de pagos y acciones CRUD de `Administrador` (`En revisión`/`Cancelar`) | `v0.7.0` | Figma Cap. 9 | 2 | P1 | Juan | Edgar | SF-064, SF-072 |
+| **SF-074** | QA Gate `v0.7.0`: Test de Integración ACID de Venta Financiada y consulta de Cartera en `/api/v1/contratos` + Tag `v0.7.0` | `v0.7.0` | QA-Test | 2 | P0 | Edgar | Reydescel | SF-068, SF-073 |
+| **SF-075** | Entidad `Pago` en `Core` con `Folio`, `TipoPago`, `MetodoPago` (`Transferencia`/`Efectivo`/`Tarjeta`), `Referencia`, `ClaveIdempotencia` y `RN-11` | `v0.8.0` | Core | 2 | P0 | Gustavo | Edgar | SF-058 |
+| **SF-076** | `PagoConfiguration`, secuencia PostgreSQL `seq_pagos_folio` (`PAG-2026-XXXXXX`), índice `uq_pagos_idempotencia` y migración | `v0.8.0` | Infra-DB | 3 | P0 | Gustavo | Edgar | SF-059, SF-075 |
+| **SF-077** | `CobranzaService.RegistrarPagoOrdinarioAsync` (ACID + `xmin` + idempotencia `409`) y cálculo de `CorteDelDiaDto` | `v0.8.0` | App/ACID | 3 | P0 | Reydescel | Edgar | SF-076 |
+| **SF-078** | Controlador `CobranzaController` (`GET /contratos/{folio}`, `POST /pagos-ordinarios`, `GET /corte-del-dia`, `POST /preparar-corte`) | `v0.8.0` | Api | 2 | P0 | Guillermo | Edgar | SF-077 |
+| **SF-079** | Módulo Wrapper `wwwroot/js/api/cobranzaApi.js` con `crypto.randomUUID()` para `claveIdempotencia` | `v0.8.0` | Web-JS | 2 | P1 | Guillermo | Edgar | SF-024, SF-078 |
+| **SF-080** | Pantalla Figma `/Caja/Index` (*Captura 10* — Parte 1): Header `● Caja abierta`, buscador `CTR-...`, card cliente y 3 tarjetas de operación | `v0.8.0` | Figma Cap. 10 | 3 | P1 | Juan | Edgar | SF-027, SF-079 |
+| **SF-081** | Pantalla Figma `/Caja/Index` (*Captura 10* — Parte 2): Inputs `Importe a recibir`, `Método de pago`, `Referencia`, botón `Aplicar pago` y Recibo | `v0.8.0` | Figma Cap. 10 | 2 | P1 | Juan | Edgar | SF-080 |
+| **SF-082** | Pantalla Figma `/Caja/Index` (*Captura 10* — Parte 3): Card derecha `Corte del día` (`Preparar corte`) y Card alerta `8 pagos requieren atención` | `v0.8.0` | Figma Cap. 10 | 2 | P1 | Juan | Edgar | SF-081 |
+| **SF-083** | QA Gate `v0.8.0`: Prueba de Concurrencia `Task.WhenAll` (`ST-04`) contra `/api/v1/cobranza/pagos-ordinarios` + Tag `v0.8.0` | `v0.8.0` | QA-Test | 3 | P0 | Edgar | Reydescel | SF-078, SF-082 |
+| **SF-084** | `CalculadoraAbonoCapital.Recalcular` (`CP-07`: `$7,523.51`), `CobranzaService.AplicarAbonoCapitalAsync` (ACID) y endpoint `/abonos` | `v0.9.0` | Core/App/Api | 3 | P0 | Gustavo | Edgar | SF-077 |
+| **SF-085** | Interacción de la tarjeta `Abono a capital (Reduce mensualidad)` en `/Caja/Index` (*Captura 10*) con comparativa Antes vs. Después (`CP-07`) | `v0.9.0` | Figma Cap. 10 | 2 | P1 | Juan | Edgar | SF-081, SF-084 |
+| **SF-086** | `CalculadoraLiquidacion.Calcular` (`RN-09`: 10% desc. intereses, `CP-08`: `$77,893.39`), servicio ACID y endpoint `/liquidacion` | `v0.9.0` | Core/App/Api | 3 | P0 | Gustavo | Edgar | SF-077 |
+| **SF-087** | Interacción de la tarjeta `Liquidación (Cierre anticipado)` en `/Caja/Index` (*Captura 10*) con desglose de ahorro `$498.05` (`CP-08`) | `v0.9.0` | Figma Cap. 10 | 2 | P1 | Juan | Edgar | SF-085, SF-086 |
+| **SF-088** | `EvaluadorVencimientos.Evaluar` en `Core` con `TimeProvider` abstracto y `$0.00` mora (`RN-10`, `CP-09`) integrado en `/Contratos` y `/Caja` | `v0.9.0` | Core/App | 2 | P0 | Gustavo | Edgar | SF-069 |
+| **SF-089** | Servicio y Controlador `DashboardReportesController` (`GET /api/v1/dashboard/resumen` y `GET /api/v1/reportes/indicadores`) + `dashboardApi.js` | `v0.9.0` | App/Api/JS | 3 | P1 | Guillermo | Edgar | SF-078, SF-088 |
+| **SF-090** | Pantalla Figma `/Resumen` (*Captura 1*): Saludo dinámico, 4 KPIs, gráfica `Ventas y cobranza`, dona `Disponibilidad` y `Actividad reciente` | `v0.9.0` | Figma Cap. 1 | 3 | P1 | Juan | Edgar | SF-089 |
+| **SF-091** | Pantalla Figma `/Reportes/Index` (*Captura 11*): Filtros `Periodo`/`Sucursal`, 3 KPIs, barras `Ventas por tipo de lote` y dona `Meta mensual 81%` | `v0.9.0` | Figma Cap. 11 | 2 | P1 | Juan | Edgar | SF-089 |
+| **SF-092** | Pantalla Figma `/Configuracion/Index` (*Captura 12*) + API Config: Submenú 5 secciones, `Datos de la sucursal`, switches y pestaña `Usuarios y roles` | `v0.9.0` | Figma Cap. 12 | 3 | P1 | Juan | Edgar | SF-029 |
+| **SF-093** | Suite de Certificación HTTP/xUnit para `CP-07` (`ST-02` contra CSV oficial) y `CP-08` (`ST-03` liquidación `$77,893.39`) | `v0.9.0` | QA-Test | 2 | P0 | Edgar | Gustavo | SF-084, SF-086 |
+| **SF-094** | QA Gate `v0.9.0` & **CODE FREEZE**: Certificación HTTP de `CP-09` (`TimeProvider` con `$0.00` mora) y cierre de rama `dev` | `v0.9.0` | QA-Test | 2 | P0 | Edgar | Reydescel | SF-088, SF-093 |
+| **SF-095** | Hardening de Consultas EF Core (`AsNoTracking`, cero N+1), índices PostgreSQL 16 y políticas de seguridad en `Api` | `v1.0.0` | Infra/Api | 2 | P0 | Gustavo | Edgar | SF-094 |
+| **SF-096** | Auditoría de Fidelidad Visual contra las 13 Capturas de Figma ("Sistema Funerario"), tokens `--forest`/`--gold` y WCAG 2.2 AA | `v1.0.0` | Figma Audit | 2 | P1 | Juan | Edgar | SF-090, SF-091, SF-092 |
+| **SF-097** | Ejecución y Certificación de Suite de Regresión Completa en CI (100% de tests Unit, Arch, DB y API HTTP en verde) | `v1.0.0` | QA-Test | 2 | P0 | Edgar | Reydescel | SF-095, SF-096 |
+| **SF-098** | Corrida Formal de UAT E2E (`ST-01` a `ST-04`, `CP-01` a `CP-10` y CRUDs Admin) en Staging (`beta`) y `05-registro-ejecucion.md` | `v1.0.0` | QA-Test | 2 | P0 | Guillermo | Edgar | SF-097 |
+| **SF-099** | Auditoría de las 100 carpetas `docs/evidencias/SF-XXX/` (`Red` y `Green`) y cierre de `06-bitacora-incidencias.md` (0 SEV1/2) | `v1.0.0` | QA-Test | 2 | P0 | Edgar | Reydescel | SF-098 |
+| **SF-100** | Firma del Informe de Cierre (`07-informe-cierre.md`), promoción `dev → beta → main` y Tag Oficial `v1.0.0` | `v1.0.0` | Release | 2 | P0 | Reydescel | Edgar | SF-099 |
+
+---
+
+## 5. Resumen de Línea Base Completada en `dev` (`v0.1.0` · `SF-001` a `SF-018`)
+
+| Bloque Base en `dev` | Tickets | Entregables Certificados en el Repositorio |
+|---|---|---|
+| **Cimientos y Arquitectura Inicial** | `SF-001` a `SF-007` | `SistemaFuneraria.sln`, `docker-compose.yml` (PostgreSQL 16), `ReglasArquitecturaTests.cs`, cultura `es-MX`, `ParametrosNegocio.cs`, `Dinero.cs` y patrón `Resultado<T>`. |
+| **Motor Financiero TDD y Oráculo** | `SF-008` a `SF-014` | `CalculadoraFinanciamiento.cs`, `GeneradorAmortizacion.cs` (ajuste al centavo en cuota $n$), `OraculoFinancieroTests.cs` (36 combinaciones en verde), `SimuladorService.cs` base y Tag `v0.1.0`. |
+| **Dominio, Persistencia y App Clientes** | `SF-015` a `SF-018` | Entidad `Cliente.cs`, `ClienteConfiguration.cs` + migración `Inicial`, `IClienteService.cs`, `ClienteService.cs` y pruebas unitarias/integración de clientes. |
+
+---
+## 6. Especificación Detallada de Fichas Técnicas BDD (`SF-019` a `SF-100`)
+
+---
+
+# MILESTONE 2 (`v0.2.0`) · Servidor `SistemaFuneraria.Api`, Auth + Bloqueo/Jitter, Fetch Wrapper, CRUD Usuarios Admin & Layout Figma "Sistema Funerario" (`SF-019` a `SF-030`)
+
+---
+
+#### Ficha Técnica BDD — `SF-019` : Creación del 6.º Proyecto `SistemaFuneraria.Api`, Desacoplamiento de `Web` y Regla de Arquitectura
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Tech Lead (Reydescel R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-019-scaffold-api-project` | **Blast Radius:** $\le 220$ LOCs | **Dependencias:** `SF-018`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** Cadena `DefaultConnection` administrada exclusivamente por `SistemaFuneraria.Api`
+  - **Contrato C# (`Core`/`App`):** Inyección de `IAppDbContext`, `IClienteService` e `ISimuladorService` en `SistemaFuneraria.Api/Program.cs`
+  - **Endpoint API (`SistemaFuneraria.Api`):** Servidor REST en `http://localhost:5180` con OpenAPI/Swagger en `/swagger`
+  - **Wrapper JS & Vista Figma (`Web`):** `SistemaFuneraria.Web` (`http://localhost:5080`) elimina su referencia a `SistemaFuneraria.Infrastructure` y expone `ApiSettings:BaseUrl`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Se crea `src/SistemaFuneraria.Api/SistemaFuneraria.Api.csproj` (`.NET 8`) y se incorpora a `SistemaFuneraria.sln`.
+  2. `SistemaFuneraria.Api` referencia a `Application` e `Infrastructure`; `SistemaFuneraria.Web` elimina cualquier referencia a `Infrastructure` para que el cliente jamás toque la base de datos directamente.
+  3. En `tests/SistemaFuneraria.Tests/Arquitectura/ReglasArquitecturaTests.cs` se añade la prueba que falla si `SistemaFuneraria.Web` referencia a `SistemaFuneraria.Infrastructure` o `Npgsql`.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Prohibición estricta de acceso a base de datos desde el cliente Web
+    Dado el proyecto cliente SistemaFuneraria.Web compilado en la solución de 6 proyectos
+    Cuando se ejecuta la suite de pruebas de arquitectura ReglasArquitecturaTests
+    Entonces se verifica que SistemaFuneraria.Web no posee referencias a SistemaFuneraria.Infrastructure ni a EntityFrameworkCore
+    Y SistemaFuneraria.Api concentra exclusivamente la inyección de AppDbContext.
+  ```
+• **DoD Extenso:** `src/SistemaFuneraria.Api/SistemaFuneraria.Api.csproj` registrado en `SistemaFuneraria.sln`, `Program.cs` con `AddControllers()`, limpieza de `SistemaFuneraria.Web.csproj` y test en `ReglasArquitecturaTests.cs`. **Policies activas (`RNF-05`):** Separación física Servidor/Cliente. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-019/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-020` : Clase Base `ApiControllerBase`, Mapeo de `Resultado<T>` a `ProblemDetails` RFC 7807 y Política CORS
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Tech Lead (Reydescel R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-020-api-controller-base-cors` | **Blast Radius:** $\le 200$ LOCs | **Dependencias:** `SF-019`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** N/A
+  - **Contrato C# (`Core`/`App`):** `SistemaFuneraria.Application.Comun.Resultado` y `Resultado<T>`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `src/SistemaFuneraria.Api/Controllers/V1/ApiControllerBase.cs` + `AddProblemDetails()` + Política CORS `Sistema FunerarioWebPolicy`
+  - **Wrapper JS & Vista Figma (`Web`):** Contrato JSON estándar de error (`{ title, status, detail, errors }`) consumido por `apiClient.js`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Cuando un servicio de `Application` devuelve `Resultado<T>.Exito(valor)`, `FromResult(resultado)` en `ApiControllerBase` responde `200 OK` o `201 Created` en JSON camelCase.
+  2. Si el servicio devuelve `Resultado.Fallo(mensaje)`:
+     - Prefijo `[CONFLICTO]` $\rightarrow$ `409 Conflict` con `ProblemDetails` (`ST-04`).
+     - Prefijo `[NO_ENCONTRADO]` $\rightarrow$ `404 Not Found` con `ProblemDetails`.
+     - Error de negocio o validación (`RN-01` a `RN-12`) $\rightarrow$ `400 Bad Request` con `ProblemDetails` y el texto exacto en `detail`.
+  3. Se habilita CORS en `SistemaFuneraria.Api` permitiendo el origen de `SistemaFuneraria.Web` (`http://localhost:5080`, `https://localhost:7080`), cabeceras `Authorization` y `Content-Type`.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Conversión uniforme de Resultado fallido a HTTP 400 ProblemDetails
+    Dado un controlador que hereda de ApiControllerBase
+    Cuando el caso de uso retorna Resultado.Fallo("Enganche no permitido. Solo se acepta 10%, 20% o 30%")
+    Entonces la respuesta HTTP tiene código 400 Bad Request y Content-Type "application/problem+json"
+    Y el campo "detail" contiene exactamente "Enganche no permitido. Solo se acepta 10%, 20% o 30%".
+  ```
+• **DoD Extenso:** `ApiControllerBase.cs`, configuración CORS y `AddProblemDetails()` en `src/SistemaFuneraria.Api/Program.cs`, y pruebas unitarias en `tests/SistemaFuneraria.Tests/Unit/Api/ApiControllerBaseTests.cs`. **Policies activas (`RNF-05`):** RFC 7807. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-020/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-021` : Integración de `IdentityDbContext` en `AppDbContext` y Migración PostgreSQL `AspNet*`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 1 — BD & Backend (Gustavo L.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-021-identity-dbcontext-migration` | **Blast Radius:** $\le 240$ LOCs | **Dependencias:** `SF-016`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `AspNetUsers (id varchar(450) PK, user_name, email, access_failed_count, lockout_end)`, `AspNetRoles`, `AspNetUserRoles`
+  - **Contrato C# (`Core`/`App`):** `AppDbContext : IdentityDbContext<IdentityUser>` implementando `IAppDbContext`
+  - **Endpoint API (`SistemaFuneraria.Api`):** Registro de `AddIdentityCore<IdentityUser>(opt => { opt.Lockout.MaxFailedAccessAttempts = 5; opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15); }).AddRoles<IdentityRole>().AddEntityFrameworkStores<AppDbContext>()`
+  - **Wrapper JS & Vista Figma (`Web`):** Soporte para bloqueo de 15 minutos al 5.º intento fallido en `/Cuenta/Login`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Agregar `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (`8.0.10`) en `Directory.Packages.props` y `SistemaFuneraria.Infrastructure.csproj`.
+  2. Cambiar la herencia de `AppDbContext` a `IdentityDbContext<IdentityUser>` invocando `base.OnModelCreating(modelBuilder)` al inicio de `OnModelCreating`.
+  3. Generar la migración `EsquemaIdentity` verificando que `Down()` elimine limpiamente las tablas `AspNet*` sin afectar `clientes`.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Aplicación y reversión limpia de la migración de tablas Identity en PostgreSQL 16
+    Dado el contenedor PostgreSQL 16 con la migración Inicial aplicada
+    Cuando se aplica la migración EsquemaIdentity
+    Entonces existen las tablas AspNetUsers, AspNetRoles y AspNetUserRoles junto a la tabla clientes
+    Y si se ejecuta la reversión Down() a Inicial, las tablas AspNet* se eliminan sin perder registros en clientes.
+  ```
+• **DoD Extenso:** Herencia en `AppDbContext.cs`, migración `EsquemaIdentity.cs` con `Up()` y `Down()` verificados, y prueba en `tests/SistemaFuneraria.Tests/Integration/IdentityEsquemaTests.cs`. **Policies activas (`RNF-03`):** Seguridad e integridad referencial. **Rollback:** `dotnet ef database update Inicial --project src/SistemaFuneraria.Infrastructure --startup-project src/SistemaFuneraria.Api`. **Evidencia:** `docs/evidencias/SF-021/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-022` : Seeder `IdentitySeed` con 3 Roles (`Administrador`, `Vendedor`, `Cajero`) y Cuenta Oficial `Andrea Morales`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 1 — BD & Backend (Gustavo L.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-022-identity-seed-3-roles` | **Blast Radius:** $\le 190$ LOCs | **Dependencias:** `SF-021`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `AspNetRoles ('Administrador', 'Vendedor', 'Cajero')`, `AspNetUsers`
+  - **Contrato C# (`Core`/`App`):** `ParametrosNegocio.RolAdministrador = "Administrador"`, `RolVendedor = "Vendedor"`, `RolCajero = "Cajero"`
+  - **Endpoint API (`SistemaFuneraria.Api`):** Ejecución idempotente de `IdentitySeed.SeedAsync` al iniciar `SistemaFuneraria.Api`
+  - **Wrapper JS & Vista Figma (`Web`):** Muestra en el Topbar del Figma (*Capturas 1–6*) `AM · Andrea Morales · Administradora` y Sucursal `Jardines del Valle`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Crear `src/SistemaFuneraria.Infrastructure/Persistencia/IdentitySeed.cs`.
+  2. Sembrar de forma idempotente los **3 roles del sistema**: `"Administrador"`, `"Vendedor"` y `"Cajero"`.
+  3. Sembrar los 3 usuarios oficiales de demostración con contraseña `"Sistema Funerario2026!"` y claims de `NombreCompleto`, `Iniciales` y `Sucursal` (`"Jardines del Valle"`):
+     - **Administradora (Figma Topbar):** `andrea.morales@sistemafunerario.mx` (`NombreCompleto: "Andrea Morales"`, `Iniciales: "AM"`, Rol: `"Administrador"`).
+     - **Vendedor:** `vendedor@sistemafunerario.mx` (`NombreCompleto: "Carlos Vega"`, `Iniciales: "CV"`, Rol: `"Vendedor"`).
+     - **Cajero:** `cajero@sistemafunerario.mx` (`NombreCompleto: "Luis Torres"`, `Iniciales: "LT"`, Rol: `"Cajero"`).
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Precarga idempotente de los 3 roles (Administrador, Vendedor, Cajero) y la cuenta Andrea Morales del Figma
+    Dado el esquema Identity en PostgreSQL 16
+    Cuando se ejecuta IdentitySeed.SeedAsync dos veces consecutivas
+    Entonces existen exactamente los roles "Administrador", "Vendedor" y "Cajero"
+    Y el usuario "andrea.morales@sistemafunerario.mx" posee el rol "Administrador" con iniciales "AM" y sucursal "Jardines del Valle".
+  ```
+• **DoD Extenso:** `IdentitySeed.cs` en `Infrastructure`, invocación en `SistemaFuneraria.Api/Program.cs` y prueba en `tests/SistemaFuneraria.Tests/Integration/IdentitySeedTests.cs`. **Policies activas (`RNF-03`):** 3 niveles RBAC. **Rollback:** `DELETE FROM "AspNetUserRoles"; DELETE FROM "AspNetUsers"; DELETE FROM "AspNetRoles";`. **Evidencia:** `docs/evidencias/SF-022/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-023` : Máquina de Estados de Login (`AuthController`), Bloqueo Temporal al 5.º Intento & Jitter Anti-Enumeración
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 2 — Backend & API (Guillermo S.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-023-auth-login-lockout-jitter` | **Blast Radius:** $\le 240$ LOCs | **Dependencias:** `SF-020`, `SF-022`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `AspNetUsers (access_failed_count, lockout_end, password_hash)`
+  - **Contrato C# (`Core`/`App`):** `LoginRequest(string Correo, string Password)`, `LoginResponseDto(string Token, string UsuarioId, string NombreCompleto, string Iniciales, string Correo, string Rol, string Sucursal, int IntentosFallidos, int? MinutosBloqueoRestantes, string? AdvertenciaSeguridad)`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `POST /api/v1/auth/login`, `POST /api/v1/auth/olvide-contrasena` y `GET /api/v1/auth/me`
+  - **Wrapper JS & Vista Figma (`Web`):** Consumido por `authApi.js` y `/Cuenta/Login`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. En `POST /api/v1/auth/login`, el usuario introduce sus credenciales.
+  2. Si las credenciales fallan:
+     - Incrementa `AccessFailedCount` en Identity (`UserManager.AccessFailedAsync`).
+     - Al **3.er intento fallido**: la respuesta devuelve `401 Unauthorized` incluyendo `advertenciaSeguridad: "Advertencia: Si alcanzas 5 intentos fallidos tu cuenta será bloqueada temporalmente por seguridad"` (`intentosFallidos = 3`).
+     - Al **5.º intento fallido**: se bloquea la cuenta por 15 minutos (`LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(15)`). La respuesta devuelve `423 Locked` con `minutosBloqueoRestantes = 15` y el mensaje *"Cuenta bloqueada temporalmente. Intenta nuevamente en 15 minutos"*.
+  3. En `POST /api/v1/auth/olvide-contrasena`:
+     - Exista o no el correo en base de datos, siempre responde `200 OK` con el mensaje: *"Si el correo ingresado se encuentra registrado, recibirás un enlace de restablecimiento en breve"*.
+     - Se introduce un retardo pseudoaleatorio (**jitter de 200ms a 600ms** con `Random.Shared.Next(200, 601)`) para neutralizar timing attacks.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Bloqueo de cuenta al quinto intento fallido consecutivo y advertencia preventiva al tercero
+    Dado un usuario registrado cuya cuenta tiene 4 intentos fallidos previos
+    Cuando envía POST a "/api/v1/auth/login" con una contraseña incorrecta por quinta vez
+    Entonces su cuenta se bloquea durante 15 minutos (LockoutEnd = UtcNow + 15m)
+    Y la API responde HTTP 423 Locked con minutosBloqueoRestantes=15 y el mensaje "Cuenta bloqueada temporalmente. Intenta nuevamente en 15 minutos".
+  ```
+• **DoD Extenso:** `AuthController.cs` en `SistemaFuneraria.Api/Controllers/V1/`, cálculo de minutos restantes de bloqueo, jitter de `200-600ms` en recuperación de contraseña y pruebas unitarias en `tests/SistemaFuneraria.Tests/Unit/Api/IniciarSesionUsuarioTests.cs`. **Policies activas (`RNF-03`):** Prevención de fuerza bruta y enumeración. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-023/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-024` : Motor `wwwroot/js/api/apiClient.js` (Fetch Wrapper con Bearer JWT y `ProblemDetails`) y `authApi.js`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Tech Lead (Reydescel R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-024-js-fetch-api-client-auth` | **Blast Radius:** $\le 210$ LOCs | **Dependencias:** `SF-020`, `SF-023`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** N/A
+  - **Contrato C# (`Core`/`App`):** `ProblemDetails` RFC 7807 y `LoginResponseDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `/api/v1/*`
+  - **Wrapper JS & Vista Figma (`Web`):** `src/SistemaFuneraria.Web/wwwroot/js/api/apiClient.js` y `wwwroot/js/api/authApi.js`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. `apiClient.js` centraliza `get(url, opts)`, `post(url, body, opts)`, `put(url, body, opts)` y `delete(url, opts)`, adjuntando automáticamente `Authorization: Bearer <token>` desde `sessionStorage`.
+  2. `authApi.js` gestiona `login(correo, password)`, `olvideContrasena(correo)`, `logout()`, `getSession()` y `applyRolePermissions()`:
+     - Si el rol es `Administrador`: muestra en el Sidebar tanto la sección `OPERACIÓN` como `ADMINISTRACIÓN` (`Reportes`, `Configuración`, `Parámetros UI`) y habilita en todas las pantallas los botones CRUD administrativos (`Editar`, `Eliminar`, `+ Nuevo lote`, `Usuarios y roles`).
+     - Si el rol es `Vendedor` o `Cajero`: oculta la sección `ADMINISTRACIÓN` y los controles destructivos de catálogo/usuarios.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Visibilidad dinámica de la sección ADMINISTRACIÓN y botones CRUD según el rol del JWT en authApi
+    Dado un usuario autenticado cuyo perfil en authApi.getSession() tiene el rol "Administrador"
+    Cuando se inicializa el Layout Maestro "Sistema Funerario"
+    Entonces se habilita la sección "ADMINISTRACIÓN" (Reportes, Configuración, Parámetros UI) y las acciones CRUD de tablas
+    Y si el rol es "Vendedor", la sección "ADMINISTRACIÓN" permanece oculta.
+  ```
+• **DoD Extenso:** `apiClient.js` y `authApi.js` en `wwwroot/js/api/` más pruebas en `tests/SistemaFuneraria.Tests/Unit/Web/ApiClientAuthWrapperTests.cs`. **Policies activas (`RNF-03`, `RNF-05`):** Cliente desacoplado con RBAC. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-024/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-025` : Pantalla Figma `/ParametrosUi` (*Captura 13*) y Hoja `sistema-tokens.css` (`--forest`, `--gold`, `--rose`, `--canvas`, `--ink`)
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 3 — Frontend & Figma UI (Juan R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-025-figma-parametros-ui-tokens` | **Blast Radius:** $\le 220$ LOCs | **Dependencias:** `SF-004`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** N/A
+  - **Contrato C# (`Core`/`App`):** Cultura monetaria `es-MX` (`$#,##0.00` — `RN-12`)
+  - **Endpoint API (`SistemaFuneraria.Api`):** N/A
+  - **Wrapper JS & Vista Figma (`Web`):** `src/SistemaFuneraria.Web/wwwroot/css/sistema-tokens.css` y página `src/SistemaFuneraria.Web/Pages/ParametrosUi.cshtml` (*Captura 13 del Figma*)
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Crear `wwwroot/css/sistema-tokens.css` definiendo exactamente las **Variables CSS del Proyecto de la Captura 13 del Figma**:
+     - `--forest: #173f3a;` | `--forest-2: #245c53;` | `--gold: #c59d52;` | `--rose: #a84f4b;` | `--canvas: #f4f6f3;` | `--ink: #17211f;`
+     - Variables complementarias del tema Sistema Funerario: `--sistema-funerario-olive-sidebar: #485635;`, `--sistema-funerario-cream-bg: #f5efe6;`, `--sistema-funerario-card-bg: #fcfaf7;`, `--sistema-funerario-border: #e6dfd3;`, `--sistema-funerario-radius: 16px;` y clase `.sf-money` con `font-variant-numeric: tabular-nums;`.
+  2. Maquetar la vista `Pages/ParametrosUi.cshtml` idéntica a la **Captura 13**: encabezado `DESIGN SYSTEM / Parámetros UI`, subtítulo *"Inventario visual de las ventanas, su estructura y los colores oficiales del sistema"* y tarjeta `Variables CSS del Proyecto` con las 6 muestras de color (`Forest #173f3a`, `Forest 2 #245c53`, `Gold #c59d52`, `Rose #a84f4b`, `Canvas #f4f6f3`, `Ink #17211f`).
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Fidelidad exacta de las 6 variables CSS institucionales en la pantalla /ParametrosUi (Captura 13)
+    Dado que el usuario navega a "/ParametrosUi"
+    Cuando se carga la tarjeta "Variables CSS del Proyecto"
+    Entonces se exhiben las 6 tarjetas de identidad institucional con sus códigos exactos: #173f3a, #245c53, #c59d52, #a84f4b, #f4f6f3 y #17211f.
+  ```
+• **DoD Extenso:** `wwwroot/css/sistema-tokens.css`, `Pages/ParametrosUi.cshtml` y `ParametrosUi.cshtml.cs`, más prueba en `tests/SistemaFuneraria.Tests/Unit/Web/Sistema FunerarioTokensTests.cs`. **Policies activas (`RNF-01`, `RNF-06`, `RN-12`):** Design System oficial Sistema Funerario. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-025/Red_Test.md` y `Green_Test.md` + captura comparada con Captura 13.
+
+---
+
+#### Ficha Técnica BDD — `SF-026` : Layout Maestro Figma "Sistema Funerario · Gestión Memorial" (*Capturas 1–6*): Sidebar Verde Olivo y Topbar `Jardines del Valle`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 3 — Frontend & Figma UI (Juan R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-026-figma-sistema-funerario-master-layout` | **Blast Radius:** $\le 240$ LOCs | **Dependencias:** `SF-025`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** N/A
+  - **Contrato C# (`Core`/`App`):** `LoginResponseDto(NombreCompleto, Iniciales, Rol, Sucursal)`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `GET /api/v1/auth/me`
+  - **Wrapper JS & Vista Figma (`Web`):** `Pages/Shared/_Layout.cshtml`, `Pages/Shared/_SidebarSistema FunerarioPartial.cshtml` y `Pages/Shared/_TopbarSistema FunerarioPartial.cshtml`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Maquetar `_SidebarSistema FunerarioPartial.cshtml` idéntico a las **Capturas 1 a 6 del Figma**:
+     - Brand superior: recuadro dorado `S` + título **`Sistema Funerario`** y subtítulo `Gestión memorial`.
+     - Grupo **`OPERACIÓN`**: `Resumen` (`/Index`), `Catálogo de lotes` (`/Catalogo`), `Clientes` (`/Clientes`), `+ Nueva venta` (`/Ventas/Nueva`), `Contratos` (`/Contratos`) y `Caja y cobranza` (`/Caja` con badge dorado circular `8`). El ítem activo luce borde dorado `--gold` y fondo translúcido.
+     - Grupo **`ADMINISTRACIÓN`**: `Reportes` (`/Reportes`), `Configuración` (`/Configuracion`) y `Parámetros UI` (`/ParametrosUi`).
+     - Pie de Sidebar: tarjeta redondeada `? ¿Necesitas ayuda? Consulta la guía operativa >`.
+  2. Maquetar `_TopbarSistema FunerarioPartial.cshtml`: selector izquierdo `SUCURSAL / Jardines del Valle v`, botón cuadrado de campana de alertas y perfil derecho con avatar circular `AM` + **`Andrea Morales`** / `Administradora v` (actualizado dinámicamente desde `authApi.getSession()`).
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Renderizado del Sidebar "Sistema Funerario · Gestión Memorial" y Topbar "Jardines del Valle" conforme al Figma
+    Dado un usuario autenticado que accede al sistema web
+    Cuando se renderiza el Layout maestro
+    Entonces el Sidebar muestra los grupos "OPERACIÓN" (6 módulos) y "ADMINISTRACIÓN" (3 módulos) con el bloque "¿Necesitas ayuda?"
+    Y el Topbar muestra la sucursal "Jardines del Valle" y el avatar con iniciales, nombre y rol del usuario activo.
+  ```
+• **DoD Extenso:** `_Layout.cshtml`, `_SidebarSistema FunerarioPartial.cshtml` y `_TopbarSistema FunerarioPartial.cshtml`, más prueba en `tests/SistemaFuneraria.Tests/Unit/Web/Sistema FunerarioLayoutTests.cs`. **Policies activas (`RNF-01`, `RNF-06`):** Navegación fiel al Figma. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-026/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-027` : Kit Reutilizable de los 5 Estados UI en "Sistema Funerario" (Empty, Skeleton, Error Banner, Toast y Modal Redondeado)
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 3 — Frontend & Figma UI (Juan R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-027-figma-sistema-funerario-ui-states-kit` | **Blast Radius:** $\le 210$ LOCs | **Dependencias:** `SF-026`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** N/A
+  - **Contrato C# (`Core`/`App`):** `ProblemDetails`
+  - **Endpoint API (`SistemaFuneraria.Api`):** Respuestas HTTP `200`, `201`, `400`, `403`, `404`, `409`
+  - **Wrapper JS & Vista Figma (`Web`):** `wwwroot/js/ui/uiStates.js` y `Pages/Shared/_Sistema FunerarioModalsPartial.cshtml`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Crear `wwwroot/js/ui/uiStates.js` con estilos basados en `--forest`, `--gold`, `--rose` y `--canvas` para renderizar en cualquier contenedor:
+     - Estado `Loading` (skeletons cálidos animados).
+     - Estado `Empty` (mensaje empático + CTA en verde `--forest`).
+     - Estado `Error` (alerta con borde `--rose` `#a84f4b` mostrando el `detail` de `ProblemDetails` y botón *"Reintentar"*).
+     - Estado `Success` (Toast flotante y Modal de confirmación con bordes de `24px` como en la **Captura 4**).
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Despliegue de alerta en tono Rose (#a84f4b) cuando una petición fetch devuelve ProblemDetails
+    Dado un contenedor gestionado por uiStates.js
+    Cuando la API devuelve un error 400 o 409 con mensaje de negocio
+    Entonces uiStates.renderError pinta un banner accesible con role="alert" y el mensaje exacto del servidor.
+  ```
+• **DoD Extenso:** `wwwroot/js/ui/uiStates.js`, `_Sistema FunerarioModalsPartial.cshtml` y prueba en `tests/SistemaFuneraria.Tests/Unit/Web/UiStatesKitTests.cs`. **Policies activas (`RNF-01`):** 5 estados obligatorios en todas las vistas. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-027/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-028` : Pantalla Figma `/Cuenta/Login` y `/OlvideContrasena`: Alerta al 3.er Fallo, Contador de Bloqueo al 5.º y Redirección
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 3 — Frontend & Figma UI (Juan R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-028-figma-sistema-funerario-login-ui` | **Blast Radius:** $\le 230$ LOCs | **Dependencias:** `SF-024`, `SF-027`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `AspNetUsers (access_failed_count, lockout_end)`
+  - **Contrato C# (`Core`/`App`):** `LoginRequest` $\rightarrow$ `LoginResponseDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `POST /api/v1/auth/login` y `POST /api/v1/auth/olvide-contrasena`
+  - **Wrapper JS & Vista Figma (`Web`):** `Pages/Cuenta/Login.cshtml`, `Pages/Cuenta/OlvideContrasena.cshtml` y `wwwroot/js/pages/loginPage.js`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Maquetar `/Cuenta/Login` con la estética de **Sistema Funerario · Gestión Memorial** (panel lateral verde olivo con el sello `S · Sistema Funerario · Sucursal Jardines del Valle` y tarjeta crema con inputs redondeados `Correo electrónico`, `Contraseña` y accesos rápidos demo para *Administradora Andrea Morales*, *Vendedor* y *Cajero*).
+  2. En `loginPage.js`:
+     - Al **3.er intento fallido** (`intentosFallidos === 3`), muestra la alerta preventiva en dorado `--gold`: *"Advertencia: Si alcanzas 5 intentos fallidos tu cuenta será bloqueada temporalmente por seguridad"*.
+     - Al **5.º intento fallido** (HTTP `423 Locked`), deshabilita los campos del formulario y muestra en tono `--rose` el mensaje *"Cuenta bloqueada temporalmente. Intenta nuevamente en 15 minutos"* junto con un contador regresivo visual de los minutos restantes.
+  3. En `/Cuenta/OlvideContrasena`, al enviar cualquier correo muestra el mensaje uniforme *"Si el correo ingresado se encuentra registrado, recibirás un enlace de restablecimiento en breve"*.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Deshabilitación del formulario de login y contador regresivo al quinto intento fallido
+    Dado un usuario en "/Cuenta/Login" cuya cuenta alcanza el quinto intento fallido consecutivo
+    Cuando la API responde HTTP 423 Locked con 15 minutos de bloqueo
+    Entonces el formulario deshabilita los inputs y el botón de envío mostrando "Cuenta bloqueada temporalmente. Intenta nuevamente en 15 minutos".
+  ```
+• **DoD Extenso:** `Pages/Cuenta/Login.cshtml`, `Pages/Cuenta/OlvideContrasena.cshtml`, `wwwroot/js/pages/loginPage.js` y prueba en `tests/SistemaFuneraria.Tests/Unit/Web/LoginPageTests.cs`. **Policies activas (`RNF-01`, `RNF-03`):** Login seguro con identidad Sistema Funerario. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-028/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-029` : CRUD de Usuarios y Roles para `Administrador`: `UsuariosAdminController` (`/api/v1/admin/usuarios`) y `adminApi.js`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 2 — Backend & API Wrapper (Guillermo S.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-029-api-crud-usuarios-admin` | **Blast Radius:** $\le 230$ LOCs | **Dependencias:** `SF-023`, `SF-024`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, `AspNetUserClaims`
+  - **Contrato C# (`Core`/`App`):** `UsuarioSistemaDto(string Id, string NombreCompleto, string Iniciales, string Correo, string Rol, string Sucursal, bool Bloqueado)`, `CrearUsuarioRequest`, `ActualizarUsuarioRequest`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `GET`, `POST`, `PUT /{id}`, `DELETE /{id}` en `/api/v1/admin/usuarios` (`[Authorize(Roles = "Administrador")]`)
+  - **Wrapper JS & Vista Figma (`Web`):** `src/SistemaFuneraria.Web/wwwroot/js/api/adminApi.js` consumido por la pestaña `Usuarios y roles` de `/Configuracion` (*Captura 12*)
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Crear `src/SistemaFuneraria.Api/Controllers/V1/UsuariosAdminController.cs` decorado con `[Authorize(Roles = "Administrador")]`.
+  2. Implementar el **CRUD completo de usuarios operativos**:
+     - `GET /api/v1/admin/usuarios`: lista todos los usuarios con su rol (`Administrador`, `Vendedor`, `Cajero`), sucursal y estado de bloqueo.
+     - `POST /api/v1/admin/usuarios`: crea un nuevo usuario en `UserManager`, le asigna su rol y claims de nombre/sucursal.
+     - `PUT /api/v1/admin/usuarios/{id}`: actualiza nombre, sucursal, cambia el rol o desbloquea la cuenta (`SetLockoutEndDateAsync(user, null)`).
+     - `DELETE /api/v1/admin/usuarios/{id}`: desactiva/elimina un usuario (impidiendo que la administradora activa se elimine a sí misma).
+  3. Crear `wwwroot/js/api/adminApi.js` exponiendo `listarUsuarios()`, `crearUsuario()`, `actualizarUsuario()` y `eliminarUsuario()`.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Gestión CRUD de usuarios y asignación de roles exclusiva para el rol Administrador
+    Dada la administradora "Andrea Morales" autenticada con JWT de rol "Administrador"
+    Cuando envía POST a "/api/v1/admin/usuarios" para dar de alta a un nuevo "Vendedor"
+    Entonces la API responde HTTP 201 Created con el UsuarioSistemaDto creado
+    Y si un usuario con rol "Vendedor" o "Cajero" intenta acceder a "/api/v1/admin/usuarios", recibe HTTP 403 Forbidden.
+  ```
+• **DoD Extenso:** `UsuariosAdminController.cs`, DTOs de administración de usuarios, `wwwroot/js/api/adminApi.js` y pruebas en `tests/SistemaFuneraria.Tests/Unit/Api/UsuariosAdminControllerTests.cs`. **Policies activas (`RNF-03`):** Gobernanza de usuarios por Administrador. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-029/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-030` : DevOps & QA Gate `v0.2.0`: Endpoint `/health`, GitHub Action Validador de Evidencias y Test HTTP de Auth/Lockout
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.2.0` | **Carril:** Carril 4 — DevOps & QA (Edgar A.) | **Revisor QA:** Reydescel R. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-030-qa-gate-v020-auth-health` | **Blast Radius:** $\le 190$ LOCs | **Dependencias:** `SF-023`, `SF-029`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `AspNetUsers`, `AspNetRoles`
+  - **Contrato C# (`Core`/`App`):** `LoginRequest`, `LoginResponseDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `GET /health`, `POST /api/v1/auth/login`, `POST /api/v1/auth/olvide-contrasena`, `GET /api/v1/admin/usuarios`
+  - **Wrapper JS & Vista Figma (`Web`):** Certificación de cierre del Milestone `v0.2.0`
+• **Flujo Paso a Paso (Guía Trainee — Edgar):**
+  1. Configurar `MapHealthChecks("/health")` en `SistemaFuneraria.Api/Program.cs` y agregar en `.github/workflows/ci.yml` el verificador automático de que ninguna evidencia en `docs/evidencias/` contenga rutas locales (`/Users/` o `C:\`).
+  2. Crear `tests/SistemaFuneraria.Tests/Integration/Api/AuthYUsuariosAdminHttpTests.cs` verificando vía HTTP:
+     - Login exitoso de `andrea.morales@sistemafunerario.mx` (`200 OK`, rol `Administrador`).
+     - Bloqueo al 5.º intento fallido consecutivo (`423 Locked` con 15 minutos) y jitter `>= 200ms` en `/api/v1/auth/olvide-contrasena`.
+     - Acceso `200 OK` de `Administrador` a `/api/v1/admin/usuarios` y rechazo `403 Forbidden` para `Vendedor` y `Cajero`.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Certificación de integración HTTP de Login, bloqueo al 5.º intento y protección RBAC de /api/v1/admin/usuarios
+    Dado el servidor SistemaFuneraria.Api en pruebas de integración
+    Cuando se ejecutan los flujos de autenticación y administración de usuarios
+    Entonces se certifica el bloqueo de 15 minutos al quinto fallo, el jitter >= 200ms y el control RBAC de los 3 roles.
+  ```
+• **DoD Extenso:** Endpoint `/health`, guardia en `.github/workflows/ci.yml`, `AuthYUsuariosAdminHttpTests.cs` en verde y registro en `docs/05-registro-ejecucion.md`. **Policies activas (`RNF-03`, `RNF-05`):** Gate `v0.2.0`. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-030/Red_Test.md` y `Green_Test.md`.
+
+---
+
+# MILESTONE 3 (`v0.3.0`) · Módulo de Clientes E2E + Modal Figma (Capturas 3 y 4) + CRUD Administrador (`SF-031` a `SF-038`)
+
+---
+
+#### Ficha Técnica BDD — `SF-031` : Ampliación CRUD en `Cliente` e `IClienteService` (`Buscar`, `Crear`, `Actualizar`, `EliminarAdmin` y Resumen de Cartera)
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.3.0` | **Carril:** Carril 2 — Backend & API (Guillermo S.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-031-app-cliente-crud-completo` | **Blast Radius:** $\le 220$ LOCs | **Dependencias:** `SF-018`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `clientes (id, curp, correo, nombre, apellidos, telefono, direccion, created_at)`
+  - **Contrato C# (`Core`/`App`):** Método `Cliente.Actualizar(nombre, apellidos, curp, telefono, correo, direccion)` en `Core`, `ActualizarClienteRequest` y ampliación de `ClienteDto` con `Iniciales`, `FechaAltaFormateada` (`"Cliente desde nov. 2025"`), `ContratosActivos`, `SaldoActual`, `UltimoPago` y `EstadoCartera` (`"Al corriente"`, `"Pago vencido"`, `"En revisión"`)
+  - **Endpoint API (`SistemaFuneraria.Api`):** Base para `ClientesController`
+  - **Wrapper JS & Vista Figma (`Web`):** Alimenta exactamente todas las columnas de la **Captura 3 (`Clientes`)** y el **Modal de la Captura 4**
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. En `src/SistemaFuneraria.Core/Entidades/Cliente.cs`, agregar el método `Actualizar(...)` validando las mismas invariantes de nombre, apellidos, CURP (18 caracteres), teléfono (10 dígitos) y correo; permitir que `direccion` tenga valor por defecto `"Sin dirección registrada"` cuando se crea desde el modal rápido de la Captura 4.
+  2. En `IClienteService` y `ClienteService`, implementar:
+     - `BuscarClientesAsync(string? filtro, CancellationToken ct)` (filtrando por nombre, teléfono o CURP como pide el placeholder de la Captura 3: *"Buscar por nombre, teléfono o CURP"*).
+     - `ObtenerPorIdAsync(Guid id, CancellationToken ct)`.
+     - `ActualizarClienteAsync(Guid id, ActualizarClienteRequest request, CancellationToken ct)` (verificando unicidad de CURP y correo).
+     - `EliminarClienteAsync(Guid id, CancellationToken ct)` (uso exclusivo de `Administrador`; rechaza eliminar si el cliente tiene contratos activos).
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Actualización de datos de cliente y protección contra borrado si posee contratos asociados
+    Dado un cliente registrado en el padrón
+    Cuando se invoca ActualizarClienteAsync con un nuevo teléfono válido de 10 dígitos y correo único
+    Entonces los cambios se persisten exitosamente
+    Y si se solicita EliminarClienteAsync sobre un cliente sin contratos, se elimina del padrón.
+  ```
+• **DoD Extenso:** Método `Cliente.Actualizar`, ampliación de `ClienteDto`, `IClienteService.cs` y `ClienteService.cs`, más pruebas en `tests/SistemaFuneraria.Tests/Application/ClienteServiceTests.cs`. **Policies activas (`RF-02`, `RNF-03`):** CRUD completo de clientes. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-031/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-032` : Controlador REST `ClientesController` (`GET`, `GET /{id}`, `POST`, `PUT /{id}`, `DELETE /{id}` Admin y `GET /exportar`)
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.3.0` | **Carril:** Carril 2 — Backend & API (Guillermo S.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-032-api-clientes-crud-controller` | **Blast Radius:** $\le 210$ LOCs | **Dependencias:** `SF-020`, `SF-031`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `clientes`
+  - **Contrato C# (`Core`/`App`):** `IClienteService`, `RegistrarClienteRequest`, `ActualizarClienteRequest`, `ClienteDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `GET /api/v1/clientes?filtro=...`, `GET /api/v1/clientes/{id}`, `POST /api/v1/clientes`, `PUT /api/v1/clientes/{id}`, `DELETE /api/v1/clientes/{id}` (`[Authorize(Roles = "Administrador")]`) y `GET /api/v1/clientes/exportar` (`text/csv`)
+  - **Wrapper JS & Vista Figma (`Web`):** Consumido por `clientesApi.js` y el botón `Exportar directorio` de la Captura 3
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Crear `src/SistemaFuneraria.Api/Controllers/V1/ClientesController.cs`.
+  2. Exponer `GET`, `GET /{id}`, `POST` y `PUT /{id}` para roles autorizados (`Administrador` y `Vendedor`), y restringir `DELETE /{id}` exclusivamente a `[Authorize(Roles = "Administrador")]`.
+  3. Implementar `GET /api/v1/clientes/exportar` que devuelve un archivo CSV UTF-8 (`directorio-clientes.csv`) para el botón `Exportar directorio` de la **Captura 3**.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Operaciones CRUD sobre /api/v1/clientes y restricción de DELETE al rol Administrador
+    Dado el controlador ClientesController
+    Cuando un Administrador envía PUT o DELETE sobre "/api/v1/clientes/{id}"
+    Entonces la operación se ejecuta retornando HTTP 200 OK o 204 No Content
+    Y si un Vendedor intenta ejecutar DELETE "/api/v1/clientes/{id}", recibe HTTP 403 Forbidden.
+  ```
+• **DoD Extenso:** `ClientesController.cs` y pruebas unitarias en `tests/SistemaFuneraria.Tests/Unit/Api/ClientesControllerTests.cs`. **Policies activas (`RF-02`, `RNF-03`):** API CRUD + Exportación. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-032/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-033` : Módulo Wrapper `wwwroot/js/api/clientesApi.js` (`listar`, `obtener`, `registrar`, `actualizar`, `eliminar`, `exportar`)
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.3.0` | **Carril:** Carril 2 — Backend & API Wrapper (Guillermo S.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-033-clientes-js-wrapper` | **Blast Radius:** $\le 160$ LOCs | **Dependencias:** `SF-024`, `SF-032`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `clientes`
+  - **Contrato C# (`Core`/`App`):** `RegistrarClienteRequest`, `ActualizarClienteRequest`, `ClienteDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `/api/v1/clientes/*`
+  - **Wrapper JS & Vista Figma (`Web`):** `src/SistemaFuneraria.Web/wwwroot/js/api/clientesApi.js`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Crear `wwwroot/js/api/clientesApi.js` exponiendo `listar(filtro)`, `obtenerPorId(id)`, `registrar(payload)`, `actualizar(id, payload)`, `eliminar(id)` y `exportarDirectorio()`.
+  2. En `registrar` y `actualizar`, limpiar espacios del teléfono (`"55 1284 9021"` $\rightarrow$ `"5512849021"`) y convertir `curp` a mayúsculas automáticamente antes de enviar el JSON a la API.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Sanitización automática de teléfono con espacios y CURP en minúsculas en clientesApi.js
+    Dado un usuario que escribe en el modal de la Captura 4 el teléfono "55 1284 9021" y CURP en minúsculas
+    Cuando se invoca clientesApi.registrar(payload)
+    Entonces el wrapper normaliza el teléfono a 10 dígitos continuos "5512849021" y la CURP en mayúsculas antes del fetch POST.
+  ```
+• **DoD Extenso:** `src/SistemaFuneraria.Web/wwwroot/js/api/clientesApi.js` y prueba en `tests/SistemaFuneraria.Tests/Unit/Web/ClientesApiWrapperTests.cs`. **Policies activas (`RF-02`, `RNF-01`):** Ergonomía en captura. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-033/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-034` : Pantalla Figma `/Clientes/Index` (*Captura 3*): Buscador, Botón `Exportar directorio` y Tabla con Avatares y Badges
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.3.0` | **Carril:** Carril 3 — Frontend & Figma UI (Juan R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-034-figma-clientes-index-cap3` | **Blast Radius:** $\le 230$ LOCs | **Dependencias:** `SF-027`, `SF-033`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `clientes`
+  - **Contrato C# (`Core`/`App`):** `ClienteDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `GET /api/v1/clientes?filtro=...`
+  - **Wrapper JS & Vista Figma (`Web`):** `Pages/Clientes/Index.cshtml` y `wwwroot/js/pages/clientesPage.js` (*Captura 3 del Figma*)
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Maquetar `src/SistemaFuneraria.Web/Pages/Clientes/Index.cshtml` fiel a la **Captura 3 del Figma**:
+     - Encabezado superior: etiqueta `RELACIONES`, título `Clientes`, subtítulo *"Expedientes, datos de contacto y contratos asociados."* y botón verde olivo `+ Nuevo cliente` (que abre el Modal de la Captura 4).
+     - Barra blanca redondeada con buscador `Buscar por nombre, teléfono o CURP` y botón derecho `Exportar directorio`.
+     - Tabla con las **7 columnas exactas de la Captura 3**:
+       1. `CLIENTE`: Avatar circular beige con iniciales (`LC`, `RM`, `EV`, `JS`), nombre en negrita (`Laura Castañeda`) y subtexto (`Cliente desde nov. 2025`).
+       2. `CONTACTO`: Teléfono formateado (`55 1284 9021`) y correo debajo (`laura.c@email.mx`).
+       3. `CONTRATOS`: `1 activo`, `2 activos`, `0 activos`.
+       4. `SALDO ACTUAL`: en `.sf-money` (`$127,500.00`).
+       5. `ÚLTIMO PAGO`: fecha corta (`18 nov. 2025`).
+       6. `ESTADO`: píldora de estado (`Al corriente` verde suave, `Pago vencido` rosa `--rose`, `En revisión` ámbar).
+       7. Acción derecha: enlace en negrita **`Abrir`**.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Renderizado de la pantalla Clientes con las 7 columnas, avatares e insignias de la Captura 3 del Figma
+    Dado que el usuario navega a "/Clientes"
+    Cuando clientesPage.js obtiene la lista desde clientesApi.listar()
+    Entonces renderiza cada fila con avatar de iniciales, contacto doble línea, contratos activos, saldo actual en MXN, último pago, badge de estado y botón "Abrir".
+  ```
+• **DoD Extenso:** `Pages/Clientes/Index.cshtml`, `Index.cshtml.cs`, `wwwroot/js/pages/clientesPage.js` y test en `tests/SistemaFuneraria.Tests/Unit/Web/ClientesPageTests.cs`. **Policies activas (`RF-02`, `RNF-01`, `RN-12`):** Fidelidad a Captura 3. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-034/Red_Test.md` y `Green_Test.md` + captura comparada con Captura 3.
+
+---
+
+#### Ficha Técnica BDD — `SF-035` : Modal Figma `Registrar nuevo cliente` y Edición (*Captura 4*): Formulario en 2 Columnas con Guardado `fetch`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.3.0` | **Carril:** Carril 3 — Frontend & Figma UI (Juan R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-035-figma-modal-registrar-cliente-cap4` | **Blast Radius:** $\le 220$ LOCs | **Dependencias:** `SF-034`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `clientes (nombre, apellidos, telefono, curp, correo, direccion)`
+  - **Contrato C# (`Core`/`App`):** `RegistrarClienteRequest` y `ActualizarClienteRequest`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `POST /api/v1/clientes` y `PUT /api/v1/clientes/{id}`
+  - **Wrapper JS & Vista Figma (`Web`):** Modal `#modalClienteSF` en `Pages/Clientes/Index.cshtml` y `clientesPage.js` (*Captura 4 del Figma*)
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Maquetar el modal `#modalClienteSF` idéntico a la **Captura 4 del Figma**:
+     - Título **`Registrar nuevo cliente`**, subtítulo *"Proporciona la información del titular para guardarlo en la tabla."* y botón `×` superior derecho.
+     - Fila 1 (2 columnas): `Nombre(s)` (`placeholder="Ej. Carlos"`) y `Apellidos` (`placeholder="Ej. López"`).
+     - Fila 2 (2 columnas): `Teléfono` (`placeholder="55 0000 0000"`) y `CURP` (`placeholder="18 caracteres"`).
+     - Fila 3 (ancho completo): `Correo electrónico` (`placeholder="correo@email.mx"`).
+     - Pie del modal: botón blanco con borde **`Cancelar`** y botón verde olivo **`Guardar cliente`**.
+  2. Al guardar, invoca `clientesApi.registrar(payload)` (o `clientesApi.actualizar(id, payload)` cuando se abre en modo edición), cierra el modal, muestra Toast de éxito y refresca la tabla de `/Clientes` sin recargar la página. Si la API devuelve `400 ProblemDetails`, muestra el error dentro del modal sin perder los datos escritos.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Alta de nuevo cliente desde el Modal de la Captura 4 actualizando la tabla en caliente vía fetch
+    Dado el modal "Registrar nuevo cliente" abierto sobre la pantalla "/Clientes"
+    Cuando el usuario captura Nombre, Apellidos, Teléfono, CURP y Correo válidos y presiona "Guardar cliente"
+    Entonces clientesApi.registrar envía POST a "/api/v1/clientes", cierra el modal y agrega al titular en la tabla inmediatamente.
+  ```
+• **DoD Extenso:** Modal `#modalClienteSF` en `Pages/Clientes/Index.cshtml`, lógica de alta/edición y validación en `clientesPage.js` y test en `ClientesPageTests.cs`. **Policies activas (`RF-02`, `RNF-01`):** Fidelidad a Captura 4. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-035/Red_Test.md` y `Green_Test.md` + captura comparada con Captura 4.
+
+---
+
+#### Ficha Técnica BDD — `SF-036` : Drawer de Expediente de Cliente al Pulsar `Abrir` en `/Clientes` + Botones CRUD (`Editar` / `Eliminar`) para `Administrador`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.3.0` | **Carril:** Carril 3 — Frontend & Figma UI (Juan R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-036-figma-drawer-expediente-cliente-admin` | **Blast Radius:** $\le 190$ LOCs | **Dependencias:** `SF-035`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `clientes`
+  - **Contrato C# (`Core`/`App`):** `ClienteDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `GET /api/v1/clientes/{id}`, `PUT /api/v1/clientes/{id}`, `DELETE /api/v1/clientes/{id}`
+  - **Wrapper JS & Vista Figma (`Web`):** Drawer `#drawerExpedienteCliente` en `Pages/Clientes/Index.cshtml` y `clientesPage.js`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Cuando el usuario hace clic en **`Abrir`** en cualquier fila de `/Clientes` (*Captura 3*), se despliega el Drawer lateral mostrando el expediente completo del titular, sus contratos asociados y el botón `"+ Iniciar Nueva Venta"` (`/Ventas/Nueva?clienteId={id}`).
+  2. Incluir en el expediente los controles de **CRUD Administrativo**:
+     - Botón *"Editar datos del titular"*: abre el Modal de la Captura 4 precargado con los datos del cliente y envía `PUT /api/v1/clientes/{id}`.
+     - Botón *"Eliminar cliente"* (visible solo para rol `Administrador`): pide confirmación en modal y ejecuta `clientesApi.eliminar(id)`.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Edición y eliminación de cliente desde el expediente por parte de la Administradora
+    Dado que la Administradora pulsa "Abrir" sobre un cliente en "/Clientes"
+    Cuando elige "Editar datos del titular" y modifica el teléfono o pulsa "Eliminar cliente"
+    Entonces el sistema ejecuta PUT o DELETE contra "/api/v1/clientes/{id}" y actualiza la tabla del directorio.
+  ```
+• **DoD Extenso:** Drawer `#drawerExpedienteCliente` en `Pages/Clientes/Index.cshtml`, integración con `clientesApi.actualizar` / `eliminar` en `clientesPage.js` y prueba en `ClientesPageTests.cs`. **Policies activas (`RF-02`, `RNF-03`):** CRUD de clientes para Administrador. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-036/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-037` : Descarga de Archivo CSV en Botón `Exportar directorio` y Estados Empty/Skeleton/Error en `/Clientes/Index`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.3.0` | **Carril:** Carril 3 — Frontend & Figma UI (Juan R.) | **Revisor QA:** Edgar A. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-037-clientes-exportar-ui-states` | **Blast Radius:** $\le 160$ LOCs | **Dependencias:** `SF-034`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `clientes`
+  - **Contrato C# (`Core`/`App`):** `ClienteDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `GET /api/v1/clientes/exportar`
+  - **Wrapper JS & Vista Figma (`Web`):** Botón `Exportar directorio` (*Captura 3*) y `uiStates.js` en `clientesPage.js`
+• **Flujo Paso a Paso (Guía Trainee):**
+  1. Conectar el botón `Exportar directorio` de la **Captura 3** a `clientesApi.exportarDirectorio()`, descargando el archivo CSV con todos los clientes filtrados.
+  2. Completar los estados `Empty` (cuando una búsqueda por CURP no arroja coincidencias), `Loading` (skeleton de filas con avatar circular) y `Error` en `/Clientes/Index`.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Descarga del padrón al pulsar "Exportar directorio" y visualización de Empty State en búsqueda sin resultados
+    Dada la pantalla "/Clientes"
+    Cuando el usuario pulsa el botón "Exportar directorio"
+    Entonces se descarga el archivo CSV desde "/api/v1/clientes/exportar"
+    Y si busca una CURP inexistente, la tabla muestra el Empty State con opción para limpiar el filtro.
+  ```
+• **DoD Extenso:** Función de exportación y estados UI en `clientesPage.js`, más prueba en `ClientesPageTests.cs`. **Policies activas (`RNF-01`):** Completitud funcional de Captura 3. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-037/Red_Test.md` y `Green_Test.md`.
+
+---
+
+#### Ficha Técnica BDD — `SF-038` : QA Gate `v0.3.0`: Suite HTTP para CRUD Completo de `/api/v1/clientes` (Permisos Admin y BVA) + Tag `v0.3.0`
+
+• **Estado:** **Pendiente ⏳** | **Milestone:** `v0.3.0` | **Carril:** Carril 4 — DevOps & QA (Edgar A.) | **Revisor QA:** Reydescel R. | **Gate:** Reydescel R.
+• **Rama:** `feature/SF-038-qa-gate-v030-clientes-crud-http` | **Blast Radius:** $\le 200$ LOCs | **Dependencias:** `SF-032`, `SF-036`
+• **Mapa de Alineación (Cero Disparidad):**
+  - **Tabla/Columna BD (`09-erd`):** `clientes`
+  - **Contrato C# (`Core`/`App`):** `RegistrarClienteRequest`, `ActualizarClienteRequest`, `ClienteDto`
+  - **Endpoint API (`SistemaFuneraria.Api`):** `GET`, `POST`, `PUT`, `DELETE`, `GET /exportar` en `/api/v1/clientes`
+  - **Wrapper JS & Vista Figma (`Web`):** Certificación del Milestone `v0.3.0`
+• **Flujo Paso a Paso (Guía Trainee — Edgar):**
+  1. Crear `tests/SistemaFuneraria.Tests/Integration/Api/ClientesCrudHttpTests.cs`.
+  2. Probar el ciclo completo: `POST` (alta de *Laura Castañeda*), `GET ?filtro=Castañeda`, `PUT /{id}` (actualización de teléfono), `GET /exportar` (`200 OK`, `text/csv`), rechazo `400 Bad Request` ante teléfonos de 9/11 dígitos o CURP duplicada, y verificación de que `DELETE /{id}` responde `403 Forbidden` para `Vendedor` y `200/204` para `Administrador`.
+  3. Registrar la aprobación del **Milestone `v0.3.0`** en `docs/05-registro-ejecucion.md`.
+• **Escenarios BDD (Gherkin):**
+  ```gherkin
+  Escenario: Certificación HTTP del ciclo CRUD de clientes y validación de fronteras de teléfono y CURP
+    Dado el servidor SistemaFuneraria.Api en pruebas de integración
+    Cuando se ejecutan las pruebas de alta, búsqueda, edición, exportación CSV, rechazo BVA y borrado por Administrador
+    Entonces todas las aserciones pasan en verde certificando el Milestone v0.3.0.
+  ```
+• **DoD Extenso:** `ClientesCrudHttpTests.cs` en verde y actualización de `docs/05-registro-ejecucion.md`. **Policies activas (`RF-02`, `RNF-03`):** Gate `v0.3.0`. **Rollback:** `git revert <commit-sha>`. **Evidencia:** `docs/evidencias/SF-038/Red_Test.md` y `Green_Test.md`.
+
+---
+
+---
+
+## 8. Fichas Técnicas BDD — Milestone 4 (`v0.4.0`: Catálogo de Lotes "Sistema Funerario", CRUD Admin & `CP-01` — `SF-039` a `SF-047`)
+
+#### Ficha Técnica BDD — `SF-039`: Entidad `Lote` (`Clave`, `Seccion`, `AndadorFila`, `Gavetas` 2/3/4, `PrecioContado` & `EstadoLote`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` | **Carril**: Carril 1 (`Core + Tests`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-013`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Core (`src/SistemaFuneraria.Core/Entities/Lote.cs` & `Enums/EstadoLote.cs`)**:
+    - `EstadoLote`: `Disponible = 1`, `Reservado = 2`, `Vendido = 3` (y `Mantenimiento = 4` para uso administrativo).
+    - `Lote`: `Id (Guid)`, `Clave (string)` (ej. `JN-A-042`, `JC-C-118`, `RO-B-027`, `JN-D-065`, `LM-A-014`), `Seccion (string)` (`Jardín Norte`, `Jardín Central`, `Robles`, `Las Magnolias`), `AndadorFila (string)` (ej. `Andador A · Fila 4`), `Gavetas (int)` (`2`, `3` o `4`), `PrecioContado (Dinero)`, `Estado (EstadoLote)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. En `Lote.Crear(clave, seccion, andadorFila, gavetas, precioContado)`:
+     - Valida que `clave` cumpla formato `^[A-Z]{2,3}-[A-Z]-\d{3}$` (normalizando `Trim().ToUpperInvariant()`).
+     - Valida que `gavetas` sea únicamente `2`, `3` o `4`.
+     - Valida que `precioContado.Monto > 0m` (`$120,000.00` para 2 gavetas, `$150,000.00` para 3 gavetas, `$180,000.00` para 4 gavetas por defecto comercial).
+     - Inicializa `Estado = EstadoLote.Disponible`.
+  2. Implementa métodos de transición de dominio:
+     - `MarcarVendido()`: sólo permitido desde `Disponible` o `Reservado`; si ya está `Vendido`, lanza `ReglaNegocioException("El lote ya se encuentra vendido")`.
+     - `Reservar()` y `Liberar()`: permite pasar entre `Disponible` y `Reservado`.
+     - `ActualizarDatosAdmin(seccion, andadorFila, gavetas, precioContado, nuevoEstado)`: permite al Administrador editar el lote siempre que no viole invariantes de un lote con contrato activo.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Intento de vender un lote que ya está Vendido (Invariante de Dominio)
+    Dado un lote con Clave "LM-A-014" en estado "Vendido"
+    Cuando se invoca el método "MarcarVendido()"
+    Entonces el dominio debe lanzar ReglaNegocioException con el mensaje "El lote ya se encuentra vendido"
+
+  Escenario: Validación de capacidad de gavetas permitida (2, 3 o 4 gavetas)
+    Dado un intento de crear un lote con Gavetas = 5
+    Cuando se invoca "Lote.Crear"
+    Entonces el dominio debe rechazar la creación indicando que la capacidad permitida es de 2, 3 o 4 gavetas
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Clave vacía, gavetas fuera de `{2, 3, 4}`, precio negativo o cero, doble venta.
+  - **Pruebas Obligatorias**: `LoteTests.cs` con cobertura 100% de transiciones de estado.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-039/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-040`: EF Core `LoteConfiguration`, Migración `AddLotesCatalogo` y `LoteSeed` (Jardín Norte, Jardín Central, Robles, Las Magnolias)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` | **Carril**: Carril 1 (`Infrastructure`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-039`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **BD PostgreSQL (`lotes`)**: `id (uuid PK)`, `clave (varchar(20) UNIQUE NOT NULL)`, `seccion (varchar(60) NOT NULL)`, `andador_fila (varchar(60) NOT NULL)`, `gavetas (int NOT NULL)`, `precio_contado (numeric(18,2) NOT NULL)`, `estado (varchar(20) NOT NULL)`, `xmin (xid)` (concurrency token).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `LoteConfiguration.cs` mapeando `PrecioContado` con `HasConversion(d => d.Monto, m => Dinero.Desde(m))` y `HasPrecision(18, 2)`.
+  2. Crea índice único en `Clave` (`ix_lotes_clave`) e índice compuesto en `(Seccion, Estado, Gavetas)` para acelerar los filtros de la *Captura 2*.
+  3. Crea `LoteSeed.cs` poblando los lotes idénticos al mockup de Figma (*Captura 2*) más un loteo realista por sección:
+     - `JN-A-042` (`Jardín Norte`, `Andador A · Fila 4`, `2 gavetas`, `$120,000.00`, `Disponible`).
+     - `JC-C-118` (`Jardín Central`, `Andador C · Fila 11`, `3 gavetas`, `$150,000.00`, `Disponible`).
+     - `RO-B-027` (`Robles`, `Andador B · Fila 2`, `4 gavetas`, `$180,000.00`, `Reservado`).
+     - `JN-D-065` (`Jardín Norte`, `Andador D · Fila 6`, `3 gavetas`, `$150,000.00`, `Disponible`).
+     - `LM-A-014` (`Las Magnolias`, `Andador A · Fila 1`, `2 gavetas`, `$120,000.00`, `Vendido`).
+     - Lotes adicionales (`JN-A-043` a `JN-A-046`, `RO-E-081`, `JN-A-036`) para alimentar el selector gráfico del Wizard (*Capturas 5–8*).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Idempotencia del seed de lotes Sistema Funerario y unicidad de Clave
+    Dado que la migración AddLotesCatalogo fue aplicada en PostgreSQL 16
+    Cuando se ejecuta LoteSeed.SeedAsync dos veces seguidas
+    Entonces no se duplican registros y existen los lotes "JN-A-042" ($120,000), "JC-C-118" ($150,000) y "RO-B-027" ($180,000)
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `Down()` de migración probado; violación de `ix_lotes_clave` lanza excepción controlada.
+  - **Pruebas Obligatorias**: Test de integración con Testcontainers verificando `LoteSeed`.
+  - **Blast Radius & Rollback**: Máximo 220 LOCs. Rollback: `dotnet ef database update <PrevMigration>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-040/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-041`: `ILoteService` — Catálogo Paginado, Resumen KPIs (`Disponibles`, `Precio desde`, `Sección con más espacio`) y CRUD Admin
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` | **Carril**: Carril 2 (`Application`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-040`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Application (`DTOs/Lotes/CatalogoLotesDto.cs`)**:
+    - `LoteItemDto(Guid Id, string Clave, string Seccion, string AndadorFila, int Gavetas, decimal PrecioContado, string Estado, Guid? ContratoActivoId)`.
+    - `ResumenCatalogoLotesDto(int TotalDisponibles, int TotalLotes, decimal PrecioDesde, string SeccionMasEspacio, int LotesLibresSeccionMasEspacio, IReadOnlyList<LoteItemDto> Items, int PaginaActual, int TotalPaginas)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. En `LoteService.ObtenerCatalogoAsync(buscar, seccion, estado, gavetas, pagina, tamanoPagina)`:
+     - Calcula los 3 KPIs superiores de la *Captura 2*:
+       1. `Disponibles`: conteo de lotes en `EstadoLote.Disponible` vs `TotalLotes`.
+       2. `Precio desde`: mínimo `PrecioContado` entre lotes disponibles (`$120,000.00`).
+       3. `Sección con más espacio`: agrupación por `Seccion` con mayor cantidad de lotes `Disponible` (ej. `Jardín Norte` con `24 lotes libres`).
+     - Filtra con `AsNoTracking()` por `buscar` (`Clave`, `Seccion` o texto `"2 gavetas"`/`"3 gavetas"`/`"4 gavetas"`), `seccion` y `estado`.
+  2. Implementa operaciones exclusivas de Administrador:
+     - `CrearLoteAsync(CrearLoteCommand)` (valida clave única).
+     - `ActualizarLoteAsync(Guid id, ActualizarLoteCommand)`.
+     - `CambiarEstadoLoteAsync(Guid id, EstadoLote nuevoEstado)` (bloquea pasar a `Disponible` si tiene un contrato activo no cancelado).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Cálculo de KPIs de cabecera y filtrado por sección y estado (CP-01)
+    Dado el catálogo inicial con lotes en Jardín Norte, Jardín Central, Robles y Las Magnolias
+    Cuando se invoca ObtenerCatalogoAsync filtrando por Seccion = "Jardín Norte" y Estado = "Disponible"
+    Entonces el servicio retorna únicamente lotes disponibles de "Jardín Norte" y los 3 KPIs de resumen poblados
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Catálogo sin lotes disponibles (`PrecioDesde = 0m`), intento de eliminar/liberar lote con contrato activo (`409 Conflict`).
+  - **Pruebas Obligatorias**: `LoteServiceTests.cs` cubriendo filtros, KPIs y CRUD Admin.
+  - **Blast Radius & Rollback**: Máximo 240 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-041/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-042`: `LotesController` (`GET /api/v1/lotes`, `GET /{id}`, `POST`, `PUT /{id}`, `PATCH /{id}/estado`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` | **Carril**: Carril 2 (`Api`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-041`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **API (`src/SistemaFuneraria.Api/Controllers/V1/LotesController.cs`)**:
+    - `GET /api/v1/lotes?buscar=&seccion=&estado=&gavetas=&page=1&pageSize=5` (`[Authorize]`).
+    - `GET /api/v1/lotes/{id:guid}` (`[Authorize]`).
+    - `POST /api/v1/lotes`, `PUT /api/v1/lotes/{id:guid}`, `PATCH /api/v1/lotes/{id:guid}/estado` (`[Authorize(Roles = "Administrador")]`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Hereda de `ApiControllerBase` y delega en `ILoteService`.
+  2. En `POST`, `PUT` y `PATCH`, aplica `[Authorize(Roles = "Administrador")]` para garantizar que un `Vendedor` o `Cajero` reciba `403 Forbidden` si intenta alterar precios o inventario de lotes.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Vendedor intenta modificar el precio de un lote vía API
+    Dado un usuario autenticado con rol "Vendedor"
+    Cuando envía PUT "/api/v1/lotes/{id}" intentando cambiar el precio de $150,000 a $100,000
+    Entonces el endpoint responde HTTP 403 Forbidden sin modificar la base de datos
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `page < 1` o `pageSize > 100` normalizados; `409 Conflict` en clave duplicada.
+  - **Pruebas Obligatorias**: Pruebas de controlador para `GET`, `POST`, `PUT`, `PATCH`.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-042/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-043`: Wrapper JS `lotesApi.js` y Formateadores `es-MX` (`$120,000.00`, Badges de Estado)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` | **Carril**: Carril 2 (`Web JS`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-042`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **JS (`src/SistemaFuneraria.Web/wwwroot/js/api/lotesApi.js`)**:
+    - `obtenerCatalogo(filtros)`, `obtenerLotePorId(id)`, `crearLote(payload)`, `actualizarLote(id, payload)`, `cambiarEstadoLote(id, estado)`.
+    - Helpers compartidos `formatearMonedaMXN(monto)` (`Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })`) y `renderizarBadgeEstadoLote(estado)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Implementa `lotesApi.js` consumiendo `apiClient.js`.
+  2. Crea el mapeo exacto de badges del mockup (*Captura 2*):
+     - `Disponible` $\rightarrow$ pill verde suave (`badge-sf-success`, texto `"Disponible"`, acción `"Cotizar"`).
+     - `Reservado` $\rightarrow$ pill ámbar suave (`badge-sf-warning`, texto `"Reservado"`, acción `"Ver detalle"`).
+     - `Vendido` $\rightarrow$ pill neutra (`badge-sf-neutral`, texto `"Vendido"`, acción `"Ver contrato"`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Formateo consistente en cultura es-MX para precios de lista
+    Dado un lote con precioContado = 120000
+    Cuando se invoca formatearMonedaMXN(120000)
+    Entonces retorna exactamente "$120,000.00" con clase tabular-nums
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `URLSearchParams` ignora filtros vacíos (`Todas las secciones`, `Todos los estados`).
+  - **Pruebas Obligatorias**: Verificación de exportación ES6 y consumo contra `LotesController`.
+  - **Blast Radius & Rollback**: Máximo 140 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-043/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-044`: Pantalla Figma `/Lotes/Index` (*Captura 2*: 3 KPI Cards, Buscador, Selectores de Sección/Estado y Tabla Paginada)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-029`, `SF-043`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 2 — Catálogo de lotes*)**:
+    - Subtítulo superior: `INVENTARIO` / Título: `Catálogo de lotes` / Bajada: `Consulta disponibilidad, ubicación y condiciones comerciales.` / Botón primario superior derecho: `+ Cotizar lote` (redirige a `/Ventas/Nueva`).
+    - Barra de filtros en card blanca: input `Buscar por clave, sección o tipo`, select `Todas las secciones` (`Jardín Norte`, `Jardín Central`, `Robles`, `Las Magnolias`), select `Todos los estados` (`Disponible`, `Reservado`, `Vendido`).
+    - 3 KPI Cards horizontales:
+      1. `Disponibles`: `64` (`de 178 lotes`).
+      2. `Precio desde`: `$120,000` (`pago de contado`).
+      3. `Sección con más espacio`: `Jardín Norte` (`24 lotes libres`).
+    - Tabla con columnas: `CLAVE`, `UBICACIÓN` (Sección en negrita + `Andador · Fila` en gris debajo), `CAPACIDAD` (`2 gavetas`, `3 gavetas`, `4 gavetas`), `PRECIO DE LISTA` (`$120,000.00`), `ESTADO` (badge), y columna de acción derecha (`Cotizar` $\rightarrow$ `/Ventas/Nueva?loteId=...`, `Ver detalle`, `Ver contrato`).
+    - Pie de tabla: `Mostrando 5 de 178 lotes` y botones `Anterior` / `Siguiente`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Construye `Pages/Lotes/Index.cshtml` replicando al píxel la *Captura 2*.
+  2. Conecta el buscador (con debounce de 300ms) y los 2 `<select>` para recargar la tabla y los KPIs vía `lotesApi.obtenerCatalogo(...)` sin recargar la página completa.
+  3. Implementa los 5 estados de UI (skeleton en las 3 KPI cards y filas de tabla mientras carga, empty state con botón `"Limpiar filtros"`, error state).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Selección de lote disponible para iniciar cotización desde el catálogo (Captura 2)
+    Dado que el usuario visualiza el lote "JN-A-042" en estado "Disponible" en "/Lotes"
+    Cuando hace clic en la acción "Cotizar" de la fila "JN-A-042"
+    Entonces el navegador redirige a "/Ventas/Nueva?loteClave=JN-A-042" preseleccionando dicho lote en el Wizard
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Paginación deshabilita `Anterior` en página 1 y `Siguiente` en última página; `tabular-nums` en precios y claves.
+  - **Pruebas Obligatorias**: Comparación visual lado a lado contra *Captura 2*.
+  - **Blast Radius & Rollback**: Máximo 250 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-044/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-045`: Modal Admin de Lotes (Crear / Editar Lote, Precio y Estado para Rol `Administrador`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-044`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Web (`Pages/Lotes/_ModalAdminLotePartial.cshtml`)**:
+    - Visible únicamente cuando el usuario tiene rol `Administrador` (botón `+ Nuevo lote` junto a `+ Cotizar lote` y opción `Editar` en cada fila).
+    - Campos: `Clave` (`JN-A-042`), `Sección`, `Andador y Fila`, `Capacidad (2, 3 o 4 gavetas)`, `Precio de lista (MXN)`, `Estado` (`Disponible`, `Reservado`, `Mantenimiento`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea el partial modal con el mismo estilo visual crema/oliva de la *Captura 4*.
+  2. Al guardar, invoca `lotesApi.crearLote` o `lotesApi.actualizarLote`, cierra el modal y refresca la tabla y los 3 KPIs de `/Lotes/Index`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Administrador registra un nuevo lote en sección Robles
+    Dado que Andrea Morales (Administradora) abre el modal "+ Nuevo lote" en "/Lotes"
+    Cuando captura Clave "RO-C-099", Sección "Robles", "Andador C · Fila 9", Capacidad "4 gavetas" y Precio "$180,000.00"
+    Entonces el lote se guarda vía POST "/api/v1/lotes" y el KPI "Disponibles" incrementa en 1
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Ocultamiento estricto de botones Admin para `Vendedor` y `Cajero`; manejo de `409 Conflict` si la clave ya existe.
+  - **Pruebas Obligatorias**: Captura del modal Admin creando y editando un lote.
+  - **Blast Radius & Rollback**: Máximo 190 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-045/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-046`: Endpoint y Modal `Ver detalle` de Lote e Historial de Estado
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` | **Carril**: Carril 2 (`Api + Web JS`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-044`, `SF-045`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 2*)**: Acción `"Ver detalle"` en lotes `Reservado` (ej. `RO-B-027`) y `"Ver contrato"` en lotes `Vendido` (ej. `LM-A-014`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Conecta el botón `"Ver detalle"` de la fila para abrir un drawer/modal informativo con todos los datos técnicos del lote (`Clave`, `Sección`, `Andador/Fila`, `Capacidad`, `Precio de contado`, `Estado actual`, y botón rápido para cambiar estado si es `Administrador` o pasar a `Cotizar` si se libera).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Consulta de detalle de un lote Reservado (RO-B-027)
+    Dado el lote "RO-B-027" en estado "Reservado" en la tabla de Catálogo de lotes
+    Cuando el usuario hace clic en "Ver detalle"
+    Entonces se abre el modal con la ubicación "Robles · Andador B · Fila 2", "4 gavetas" y "$180,000.00"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Si el lote está `Vendido`, el enlace `"Ver contrato"` lleva al contrato asociado (`/Contratos/Detalle?loteClave=LM-A-014`).
+  - **Pruebas Obligatorias**: Prueba de endpoint `GET /api/v1/lotes/{id}` y captura del modal de detalle.
+  - **Blast Radius & Rollback**: Máximo 160 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-046/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-047`: Suite QA HTTP `CP-01` (Filtros Catálogo de Lotes, Paginación, KPIs y Seguridad Admin)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.4.0` (Cierre de Milestone) | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-039` a `SF-046`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Tests (`tests/SistemaFuneraria.Tests/Integration/Api/LotesControllerTests.cs`)**: Certifica `CP-01` (`docs/04-diseno-casos-prueba.md`) y el CRUD de Administrador.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Escribe pruebas de integración HTTP con `WebApplicationFactory` y PostgreSQL Testcontainers:
+     - `CP-01`: Filtra lotes por `seccion=Jardín Norte&estado=Disponible&gavetas=2` y verifica que sólo regrese lotes que cumplan los 3 criterios.
+     - Verifica que los 3 KPIs (`TotalDisponibles`, `PrecioDesde`, `SeccionMasEspacio`) coincidan con el estado real de la BD.
+     - Verifica que `POST /api/v1/lotes` con rol `Vendedor` retorne `403 Forbidden` y con `Administrador` retorne `201 Created`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Ejecución automatizada de CP-01 (Filtro combinado de lotes disponibles)
+    Dado el catálogo semilla cargado en PostgreSQL Testcontainers
+    Cuando el cliente HTTP consulta GET "/api/v1/lotes?seccion=Jardín Norte&estado=Disponible"
+    Entonces recibe HTTP 200 OK únicamente con lotes en estado Disponible pertenecientes a Jardín Norte
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Búsqueda sin coincidencias retorna `Items` vacío y `200 OK` (nunca `500` ni `404`).
+  - **Pruebas Obligatorias**: `LotesControllerTests.cs` 100% en verde.
+  - **Blast Radius & Rollback**: Máximo 200 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-047/` (Cierra el Milestone `v0.4.0`).
+
+---
+
+## 9. Fichas Técnicas BDD — Milestone 5 (`v0.5.0`: Simulador API + Wizard "Nueva Venta" Pasos 1–3 & Mapa de Lotes — `SF-048` a `SF-056`)
+
+#### Ficha Técnica BDD — `SF-048`: Servicio `ISimuladorService` (Puente Application hacia Oráculo de 36 Combinaciones y Tabla Francesa)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` | **Carril**: Carril 1 (`Application`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-016`, `SF-017`, `SF-041`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Application (`DTOs/Simulador/SimulacionCotizacionDto.cs`)**:
+    - Request: `SimularCotizacionRequest(Guid? LoteId, int? Gavetas, string Modalidad, decimal PorcentajeEnganche, int PlazoMeses, DateOnly? FechaPrimerPago)`.
+    - Response: `SimulacionCotizacionDto(decimal PrecioLista, string Modalidad, decimal PorcentajeEnganche, decimal MontoEnganche, decimal SaldoAFinanciar, int PlazoMeses, decimal TasaAnualPorcentaje, decimal MensualidadEstimada, DateOnly FechaPrimerPago, decimal TotalAPagar, IReadOnlyList<FilaAmortizacionDto> TablaAmortizacion)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `SimuladorService` inyectando el calculador de dominio ya certificado en `v0.1.0` (`SF-014` a `SF-017`) y `TimeProvider`.
+  2. Si `Modalidad == "Contado"`, devuelve `MontoEnganche = PrecioLista`, `SaldoAFinanciar = 0m`, `PlazoMeses = 0`, `TasaAnualPorcentaje = 0m`, `MensualidadEstimada = 0m` y `TablaAmortizacion` vacía.
+  3. Si `Modalidad == "Credito"`, valida que `PorcentajeEnganche` $\in \{10, 20, 30\}$ y `PlazoMeses` $\in \{12, 18, 24, 48\}$ (aplicando tasa anual fija de `16%`, `18%`, `20%`, `24%` respectivamente según `ParametrosNegocio`), calcula la tabla francesa con ajuste en la última cuota $N$ y retorna el DTO completo.
+  4. Verifica que para el caso exacto de la *Captura 7* (`Lote JN-A-042` de `$120,000.00`, `Enganche 20% = $24,000.00`, `Plazo 24 meses · 20% anual`), `MensualidadEstimada` sea exactamente **`$4,887.54`**.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Simulación idéntica a la Captura 7 de Figma ($120,000, 20% enganche, 24 meses al 20% anual)
+    Dado un lote de 2 gavetas con PrecioLista = $120,000.00
+    Cuando se simula en modalidad "Credito" con PorcentajeEnganche = 20 y PlazoMeses = 24
+    Entonces el MontoEnganche es $24,000.00, el SaldoAFinanciar es $96,000.00, la MensualidadEstimada es $4,887.54 y la suma de capital de las 24 cuotas cuadra exactamente en $96,000.00
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Plazo fuera de `{12, 18, 24, 48}` (ej. `15` meses en `CP-10`) o enganche fuera de `{10, 20, 30}` retorna `Resultado.Fallo(TipoError.Validacion, ...)` ($\rightarrow$ HTTP `400`).
+  - **Pruebas Obligatorias**: `SimuladorServiceTests.cs` validando `CP-03`, `CP-04`, `CP-05`, `CP-06` y `CP-10`.
+  - **Blast Radius & Rollback**: Máximo 210 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-048/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-049`: `SimuladorController` (`POST /api/v1/simulador/cotizar` & `GET /api/v1/simulador/planes`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` | **Carril**: Carril 2 (`Api`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-048`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **API (`src/SistemaFuneraria.Api/Controllers/V1/SimuladorController.cs`)**:
+    - `GET /api/v1/simulador/planes`: devuelve el catálogo oficial de porcentajes de enganche (`10%`, `20%`, `30%`) y plazos/tasas (`12 meses · 16% anual`, `24 meses · 20% anual`, `18 meses · 18% anual`, `24 meses · 20% anual`, `48 meses · 24% anual`) para poblar los `<select>` de la *Captura 7*.
+    - `POST /api/v1/simulador/cotizar`: ejecuta la simulación sin tocar ni bloquear lotes en BD.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `SimuladorController` heredando de `ApiControllerBase`.
+  2. Conecta ambos endpoints con `ISimuladorService` y devuelve `ProblemDetails` `400 Bad Request` ante cualquier combinación fuera de las 36 permitidas (`CP-10`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Rechazo de plazo inválido de 15 meses por API (CP-10)
+    Dado un usuario autenticado en el Wizard de Nueva Venta
+    Cuando envía POST "/api/v1/simulador/cotizar" con PlazoMeses = 15 y PorcentajeEnganche = 15
+    Entonces el endpoint responde HTTP 400 Bad Request con ProblemDetails indicando que los plazos permitidos son 12, 18, 24 o 48 meses
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `LoteId` inexistente retorna `404 Not Found`.
+  - **Pruebas Obligatorias**: Tests de controlador para `GET /planes` y `POST /cotizar`.
+  - **Blast Radius & Rollback**: Máximo 160 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-049/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-050`: Wrapper JS `simuladorApi.js` y Persistencia de Borrador en `sessionStorage` (`Borrador guardado`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` | **Carril**: Carril 2 (`Web JS`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-049`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Capturas 5, 6, 7 y 8*)**: Pill superior derecha `Borrador guardado` y estado compartido entre los 4 pasos del Wizard (`Cliente`, `Lote`, `Financiamiento`, `Confirmación`).
+  - **JS (`src/SistemaFuneraria.Web/wwwroot/js/api/simuladorApi.js` & `wwwroot/js/ventas/wizardState.js`)**:
+    - `obtenerPlanes()`, `cotizar(payload)`.
+    - `wizardState`: guarda y restaura en `sessionStorage` (`sf_nueva_venta_draft`) el cliente seleccionado/capturado, el lote elegido y el plan financiero, actualizando el indicador `Borrador guardado`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Implementa `simuladorApi.js`.
+  2. Implementa `wizardState.js` con métodos `getDraft()`, `updateDraft(partial)`, `clearDraft()` y evento custom `sf:draft-updated` para que el panel derecho `RESUMEN DE COTIZACIÓN` se actualice en tiempo real en cualquiera de los 4 pasos.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Conservación del borrador de cotización al recargar el navegador
+    Dado que el vendedor seleccionó a "Mariana Torres Aguirre" en el Paso 1 y el lote "JN-A-042" en el Paso 2
+    Cuando recarga accidentalmente la página "/Ventas/Nueva"
+    Entonces wizardState restaura los datos desde sessionStorage y muestra el pill "Borrador guardado"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `clearDraft()` limpia `sessionStorage` inmediatamente después de generar el contrato en el Paso 4 o al cerrar sesión.
+  - **Pruebas Obligatorias**: Verificación de sincronización de `wizardState` con el panel derecho.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-050/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-051`: Shell del Wizard `/Ventas/Nueva` (*Capturas 5–8*: Stepper Horizontal 1–4 + Panel Derecho `RESUMEN DE COTIZACIÓN` con Mapa de Lotes `A, B, 42, 43 / C, 44, 45, 46`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-029`, `SF-050`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Capturas 5, 6, 7 y 8 — Nueva venta*)**:
+    - Cabecera: `PROCESO COMERCIAL` / `Nueva venta` / `Completa los datos para generar la cotización y el contrato.` + pill derecha `Borrador guardado`.
+    - Stepper horizontal de 4 pasos:
+      1. `1 Cliente · Datos del titular`
+      2. `2 Lote · Selección`
+      3. `3 Financiamiento · Plan de pago`
+      4. `4 Confirmación · Resumen`
+    - **Panel Derecho Fijo (`RESUMEN DE COTIZACIÓN`)**:
+      - Título dinámico del tipo de lote: `Lote Básico` (2 gavetas), `Lote Familiar` (3 gavetas) o `Lote Memorial` (4 gavetas).
+      - **Selector gráfico de cuadrícula 2x4**: botones `[A] [B] [42] [43]` / `[C] [44] [45] [46]` donde la celda seleccionada (ej. `42`) se ilumina en verde bosque (`--forest`).
+      - Filas de detalle: `Clave` (`JN-A-042`), `Capacidad` (`2 gavetas`), `Precio de lista` (`$120,000.00`).
+      - Recuadro crema inferior: `TOTAL ESTIMADO` **`$120,000.00`** (`Importes expresados en MXN`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `Pages/Ventas/Nueva.cshtml` con la maqueta de 2 columnas (columna izquierda de 8 cols para el Stepper y la tarjeta activa del paso; columna derecha de 4 cols para `RESUMEN DE COTIZACIÓN`).
+  2. Programa la cuadrícula interactiva `A, B, 42, 43 / C, 44, 45, 46` para que al hacer clic en un número de lote disponible actualice el lote activo en `wizardState` y refresque `Clave`, `Capacidad`, `Precio de lista` y `TOTAL ESTIMADO`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Actualización en vivo del panel RESUMEN DE COTIZACIÓN al cambiar de paso
+    Dado que el usuario navega a "/Ventas/Nueva"
+    Cuando el lote activo en el borrador es "JN-A-042"
+    Entonces el panel derecho ilumina la casilla "42" en verde, muestra "Lote Básico", Clave "JN-A-042", Capacidad "2 gavetas" y TOTAL ESTIMADO "$120,000.00"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: No se permite saltar al Paso 3 o 4 haciendo clic en el stepper si los pasos previos no están completos.
+  - **Pruebas Obligatorias**: Captura del shell del Wizard y del panel derecho comparada contra *Capturas 5–8*.
+  - **Blast Radius & Rollback**: Máximo 230 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-051/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-052`: Wizard Paso 1 (`Cliente` — *Captura 5*: Autocomplete de Cliente Existente o Captura Inline de Datos del Titular)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-034`, `SF-051`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 5 — Paso 1 Cliente*)**:
+    - Título de tarjeta: `Datos del cliente` / Subtítulo: `Busca un cliente existente o registra uno nuevo.`
+    - Campo `Buscar cliente` con ícono de lupa (`Nombre, CURP o teléfono`).
+    - Divisor central sutil: `o captura sus datos`.
+    - Grid 2 columnas: `Nombre(s)` (`Mariana`), `Apellidos` (`Torres Aguirre`), `CURP` (`18 caracteres`), `Teléfono` (`55 0000 0000`), y fila completa `Correo electrónico` (`mariana.torres@email.mx`).
+    - Botones inferiores: `Anterior` (deshabilitado en paso 1) y `Continuar →`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Conecta el input `Buscar cliente` a `clientesApi.obtenerDirectorio({ buscar })` mostrando un dropdown de sugerencias; al elegir un cliente existente, rellena automáticamente los 5 inputs y guarda su `clienteId` en `wizardState`.
+  2. Si el usuario captura un cliente nuevo directamente en los 5 inputs y pulsa `Continuar →`, valida los campos y crea/actualiza el cliente vía `clientesApi` antes de avanzar al Paso 2.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Captura de titular en el Paso 1 del Wizard (Captura 5)
+    Dado que el vendedor está en el Paso 1 "Datos del cliente" en "/Ventas/Nueva"
+    Cuando captura Nombre "Mariana", Apellidos "Torres Aguirre", CURP válido, Teléfono "5512345678" y Correo "mariana.torres@email.mx" y pulsa "Continuar →"
+    Entonces se guarda el titular en el borrador y el Wizard avanza al Paso 2 "Selecciona el lote"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Validación inline de CURP y teléfono antes de permitir avanzar al Paso 2.
+  - **Pruebas Obligatorias**: Captura del Paso 1 idéntica a la *Captura 5*.
+  - **Blast Radius & Rollback**: Máximo 210 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-052/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-053`: Wizard Paso 2 (`Lote` — *Captura 6*: Tarjetas de Selección de Lote y Sincronización con Panel Derecho)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-043`, `SF-051`, `SF-052`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 6 — Paso 2 Lote*)**:
+    - Título: `Selecciona el lote` / Subtítulo: `Elige una opción disponible para continuar.`
+    - Lista de tarjetas horizontales seleccionables con borde verde activo (`--forest`):
+      - `JN-A-042` | **Jardín Norte** (`2 gavetas · Andador A`) | **`$120,000`**
+      - `JC-C-118` | **Jardín Central** (`3 gavetas · Andador C`) | **`$150,000`**
+      - `RO-E-081` | **Robles** (`4 gavetas · Andador E`) | **`$180,000`**
+    - Botones `Anterior` y `Continuar →`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Carga los lotes `Disponible` desde `lotesApi.obtenerCatalogo({ estado: 'Disponible' })` y renderiza las tarjetas seleccionables como en la *Captura 6*.
+  2. Al seleccionar una tarjeta (o al venir redirigido desde `/Lotes?loteClave=JN-A-042`), resalta el borde de la tarjeta, sincroniza la cuadrícula derecha `RESUMEN DE COTIZACIÓN` y actualiza `TOTAL ESTIMADO`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Selección de lote en Paso 2 sincronizada con el Resumen de Cotización (Captura 6)
+    Dado que el vendedor está en el Paso 2 "Selecciona el lote"
+    Cuando selecciona la tarjeta "JC-C-118 · Jardín Central · 3 gavetas · $150,000"
+    Entonces el panel derecho "RESUMEN DE COTIZACIÓN" cambia a Clave "JC-C-118", Capacidad "3 gavetas" y TOTAL ESTIMADO "$150,000.00"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Si ningún lote está seleccionado, el botón `Continuar →` permanece deshabilitado.
+  - **Pruebas Obligatorias**: Captura del Paso 2 idéntica a la *Captura 6*.
+  - **Blast Radius & Rollback**: Máximo 190 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-053/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-054`: Wizard Paso 3 (`Financiamiento` — *Captura 7*: Toggle `Crédito`/`Contado`, Selects `Enganche`/`Plazo` y Banner Verde `Mensualidad estimada $4,887.54`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-050`, `SF-053`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 7 — Paso 3 Plan de financiamiento*)**:
+    - Título: `Plan de financiamiento` / Subtítulo: `Configura el enganche y el plazo de pago.`
+    - Selector `Modalidad` (2 botones tipo toggle): `Crédito` (activo en verde oliva `--forest`) y `Contado`.
+    - Grid de 2 selects (visibles en modo `Crédito`):
+      - `Enganche`: muestra porcentaje y monto calculado en vivo (`10% · $12,000.00`, `20% · $24,000.00`, `30% · $36,000.00`).
+      - `Plazo`: muestra plazo y tasa anual fija (`12 meses · 16% anual`, `24 meses · 20% anual`, `18 meses · 18% anual`, `24 meses · 20% anual`, `48 meses · 24% anual`).
+    - **Banner verde bosque (`--forest`)**:
+      - Izquierda: `Mensualidad estimada` + subtítulo `Primer pago: 18 dic. 2025` (fecha calculada a +1 mes).
+      - Derecha: importe grande en blanco **`$4,887.54`**.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Al entrar al Paso 3 o cambiar cualquiera de los controles (`Modalidad`, `Enganche`, `Plazo`), invoca `simuladorApi.cotizar(...)`.
+  2. Si `Modalidad == "Contado"`, oculta/deshabilita los selects de `Enganche` y `Plazo` y muestra en el banner verde `Pago único de contado: $120,000.00 (Sin intereses)`.
+  3. Si `Modalidad == "Credito"`, muestra en el banner verde la `Mensualidad estimada` exacta devuelta por la API (ej. `$4,887.54`) y la fecha del primer pago.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Cotización interactiva en el Paso 3 del Wizard (Captura 7)
+    Dado que el lote seleccionado es "JN-A-042" ($120,000.00)
+    Cuando el vendedor elige Modalidad "Crédito", Enganche "20% · $24,000.00" y Plazo "24 meses · 20% anual"
+    Entonces el banner verde muestra exactamente "Mensualidad estimada $4,887.54" obtenida de POST "/api/v1/simulador/cotizar"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Mientras `simuladorApi.cotizar` responde, el monto del banner muestra un indicador de carga sutil y deshabilita `Continuar →` hasta tener respuesta válida.
+  - **Pruebas Obligatorias**: Captura del Paso 3 idéntica a la *Captura 7*.
+  - **Blast Radius & Rollback**: Máximo 220 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-054/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-055`: Suite QA HTTP `CP-03`, `CP-04`, `CP-05`, `CP-06` y `CP-10` contra `POST /api/v1/simulador/cotizar`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-048`, `SF-049`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Tests (`tests/SistemaFuneraria.Tests/Integration/Api/SimuladorControllerTests.cs`)**: Certifica por HTTP los casos de prueba oficiales del plan de pruebas (`CP-03` a `CP-06` y `CP-10`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Implementa `[Theory]` HTTP contra `POST /api/v1/simulador/cotizar` verificando:
+     - `CP-03`: 2 gavetas (`$120,000`), enganche `20%` (`$24,000`), saldo `$96,000`, 12 meses (`16%`) $\rightarrow$ cuota `$8,710.16`, última cuota `$8,710.19`, suma de capital `$96,000.00`.
+     - `CP-04` / *Captura 7*: 2 gavetas (`$120,000`), enganche `20%`, 24 meses (`20%`) $\rightarrow$ cuota **`$4,887.54`**.
+     - `CP-05`: 3 gavetas (`$150,000`), enganche `20%` (`$30,000`), saldo `$120,000`, 24 meses (`20%`) $\rightarrow$ cuota `$6,109.42`, última cuota `$6,109.33`, suma de capital `$120,000.00`.
+     - `CP-06`: Las 36 combinaciones (`3 tipos de lote × 3 enganches × 4 plazos`) devuelven `200 OK` y `Sum(Capital) == SaldoAFinanciar` con `0.00` diferencia.
+     - `CP-10`: Plazos inválidos (`0`, `15`, `60`) o enganches inválidos (`10%`, `25%`, `100%` en crédito) devuelven `400 Bad Request`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Certificación HTTP del Oráculo de las 36 combinaciones financieras (CP-06)
+    Dadas las 36 combinaciones de Capacidad (2, 3, 4 gavetas), Enganche (10%, 20%, 30%) y Plazo (12, 18, 24, 48 meses)
+    Cuando se invoca POST "/api/v1/simulador/cotizar" para cada una de las 36 combinaciones
+    Entonces las 36 respuestas devuelven HTTP 200 OK y la suma de la columna Capital de su tabla de amortización es exactamente igual al SaldoAFinanciar
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Cero diferencias de centavos en las 36 combinaciones.
+  - **Pruebas Obligatorias**: `SimuladorControllerTests.cs` (40+ aserciones automatizadas).
+  - **Blast Radius & Rollback**: Máximo 230 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-055/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-056`: Auditoría QA Visual y Funcional del Wizard Pasos 1–3 (*Capturas 5, 6 y 7*)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.5.0` (Cierre de Milestone) | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-051` a `SF-055`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Evidencia (`docs/evidencias/SF-056/`)**: Certificación E2E de los Pasos 1, 2 y 3 del Wizard contra las *Capturas 5, 6 y 7*.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Verifica navegación completa Paso 1 $\leftrightarrow$ Paso 2 $\leftrightarrow$ Paso 3, persistencia de `Borrador guardado`, sincronización del mapa de lotes `A, B, 42, 43` y cálculo de `$4,887.54`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Regresión de pasos hacia atrás y adelante sin pérdida de datos en el Wizard
+    Dado que el usuario completó los Pasos 1, 2 y 3 en "/Ventas/Nueva"
+    Cuando pulsa el botón "Anterior" desde el Paso 3 al Paso 2 y regresa al Paso 3
+    Entonces todos los datos del cliente, el lote "JN-A-042" y el plan de 24 meses se conservan intactos
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Cero errores en consola del navegador (`F12`).
+  - **Pruebas Obligatorias**: Reporte de inspección visual y `dotnet test` global en verde.
+  - **Blast Radius & Rollback**: Máximo 120 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-056/` (Cierra el Milestone `v0.5.0`).
+
+---
+
+## 10. Fichas Técnicas BDD — Milestone 6 (`v0.6.0`: Venta de Contado ACID, Paso 4 Confirmación & CRUD Admin Ventas — `SF-057` a `SF-065`)
+
+#### Ficha Técnica BDD — `SF-057`: Entidad `Venta` (`FolioContrato` `CTR-YYYY-XXXX`, `ModalidadVenta`, `EstadoVenta`, `PrecioPactado`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` | **Carril**: Carril 1 (`Core + Tests`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-031`, `SF-039`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Core (`src/SistemaFuneraria.Core/Entities/Venta.cs` & `Enums/ModalidadVenta.cs`, `EstadoVenta.cs`)**:
+    - `ModalidadVenta`: `Contado = 1`, `Financiado = 2`.
+    - `EstadoVenta`: `Activo = 1`, `Liquidado = 2`, `EnRevision = 3`, `Cancelado = 4`.
+    - `Venta`: `Id (Guid)`, `FolioContrato (string)` (formato Figma *Captura 1, 9, 10*: `CTR-2025-0189`, `CTR-2024-0118`), `ClienteId (Guid)`, `LoteId (Guid)`, `VendedorId (string)`, `Modalidad (ModalidadVenta)`, `PrecioPactado (Dinero)`, `Estado (EstadoVenta)`, `FechaVenta (DateTimeOffset)`, `MotivoCancelacion (string?)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. En `Venta.CrearContado(folioContrato, clienteId, loteId, vendedorId, precioPactado, fechaVenta)`:
+     - Valida que `folioContrato` cumpla `^CTR-\d{4}-\d{4,6}$`.
+     - Asigna `Modalidad = ModalidadVenta.Contado` y `Estado = EstadoVenta.Liquidado` (al pagarse de contado en un solo exhibición).
+  2. En `Venta.CrearFinanciada(...)`:
+     - Asigna `Modalidad = ModalidadVenta.Financiado` y `Estado = EstadoVenta.Activo`.
+  3. Agrega método `CambiarEstadoAdmin(EstadoVenta nuevoEstado, string motivo)` para que el Administrador pueda poner un contrato `EnRevision` o `Cancelado` con auditoría obligatoria de motivo.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Creación de venta de contado nace en estado Liquidado con folio CTR-YYYY-XXXX
+    Dado un cliente válido y el lote "JN-A-042" con PrecioContado de $120,000.00
+    Cuando se invoca Venta.CrearContado con folio "CTR-2026-0001"
+    Entonces la entidad Venta queda con Modalidad "Contado", Estado "Liquidado" y PrecioPactado "$120,000.00"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `FolioContrato` vacío o inválido, `PrecioPactado <= 0`, cancelación sin `MotivoCancelacion`.
+  - **Pruebas Obligatorias**: `VentaTests.cs` con 100% de cobertura de constructores y cambios de estado.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-057/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-058`: Entidades `Financiamiento` (`SaldoInsoluto`, `PlazoMeses`, `TasaAnual`, `VersionFila`) y `Mensualidad`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` | **Carril**: Carril 1 (`Core + Tests`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-057`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Core (`src/SistemaFuneraria.Core/Entities/Financiamiento.cs`, `Mensualidad.cs`, `Enums/EstadoFinanciamiento.cs`, `EstadoMensualidad.cs`)**:
+    - `Financiamiento`: `Id (Guid)`, `VentaId (Guid)`, `PorcentajeEnganche (decimal)`, `MontoEnganche (Dinero)`, `CapitalFinanciado (Dinero)`, `PlazoMeses (int)`, `TasaInteresAnual (decimal)`, `CuotaMensualActual (Dinero)`, `SaldoInsoluto (Dinero)`, `Estado (EstadoFinanciamiento)` (`Activo`, `EnMora`, `Liquidado`, `Cancelado`), `VersionFila (uint)` (mapeado a `xmin` de PostgreSQL), `IReadOnlyCollection<Mensualidad> Mensualidades`.
+    - `Mensualidad`: `Id (Guid)`, `FinanciamientoId (Guid)`, `NumeroCuota (int)` (`1..N`), `FechaVencimiento (DateOnly)`, `SaldoInicialPeriodo (Dinero)`, `CapitalProgramado (Dinero)`, `InteresProgramado (Dinero)`, `MontoTotalCuota (Dinero)`, `SaldoFinalPeriodo (Dinero)`, `Estado (EstadoMensualidad)` (`Pendiente`, `Pagada`, `Vencida`), `FechaPago (DateTimeOffset?)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `Financiamiento.Crear(ventaId, porcentajeEnganche, montoEnganche, capitalFinanciado, plazoMeses, tasaAnual, filasAmortizacion, fechaPrimerPago)`:
+     - Genera las $N$ entidades `Mensualidad` (`1..PlazoMeses`) a partir del resultado del calculador de amortización francesa, garantizando que $\sum \text{CapitalProgramado} == \text{CapitalFinanciado}$.
+  2. Incluye métodos de dominio para aplicar pago de la cuota más antigua pendiente y verificar que no se salten mensualidades (`RF-COB-02`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Generación de 24 mensualidades con cuadre exacto de capital al crear Financiamiento
+    Dado una Venta financiada sobre un lote de $120,000.00 con 20% de enganche ($24,000.00) a 24 meses (20% anual)
+    Cuando se invoca Financiamiento.Crear con la tabla de amortización calculada
+    Entonces se crean 24 registros de Mensualidad en estado "Pendiente", SaldoInsoluto inicia en $96,000.00 y la suma de CapitalProgramado es exactamente $96,000.00
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: No permitir pagar la cuota $k+1$ si la cuota $k$ sigue `Pendiente` o `Vencida`.
+  - **Pruebas Obligatorias**: `FinanciamientoTests.cs` y `MensualidadTests.cs`.
+  - **Blast Radius & Rollback**: Máximo 240 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-058/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-059`: EF Core `VentaConfiguration`, `FinanciamientoConfiguration` (`xmin`), `MensualidadConfiguration` y Migración `AddVentasFinanciamientos`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` | **Carril**: Carril 1 (`Infrastructure`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-040`, `SF-057`, `SF-058`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **BD PostgreSQL**:
+    - Secuencia `seq_contratos_folio` (`START WITH 190 INCREMENT BY 1`) para generar folios `CTR-YYYY-XXXX`.
+    - Tabla `ventas`: `id`, `folio_contrato (UNIQUE)`, `cliente_id (FK)`, `lote_id (FK)`, `vendedor_id`, `modalidad`, `precio_pactado numeric(18,2)`, `estado`, `fecha_venta`.
+    - Tabla `financiamientos`: `id`, `venta_id (UNIQUE FK)`, `porcentaje_enganche`, `monto_enganche numeric(18,2)`, `capital_financiado numeric(18,2)`, `plazo_meses`, `tasa_interes_anual numeric(5,4)`, `cuota_mensual_actual numeric(18,2)`, `saldo_insoluto numeric(18,2)`, `estado`, `xmin (xid)` configurado con `.UseXminAsConcurrencyToken()`.
+    - Tabla `mensualidades`: `id`, `financiamiento_id (FK)`, `numero_cuota`, `fecha_vencimiento`, `saldo_inicial_periodo`, `capital_programado`, `interes_programado`, `monto_total_cuota`, `saldo_final_periodo`, `estado`, `fecha_pago`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Configura las 3 entidades en `Infrastructure/Data/Configurations/` con `DeleteBehavior.Restrict` para evitar borrados accidentales en cascada de ventas o clientes.
+  2. Configura `builder.Property(f => f.VersionFila).IsRowVersion()` / `.UseXminAsConcurrencyToken()` en `FinanciamientoConfiguration.cs`.
+  3. Genera la migración reversible `AddVentasFinanciamientos`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Detección de conflicto de concurrencia optimista mediante xmin en Financiamiento
+    Dadas dos instancias concurrentes del DbContext que leen el mismo Financiamiento con SaldoInsoluto = $96,000.00
+    Cuando ambas intentan modificar el SaldoInsoluto y guardar cambios al mismo tiempo
+    Entonces la primera tiene éxito y la segunda lanza DbUpdateConcurrencyException
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Índice único filtrado en `ventas(lote_id) WHERE estado <> 'Cancelado'` para impedir a nivel de motor PostgreSQL que dos ventas activas apunten al mismo lote.
+  - **Pruebas Obligatorias**: Prueba de integración con Testcontainers verificando `xmin` y el índice único de lote activo.
+  - **Blast Radius & Rollback**: Máximo 250 LOCs. Rollback: `dotnet ef database update <PrevMigration>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-059/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-060`: `IVentaService.RegistrarVentaContadoAsync` (Transacción ACID: Venta + Lote `Vendido` + Pago Único `CP-02`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` | **Carril**: Carril 2 (`Application`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-059`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Application (`DTOs/Ventas/RegistrarVentaRequest.cs`, `ContratoResumenDto.cs`)**:
+    - `RegistrarVentaContadoAsync(RegistrarVentaContadoCommand command, CancellationToken ct)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Inicia una transacción explícita en `IAppDbContext`.
+  2. Verifica que el `Cliente` exista y que el `Lote` esté en estado `Disponible` (o `Reservado`). Si ya está `Vendido`, retorna `Resultado.Fallo(TipoError.Conflicto, "El lote seleccionado ya fue vendido")`.
+  3. Obtiene el siguiente folio `CTR-YYYY-XXXX` de la secuencia `seq_contratos_folio`.
+  4. Crea la entidad `Venta` en modalidad `Contado` (`EstadoVenta.Liquidado`, `PrecioPactado = lote.PrecioContado`) y llama a `lote.MarcarVendido()`.
+  5. Guarda y confirma la transacción (`CommitAsync`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Registro atómico de venta de contado cambia lote a Vendido y genera contrato Liquidado (CP-02 / ST-01)
+    Dado el cliente "Mariana Torres Aguirre" y el lote "JN-A-042" en estado "Disponible" ($120,000.00)
+    Cuando se invoca RegistrarVentaContadoAsync
+    Entonces se crea la Venta con folio "CTR-2026-0190" en estado "Liquidado", sin tabla de financiamiento, y el lote "JN-A-042" pasa a estado "Vendido"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Si ocurre cualquier excepción al guardar la venta, el lote permanece `Disponible` (atomicidad ACID).
+  - **Pruebas Obligatorias**: `VentaContadoServiceTests.cs` probando éxito y rollback ante lote ya vendido.
+  - **Blast Radius & Rollback**: Máximo 210 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-060/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-061`: `VentasController` (`POST /api/v1/ventas/contado`, `GET /api/v1/ventas/{id}`) y Wrapper `ventasApi.js`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` | **Carril**: Carril 2 (`Api + Web JS`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-060`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **API (`src/SistemaFuneraria.Api/Controllers/V1/VentasController.cs`)**:
+    - `POST /api/v1/ventas/contado` $\rightarrow$ `201 Created` con `ContratoResumenDto`.
+    - `GET /api/v1/ventas/{id:guid}` $\rightarrow$ `200 OK`.
+  - **JS (`src/SistemaFuneraria.Web/wwwroot/js/api/ventasApi.js`)**:
+    - `registrarVentaContado(payload)`, `registrarVentaFinanciada(payload)`, `obtenerVentaPorId(id)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Implementa `VentasController` extrayendo `VendedorId` de `User.FindFirstValue(ClaimTypes.NameIdentifier)`.
+  2. Implementa `ventasApi.js` para que el Paso 4 del Wizard pueda enviar la confirmación de contrato.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Intento de vender por API un lote que ya se encuentra Vendido
+    Dado que el lote "LM-A-014" ya tiene estado "Vendido"
+    Cuando se envía POST "/api/v1/ventas/contado" con LoteId de "LM-A-014"
+    Entonces el endpoint responde HTTP 409 Conflict con ProblemDetails "El lote seleccionado ya fue vendido"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Validación de `ClienteId` y `LoteId` no vacíos (`Guid.Empty` $\rightarrow$ `400 Bad Request`).
+  - **Pruebas Obligatorias**: Pruebas unitarias de `VentasController`.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-061/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-062`: Wizard Paso 4 (`Confirmación` — *Captura 8*: Resumen 2x2, Checkbox `Confirmo que los datos fueron revisados con el cliente` y Botón `✓ Generar contrato`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-054`, `SF-061`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 8 — Paso 4 Confirma la operación*)**:
+    - Título: `Confirma la operación` / Subtítulo: `Revisa la información antes de generar el contrato.`
+    - **Grid 2x2 de tarjetas crema suaves**:
+      1. `Cliente`: **Mariana Torres Aguirre** / `mariana.torres@email.mx`
+      2. `Lote`: **JN-A-042 · Jardín Norte** / `2 gavetas`
+      3. `Precio`: **`$120,000.00`** / `Enganche de $24,000.00` (o `Pago único de contado` si eligió Contado)
+      4. `Financiamiento`: **`24 pagos de $4,887.54`** / `Tasa anual fija del 20%` (o `Liquidación inmediata · 0% interés` en Contado)
+    - Checkbox con tilde verde oliva (`--forest`): `Confirmo que los datos fueron revisados con el cliente.`
+    - Botones inferiores: `Anterior` y botón primario verde con borde dorado enfoque **`✓ Generar contrato`**.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Renderiza en el Paso 4 las 4 tarjetas resumen leyendo los datos de `wizardState`.
+  2. Mantén el botón `✓ Generar contrato` deshabilitado (`disabled`) hasta que el checkbox `Confirmo que los datos fueron revisados con el cliente` esté marcado.
+  3. Al pulsar `✓ Generar contrato`, deshabilita el botón para evitar doble clic, invoca `ventasApi.registrarVentaContado` (o `registrarVentaFinanciada` en `SF-068`), limpia `wizardState.clearDraft()` y redirige a la vista de detalle del contrato recién generado (`/Contratos/Detalle?id=...`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Generación de contrato bloqueada hasta marcar la casilla de revisión con el cliente (Captura 8)
+    Dado que el vendedor llegó al Paso 4 "Confirma la operación" en "/Ventas/Nueva"
+    Cuando el checkbox "Confirmo que los datos fueron revisados con el cliente" no está marcado
+    Entonces el botón "✓ Generar contrato" permanece deshabilitado
+    Cuando el vendedor marca el checkbox y hace clic en "✓ Generar contrato"
+    Entonces se envía la petición al API, se limpia el borrador de sessionStorage y se redirige al expediente del nuevo contrato
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Si el lote fue ganado por otro vendedor segundos antes (`409 Conflict`), muestra alerta clara en el Paso 4 con botón `"Elegir otro lote"` que regresa al Paso 2.
+  - **Pruebas Obligatorias**: Captura del Paso 4 idéntica a la *Captura 8*.
+  - **Blast Radius & Rollback**: Máximo 220 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-062/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-063`: CRUD Admin de Ventas/Contratos (`PATCH /api/v1/ventas/{id}/estado`, `DELETE /api/v1/ventas/{id}` con Liberación de Lote)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` | **Carril**: Carril 2 (`Application + Api`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-061`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Requerimiento Explícito del Usuario**: El `Administrador` debe tener manejo CRUD sobre las ventas/contratos (poner en revisión, cancelar una venta errónea liberando el lote a `Disponible`, o corregir observaciones).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. En `VentaService`, agrega `CambiarEstadoContratoAdminAsync(Guid ventaId, EstadoVenta nuevoEstado, string motivo)`:
+     - Si `nuevoEstado == EstadoVenta.Cancelado`, dentro de una transacción ACID marca el contrato como `Cancelado`, cancela su `Financiamiento` (si tenía) y regresa el `Lote` a `EstadoLote.Disponible`.
+  2. Expón `PATCH /api/v1/ventas/{id:guid}/estado` y `DELETE /api/v1/ventas/{id:guid}` (baja lógica/cancelación con motivo obligatorio) protegidos con `[Authorize(Roles = "Administrador")]`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Administrador cancela una venta errónea y el lote vuelve a estar Disponible
+    Dado un contrato "CTR-2026-0190" asociado al lote "JN-A-042" (actualmente Vendido)
+    Cuando la Administradora envía PATCH "/api/v1/ventas/{id}/estado" con Estado = "Cancelado" y Motivo = "Error de captura en titular"
+    Entonces el contrato pasa a estado "Cancelado" y el lote "JN-A-042" regresa automáticamente a estado "Disponible"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `Vendedor` y `Cajero` reciben `403 Forbidden`; motivo menor a 10 caracteres recibe `400 Bad Request`.
+  - **Pruebas Obligatorias**: Prueba de servicio y endpoint validando la liberación del lote.
+  - **Blast Radius & Rollback**: Máximo 190 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-063/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-064`: Vista Preliminar de Contrato Emitido y Comprobante Imprimible de Venta de Contado
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-062`, `SF-063`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Web (`Pages/Contratos/Detalle.cshtml` — Modo Contado & Impresión `@media print`)**:
+    - Muestra el encabezado del contrato recién emitido (`CTR-YYYY-XXXX`), datos del titular, datos del lote (`Clave`, `Sección`, `Andador/Fila`, `Gavetas`), estado (`Liquidado` / `Al corriente`) y botón `"Imprimir contrato"`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea la estructura base de `Pages/Contratos/Detalle.cshtml` que consume `GET /api/v1/ventas/{id}`.
+  2. Agrega estilos `@media print` en `sistema-components.css` que ocultan el Sidebar y el Topbar al imprimir el contrato.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Visualización de contrato de contado recién generado tras el Paso 4
+    Dado que el vendedor generó un contrato de contado para "Mariana Torres Aguirre"
+    Cuando el navegador carga "/Contratos/Detalle?id={ventaId}"
+    Entonces muestra el folio "CTR-2026-0190", el estado "Liquidado", el lote "JN-A-042" y el botón "Imprimir contrato"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Si `id` no existe en API (`404`), muestra estado vacío con botón `"Volver a Contratos"`.
+  - **Pruebas Obligatorias**: Captura de la vista de contrato y vista previa de impresión.
+  - **Blast Radius & Rollback**: Máximo 200 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-064/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-065`: Suite QA HTTP `CP-02` / `ST-01` (Venta de Contado E2E, Lote a `Vendido` y Rechazo de Doble Venta `409 Conflict`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.6.0` (Cierre de Milestone) | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-057` a `SF-064`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Tests (`tests/SistemaFuneraria.Tests/Integration/Api/VentasContadoControllerTests.cs`)**: Certifica `CP-02` y `ST-01`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Ejecuta el flujo completo en `WebApplicationFactory` + PostgreSQL Testcontainers:
+     - Consulta `GET /api/v1/lotes` y toma un lote `Disponible`.
+     - Registra un cliente con `POST /api/v1/clientes`.
+     - Registra la venta de contado con `POST /api/v1/ventas/contado` $\rightarrow$ verifica `201 Created`, `Estado == "Liquidado"`, `Financiamiento == null` y que el lote ahora esté `Vendido`.
+     - Intenta registrar una segunda venta sobre el mismo lote $\rightarrow$ verifica `409 Conflict`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Certificación automatizada de ST-01 y CP-02 (Venta de Contado y bloqueo de lote)
+    Dado el lote "JN-A-042" en estado "Disponible"
+    Cuando se registra una venta de contado vía POST "/api/v1/ventas/contado"
+    Entonces retorna 201 Created, el lote cambia a "Vendido" y un segundo intento de venta sobre "JN-A-042" retorna 409 Conflict
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Incluye prueba de cancelación por `Administrador` verificando que el lote vuelva a `Disponible`.
+  - **Pruebas Obligatorias**: `VentasContadoControllerTests.cs` 100% en verde.
+  - **Blast Radius & Rollback**: Máximo 210 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-065/` (Cierra el Milestone `v0.6.0`).
+
+---
+
+## 11. Fichas Técnicas BDD — Milestone 7 (`v0.7.0`: Venta Financiada ACID + Pantalla Figma "Contratos" / Cartera — `SF-066` a `SF-074`)
+
+#### Ficha Técnica BDD — `SF-066`: `IVentaService.RegistrarVentaFinanciadaAsync` (Transacción ACID: Venta + Financiamiento + $N$ Mensualidades + Lote `Vendido`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` | **Carril**: Carril 1 (`Application`) | **Asignado a**: Reydescel (`@reydescel`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-048`, `SF-060`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Application (`src/SistemaFuneraria.Application/Services/VentaService.cs`)**:
+    - `RegistrarVentaFinanciadaAsync(RegistrarVentaFinanciadaCommand command, CancellationToken ct)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Abre transacción explícita en `IAppDbContext`.
+  2. Verifica cliente activo y lote `Disponible` (si está `Vendido`, retorna `409 Conflict`).
+  3. Invoca el calculador de dominio para obtener la tabla de amortización francesa exacta (`12, 24, 36 o 48` cuotas) y valida el cuadre al centavo.
+  4. Crea `Venta` (`ModalidadVenta.Financiado`, `EstadoVenta.Activo`, folio `CTR-YYYY-XXXX`), `Financiamiento` (`SaldoInsoluto = CapitalFinanciado`) y las $N$ entidades `Mensualidad` (`1..PlazoMeses`).
+  5. Marca `lote.MarcarVendido()` y ejecuta `CommitAsync`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Creación atómica de contrato financiado a 24 meses (Captura 8 -> Captura 9)
+    Dado el titular "Mariana Torres Aguirre" y el lote "JN-A-042" ($120,000.00) disponible
+    Cuando se ejecuta RegistrarVentaFinanciadaAsync con PorcentajeEnganche = 20% y PlazoMeses = 24
+    Entonces se persiste el contrato en estado "Activo", el Financiamiento con SaldoInsoluto = $96,000.00, las 24 Mensualidades de $4,887.54 y el lote pasa a "Vendido" en una sola transacción ACID
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Si falla la inserción de mensualidades, toda la operación hace `RollbackAsync` y el lote sigue `Disponible`.
+  - **Pruebas Obligatorias**: `VentaFinanciadaServiceTests.cs` con Testcontainers.
+  - **Blast Radius & Rollback**: Máximo 230 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-066/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-067`: Endpoint `POST /api/v1/ventas/financiada` y Consulta de Tabla de Amortización (`GET /api/v1/contratos/{id}/amortizacion`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` | **Carril**: Carril 2 (`Api`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-066`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **API (`VentasController.cs`)**:
+    - `POST /api/v1/ventas/financiada` $\rightarrow$ `201 Created` con el folio `CTR-YYYY-XXXX` y resumen financiero.
+    - `GET /api/v1/ventas/{id:guid}/amortizacion` $\rightarrow$ devuelve las $N$ cuotas (`NumeroCuota`, `FechaVencimiento`, `SaldoInicial`, `Capital`, `Interes`, `CuotaTotal`, `SaldoFinal`, `Estado`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Conecta `POST /api/v1/ventas/financiada` con `IVentaService.RegistrarVentaFinanciadaAsync`.
+  2. Conecta el botón `✓ Generar contrato` del Paso 4 del Wizard (`SF-062`) para que cuando `Modalidad == "Credito"` invoque `ventasApi.registrarVentaFinanciada(...)`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Generación de contrato financiado desde el Paso 4 del Wizard vía API
+    Dado un payload válido con LoteId de "JN-A-042", PorcentajeEnganche = 20 y PlazoMeses = 24
+    Cuando se envía POST "/api/v1/ventas/financiada"
+    Entonces responde HTTP 201 Created y GET "/api/v1/ventas/{id}/amortizacion" devuelve las 24 cuotas persistidas
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Plazos o enganches fuera de la matriz devuelven `400 Bad Request`.
+  - **Pruebas Obligatorias**: Pruebas de controlador para `POST /financiada` y `GET /amortizacion`.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-067/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-068`: Servicio `ICarteraContratosService` (4 KPIs de Cartera, Tabs `Todos`/`Activos`/`Vencidos`/`Liquidados` y Búsqueda por Folio o Cliente)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` | **Carril**: Carril 2 (`Application`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-066`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 9 — Contratos*)**:
+    - **4 KPI Cards superiores**:
+      1. `Activos`: `128` (`$11.8 M en cartera`).
+      2. `Al corriente`: `120` (`93.8% de la cartera`).
+      3. `Con atraso`: `8` (`$24,860 por recuperar`).
+      4. `Liquidados este año`: `32` (`+14% vs. 2024`).
+    - **4 Tabs de filtro**: `Todos`, `Activos`, `Vencidos`, `Liquidados`.
+    - **Columnas de la tabla**: `CONTRATO` (`CTR-2025-0189`), `CLIENTE` (`Laura Castañeda`), `LOTE` (`JC-C-118`), `SALDO` (`$127,500.00`), `PRÓXIMO PAGO` (`18 dic. · $6,248.50` o `Venció 02 nov.`), `ESTADO` (`Al corriente`, `Vencido`, `En revisión`, `Liquidado`), y acción derecha (`Detalle` o **`Cobrar`** si está `Vencido`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `CarteraContratosService.ObtenerCarteraAsync(buscar, tab, pagina, tamanoPagina)`:
+     - Calcula los 4 KPIs agregados sobre la cartera de contratos.
+     - Filtra por `buscar` (`FolioContrato`, nombre del cliente o clave del lote) y por `tab` (`Todos`, `Activos`, `Vencidos`, `Liquidados`).
+     - Proyecta cada fila con su próxima mensualidad pendiente/vencida y determina la acción sugerida (`"Cobrar"` cuando tiene cuota vencida, `"Detalle"` en caso contrario).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Filtrado de contratos por tab "Vencidos" y cálculo de monto por recuperar (Captura 9)
+    Dada una cartera con contratos "Al corriente" y el contrato "CTR-2024-0118" de "Elena Vargas" con cuota vencida
+    Cuando se consulta ObtenerCarteraAsync con tab = "Vencidos"
+    Entonces la lista devuelve el contrato "CTR-2024-0118" con estado "Vencido" y acción "Cobrar", y el KPI "Con atraso" contabiliza el monto vencido por recuperar
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Contrato de contado o liquidado muestra `Saldo = $0.00` y `Próximo pago = "Liquidado"`.
+  - **Pruebas Obligatorias**: `CarteraContratosServiceTests.cs`.
+  - **Blast Radius & Rollback**: Máximo 230 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-068/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-069`: `ContratosController` (`GET /api/v1/contratos`, `GET /api/v1/contratos/{folioOrId}`) y Wrapper `contratosApi.js`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` | **Carril**: Carril 2 (`Api + Web JS`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-068`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **API (`src/SistemaFuneraria.Api/Controllers/V1/ContratosController.cs`)**:
+    - `GET /api/v1/contratos?buscar=&tab=Todos&page=1&pageSize=10`
+    - `GET /api/v1/contratos/{folioOrId}` (permite buscar tanto por `Guid` como por folio `CTR-2024-0118` para la pantalla de Caja).
+  - **JS (`src/SistemaFuneraria.Web/wwwroot/js/api/contratosApi.js`)**:
+    - `obtenerCartera(filtros)`, `obtenerDetalleContrato(folioOrId)`, `obtenerTablaAmortizacion(id)`, `cambiarEstadoAdmin(id, payload)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `ContratosController` y `contratosApi.js`.
+  2. Permite que `GET /api/v1/contratos/{folioOrId}` resuelva por `Guid.TryParse` o por `FolioContrato == folioOrId.ToUpperInvariant()`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Localización de contrato por su Folio comercial CTR-2024-0118
+    Dado que existe el contrato con folio "CTR-2024-0118"
+    Cuando el cliente invoca GET "/api/v1/contratos/CTR-2024-0118"
+    Entonces el endpoint responde HTTP 200 OK con el expediente completo del contrato, su saldo insoluto y su próxima cuota
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Folio inexistente retorna `404 Not Found` con `ProblemDetails`.
+  - **Pruebas Obligatorias**: Tests de controlador para búsqueda por `Guid` y por `FolioContrato`.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-069/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-070`: Pantalla Figma `/Contratos/Index` (*Captura 9*: 4 KPI Cards, Buscador, 4 Tabs `Todos`/`Activos`/`Vencidos`/`Liquidados` y Tabla de Cartera)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-029`, `SF-069`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 9 — Cartera · Contratos*)**:
+    - Subtítulo: `CARTERA` / Título: `Contratos` / Bajada: `Seguimiento de contratos activos, liquidados y vencidos.` / Botón superior derecho: `+ Nueva venta` ($\rightarrow$ `/Ventas/Nueva`).
+    - 4 KPI Cards: `Activos` (`128`), `Al corriente` (`120`), `Con atraso` (`8`), `Liquidados este año` (`32`).
+    - Barra de filtro con buscador `Buscar contrato o cliente` a la izquierda y segmented control de 4 pestañas a la derecha (`Todos`, `Activos`, `Vencidos`, `Liquidados`).
+    - Tabla con columnas `CONTRATO`, `CLIENTE`, `LOTE`, `SALDO`, `PRÓXIMO PAGO`, `ESTADO` (`Al corriente` en verde, `Vencido` en rosa `--rose`, `En revisión` en ámbar) y acción (`Detalle` $\rightarrow$ `/Contratos/Detalle?folio=...` o **`Cobrar`** $\rightarrow$ `/Caja?contrato=CTR-2024-0118`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Construye `Pages/Contratos/Index.cshtml` replicando al píxel la *Captura 9*.
+  2. Conecta el cambio de pestaña (`Todos`, `Activos`, `Vencidos`, `Liquidados`) y el buscador con `contratosApi.obtenerCartera(...)`.
+  3. Cuando una fila tenga estado `Vencido`, el enlace de acción debe decir **`Cobrar`** y navegar directamente a `/Caja?contrato={folio}` pre-cargando dicho contrato en la ventanilla de caja (*Captura 10*).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Salto directo desde un contrato Vencido hacia Caja y cobranza (Captura 9 -> Captura 10)
+    Dado que el usuario visualiza el contrato "CTR-2024-0118" de "Elena Vargas" con badge "Vencido" en "/Contratos"
+    Cuando hace clic en la acción "Cobrar" de esa fila
+    Entonces el navegador redirige a "/Caja?contrato=CTR-2024-0118" con el contrato cargado para su cobro inmediato
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: 5 estados de UI (skeleton en KPIs y tabla, empty state por tab, error state).
+  - **Pruebas Obligatorias**: Captura comparativa contra la *Captura 9*.
+  - **Blast Radius & Rollback**: Máximo 240 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-070/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-071`: Vista `/Contratos/Detalle` con Tabla de Amortización Completa, Estado de Cuotas y Panel Admin
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-064`, `SF-070`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Web (`Pages/Contratos/Detalle.cshtml`)**:
+    - Cabecera del contrato (`CTR-2025-0189`), KPIs del plan (`Precio pactado`, `Enganche`, `Saldo insoluto actual`, `Mensualidad actual`, `Plazo y Tasa`).
+    - Tabla de amortización completa (`Cuota #`, `Vencimiento`, `Saldo inicial`, `Capital`, `Interés`, `Cuota total`, `Saldo final`, `Estado` con badge `Pagada`/`Pendiente`/`Vencida`).
+    - Botón `"Registrar pago en Caja"` ($\rightarrow$ `/Caja?contrato=CTR-...`).
+    - Panel de gestión exclusiva para `Administrador`: cambiar estado (`En revisión`, `Cancelado` con motivo).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Amplía `Pages/Contratos/Detalle.cshtml` para cargar y mostrar la tabla de amortización vía `contratosApi.obtenerTablaAmortizacion(id)`.
+  2. Añade el modal de cambio de estado administrativo visible sólo para el rol `Administrador`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Consulta del expediente completo y tabla de amortización de un contrato financiado
+    Dado el contrato financiado "CTR-2025-0189" a 24 meses
+    Cuando el usuario hace clic en "Detalle" desde "/Contratos"
+    Entonces "/Contratos/Detalle" muestra el saldo insoluto actual y las 24 filas de la tabla de amortización con sus montos en formato es-MX
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Cuotas vencidas resaltadas con badge rosa (`--rose`); impresión limpia con `@media print`.
+  - **Pruebas Obligatorias**: Captura de `/Contratos/Detalle` con tabla de 24 cuotas y modal Admin.
+  - **Blast Radius & Rollback**: Máximo 230 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-071/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-072`: Semilla `CarteraDemoSeed` (Contratos de Muestra `CTR-2025-0189`, `CTR-2025-0182`, `CTR-2024-0118`, `CTR-2025-0144` Idénticos a Figma)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` | **Carril**: Carril 1 (`Infrastructure`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-032`, `SF-040`, `SF-059`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Capturas 1, 3, 9 y 10*)**:
+    - `CTR-2025-0189` · **Laura Castañeda** · Lote `JC-C-118` · Saldo `$127,500.00` · Próximo pago `$6,248.50` · `Al corriente`.
+    - `CTR-2025-0182` · **Roberto Méndez** · Lote `JN-A-036` · Saldo `$58,743.20` · Próximo pago `$6,248.50` · `Al corriente`.
+    - `CTR-2024-0118` · **Elena Vargas** · Lote `RO-B-027` · Saldo `$76,180.40` · `Venció 02 nov.` (`1 vencido` de `$6,248.50`) · `Vencido`.
+    - `CTR-2025-0144` · **Jorge Salinas** · Lote `JN-D-065` · Saldo `$94,265.80` · Próximo pago `$5,612.30` · `En revisión`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `CarteraDemoSeed.cs` (ejecutado en entorno `Development`) para poblar de forma idempotente los 4 clientes y contratos emblemáticos de las capturas de Figma junto con sus lotes y mensualidades.
+  2. Garantiza que al abrir `/Clientes`, `/Contratos`, `/Caja` o `/Resumen`, el equipo y los stakeholders vean datos consistentes con el diseño de Figma desde el primer arranque.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Carga idempotente de contratos semilla de Figma en entorno de desarrollo
+    Dado que la aplicación inicia en entorno Development
+    Cuando se ejecuta CarteraDemoSeed.SeedAsync
+    Entonces existen los contratos "CTR-2025-0189", "CTR-2025-0182", "CTR-2024-0118" y "CTR-2025-0144" asociados a sus respectivos clientes y lotes
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: No se ejecuta en tests que requieran base de datos limpia a menos que se invoque explícitamente.
+  - **Pruebas Obligatorias**: Test de integración verificando la idempotencia de `CarteraDemoSeed`.
+  - **Blast Radius & Rollback**: Máximo 210 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-072/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-073`: Conector Completo del Wizard `/Ventas/Nueva` para Modalidad `Crédito` (E2E Pasos 1 a 4 $\rightarrow$ `/Contratos/Detalle`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` | **Carril**: Carril 3 (`Web UI + JS`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-062`, `SF-067`, `SF-071`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Web (`Pages/Ventas/Nueva.cshtml` + `wwwroot/js/ventas/nuevaVenta.js`)**: Cierra el ciclo completo de venta financiada desde el Paso 1 hasta la redirección a `/Contratos/Detalle` con las $N$ mensualidades generadas.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Conecta la rama `Modalidad == "Credito"` en el botón `✓ Generar contrato` del Paso 4 hacia `ventasApi.registrarVentaFinanciada(...)`.
+  2. Muestra un toast de éxito `"Contrato CTR-YYYY-XXXX generado exitosamente"` y redirige a `/Contratos/Detalle?id={ventaId}`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Flujo E2E de Nueva Venta a Crédito desde el Paso 1 hasta el Contrato emitido (Capturas 5 a 9)
+    Dado que el vendedor captura a "Mariana Torres Aguirre", elige el lote "JN-A-042", selecciona Crédito (20% enganche, 24 meses) y confirma en el Paso 4
+    Cuando pulsa "✓ Generar contrato"
+    Entonces se crea la venta financiada en PostgreSQL, se limpia el borrador y se muestra "/Contratos/Detalle" con las 24 cuotas de $4,887.54
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Deshabilitación del botón durante el `POST` y manejo de errores `400`/`409`.
+  - **Pruebas Obligatorias**: Evidencia paso a paso del flujo completo de venta financiada.
+  - **Blast Radius & Rollback**: Máximo 160 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-073/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-074`: Suite QA HTTP de Ventas Financiadas, Integridad de Tabla Persistida y Cartera (`GET /api/v1/contratos`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.7.0` (Cierre de Milestone) | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-066` a `SF-073`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Tests (`tests/SistemaFuneraria.Tests/Integration/Api/VentasFinanciadasControllerTests.cs`)**: Certifica el flujo HTTP de ventas financiadas y consultas de cartera.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Verifica por HTTP que `POST /api/v1/ventas/financiada` cree exactamente $N$ mensualidades en BD cuya suma de capital sea igual a `CapitalFinanciado`, cambie el lote a `Vendido` y aparezca en `GET /api/v1/contratos?tab=Activos`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Integridad entre Simulación y Contrato Financiado persistido en PostgreSQL
+    Dado un lote de $150,000.00 (3 gavetas) financiado con 20% de enganche a 24 meses
+    Cuando se registra la venta vía POST "/api/v1/ventas/financiada" y luego se consulta GET "/api/v1/ventas/{id}/amortizacion"
+    Entonces existen exactamente 24 cuotas en estado "Pendiente", las cuotas 1..23 son de $6,109.42, la cuota 24 es de $6,109.33 y la suma de capital es $120,000.00
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Verifica que los 4 tabs de `/api/v1/contratos` filtren correctamente.
+  - **Pruebas Obligatorias**: `VentasFinanciadasControllerTests.cs` 100% en verde.
+  - **Blast Radius & Rollback**: Máximo 220 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-074/` (Cierra el Milestone `v0.7.0`).
+
+---
+
+## 12. Fichas Técnicas BDD — Milestone 8 (`v0.8.0`: Pantalla Figma "Caja y Cobranza", Pagos Ordinarios, Corte del Día & Recibo — `SF-075` a `SF-083`)
+
+#### Ficha Técnica BDD — `SF-075`: Entidad `Pago` (`Folio` `PAG-2026-XXXXXX`, `TipoPago`, `MetodoPago`, `Referencia`, `ClaveIdempotencia`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` | **Carril**: Carril 1 (`Core + Tests`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-057`, `SF-058`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 10 — Caja y cobranza*)**:
+    - 3 tarjetas de tipo de operación: `Mensualidad` (`Pago ordinario`), `Abono a capital` (`Reduce mensualidad`), `Liquidación` (`Cierre anticipado`).
+    - Campos del pago: `Importe a recibir` (`$ 6,248.50`), `Método de pago` (`Transferencia bancaria`, `Efectivo`, `Tarjeta de débito/crédito`), `Referencia` (`Folio o últimos 4 dígitos`).
+  - **Core (`src/SistemaFuneraria.Core/Entities/Pago.cs`, `Enums/TipoPago.cs`, `MetodoPago.cs`)**:
+    - `TipoPago`: `Enganche = 1`, `Contado = 2`, `Mensualidad = 3`, `AbonoCapital = 4`, `Liquidacion = 5`.
+    - `MetodoPago`: `Efectivo = 1`, `TransferenciaBancaria = 2`, `Tarjeta = 3`.
+    - `Pago`: `Id (Guid)`, `Folio (string)` (`PAG-2026-000001`), `VentaId (Guid)`, `FinanciamientoId (Guid?)`, `MensualidadId (Guid?)`, `CajeroId (string)`, `Tipo (TipoPago)`, `Metodo (MetodoPago)`, `Referencia (string?)`, `MontoTotal (Dinero)`, `MontoCapital (Dinero)`, `MontoInteres (Dinero)`, `SaldoAnterior (Dinero)`, `SaldoPosterior (Dinero)`, `ClaveIdempotencia (string)`, `FechaPago (DateTimeOffset)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `Pago.Crear(...)` validando que `MontoCapital + MontoInteres == MontoTotal`.
+  2. Si `Metodo` es `TransferenciaBancaria` o `Tarjeta`, exige que `Referencia` no esté vacía (mínimo 4 caracteres: `"Folio o últimos 4 dígitos"` como indica la *Captura 10*).
+  3. Valida formato de `Folio` (`^PAG-\d{4}-\d{6}$`) y `ClaveIdempotencia` obligatoria (`RNF-04`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Exigencia de Referencia cuando el método de pago es Transferencia bancaria (Captura 10)
+    Dado un cobro de Mensualidad por $6,248.50 con MetodoPago "TransferenciaBancaria"
+    Cuando se intenta crear la entidad Pago con Referencia vacía
+    Entonces el dominio lanza ReglaNegocioException indicando "La referencia (folio o últimos 4 dígitos) es obligatoria para transferencias y tarjetas"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `MontoTotal <= 0`, desglose `MontoCapital + MontoInteres != MontoTotal`, `Referencia` vacía en medios electrónicos.
+  - **Pruebas Obligatorias**: `PagoTests.cs` probando los 5 `TipoPago` y los 3 `MetodoPago`.
+  - **Blast Radius & Rollback**: Máximo 190 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-075/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-076`: EF Core `PagoConfiguration`, Secuencia PostgreSQL `seq_pagos_folio` y Migración `AddPagosCaja`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` | **Carril**: Carril 1 (`Infrastructure`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-059`, `SF-075`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **BD PostgreSQL (`pagos`)**:
+    - Secuencia `CREATE SEQUENCE seq_pagos_folio START WITH 1 INCREMENT BY 1;` (`RF-REC-01`).
+    - Índices únicos en `folio` (`ix_pagos_folio`) y `clave_idempotencia` (`ix_pagos_clave_idempotencia`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `PagoConfiguration.cs` mapeando todos los campos `Dinero` a `numeric(18,2)`.
+  2. Agrega en `AppDbContext` el helper `ObtenerSiguienteFolioPagoAsync(int anio, CancellationToken ct)` que ejecuta `SELECT nextval('seq_pagos_folio')` y formatea `PAG-{anio}-{consecutivo:D6}`.
+  3. Genera la migración reversible `AddPagosCaja`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Generación secuencial sin huecos ni colisiones de folios PAG-2026-XXXXXX
+    Dada la secuencia PostgreSQL seq_pagos_folio activa
+    Cuando se solicitan dos folios consecutivos en el año 2026
+    Entonces se obtienen "PAG-2026-000001" y "PAG-2026-000002" y cualquier intento de insertar una ClaveIdempotencia repetida es rechazado por índice único
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `Down()` de la migración elimina la tabla `pagos` y la secuencia `seq_pagos_folio`.
+  - **Pruebas Obligatorias**: Test de integración con Testcontainers verificando `seq_pagos_folio` e índice de idempotencia.
+  - **Blast Radius & Rollback**: Máximo 210 LOCs. Rollback: `dotnet ef database update <PrevMigration>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-076/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-077`: `ICobranzaService.AplicarPagoMensualidadAsync` (ACID + Concurrencia `xmin` + Idempotencia) y `ObtenerCorteDelDiaAsync`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` | **Carril**: Carril 1 (`Application`) | **Asignado a**: Reydescel (`@reydescel`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-076`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 10 — Caja y cobranza*)**:
+    - Cobro de `Mensualidad` sobre la primera cuota pendiente/vencida (`RF-COB-02`, importe exacto `$6,248.50`).
+    - Tarjeta derecha `Corte del día`: `Saldo inicial` (`$2,000.00`), `Pagos recibidos` (`12`), `Ingresos del día` (`$74,982.00`), `Total en caja` (`$76,982.00`).
+    - Tarjeta derecha inferior: `8 pagos requieren atención` (`Contacta a los clientes con mensualidades vencidas` / `Revisar cartera vencida`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. En `AplicarPagoMensualidadAsync`:
+     - Si ya existe un `Pago` con la misma `ClaveIdempotencia`, devuelve el recibo existente (`200 OK` idempotente).
+     - Identifica la mensualidad `Pendiente` o `Vencida` con menor `NumeroCuota` (`RF-COB-02`).
+     - Valida que `ImporteRecibido == mensualidad.MontoTotalCuota.Monto` (cero pagos parciales o montos distintos a la cuota).
+     - Dentro de una transacción ACID: marca la `Mensualidad` como `Pagada`, descuenta `mensualidad.CapitalProgramado` del `Financiamiento.SaldoInsoluto` (si llega a `$0.00`, marca el financiamiento y la venta como `Liquidado`), inserta el `Pago` con folio `PAG-YYYY-XXXXXX` y ejecuta `SaveChangesAsync`.
+     - Captura `DbUpdateConcurrencyException` (`xmin`) y retorna `Resultado.Fallo(TipoError.Conflicto, "El contrato fue modificado simultáneamente por otro cajero")`.
+  2. Implementa `ObtenerResumenCajaAsync()` que devuelve `CorteDelDiaDto` (`SaldoInicial = 2000m`, `PagosRecibidosHoy`, `IngresosDelDia`, `TotalEnCaja = SaldoInicial + IngresosDelDia`, `PagosVencidosCount`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Aplicación de pago de mensualidad ordinaria actualiza cuota, saldo insoluto y Corte del día
+    Dado el contrato "CTR-2024-0118" de "Elena Vargas" con cuota vencida de $6,248.50
+    Cuando el cajero invoca AplicarPagoMensualidadAsync por $6,248.50 vía "TransferenciaBancaria" con referencia "9841"
+    Entonces la cuota pasa a "Pagada", el SaldoInsoluto disminuye exactamente en el capital de esa cuota, se genera el folio "PAG-2026-000001" y "Ingresos del día" suma $6,248.50
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Rechazo de monto distinto a la cuota (`400`), contrato ya liquidado (`409`), colisión concurrente `xmin` (`409`).
+  - **Pruebas Obligatorias**: `CobranzaServiceTests.cs` probando pago ordinario, idempotencia y `DbUpdateConcurrencyException`.
+  - **Blast Radius & Rollback**: Máximo 250 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-077/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-078`: `CobranzaController` (`GET /api/v1/cobranza/resumen-caja`, `GET /contrato/{folio}`, `POST /mensualidad`, `GET /recibos/{folio}`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` | **Carril**: Carril 2 (`Api`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-077`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **API (`src/SistemaFuneraria.Api/Controllers/V1/CobranzaController.cs`)**:
+    - `GET /api/v1/cobranza/resumen-caja`: devuelve `CorteDelDiaDto` y conteo de alertas (`8 pagos requieren atención`).
+    - `GET /api/v1/cobranza/contrato/{folio}`: localiza el contrato (`CTR-2024-0118`) y devuelve para las 3 tarjetas de operación (`Mensualidad`, `Abono a capital`, `Liquidación`) los importes sugeridos/exactos en vivo.
+    - `POST /api/v1/cobranza/mensualidad`: aplica el pago ordinario leyendo el header `X-Idempotency-Key` (o propiedad `ClaveIdempotencia`).
+    - `GET /api/v1/cobranza/recibos/{folio}`: devuelve `ReciboPagoDto` para impresión.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `CobranzaController` protegido con `[Authorize(Roles = "Administrador,Cajero")]`.
+  2. Mapea conflictos de concurrencia (`TipoError.Conflicto`) a HTTP `409 Conflict` (`ProblemDetails`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Vendedor intenta cobrar en Caja y recibe 403 Forbidden
+    Dado un usuario autenticado únicamente con rol "Vendedor"
+    Cuando envía POST "/api/v1/cobranza/mensualidad"
+    Entonces el endpoint responde HTTP 403 Forbidden porque la cobranza está restringida a Cajero y Administrador
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Si falta `ClaveIdempotencia`, devuelve `400 Bad Request`.
+  - **Pruebas Obligatorias**: Pruebas unitarias de `CobranzaController`.
+  - **Blast Radius & Rollback**: Máximo 190 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-078/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-079`: Wrapper JS `cobranzaApi.js` con Generación de `crypto.randomUUID()` para `ClaveIdempotencia`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` | **Carril**: Carril 2 (`Web JS`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-078`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **JS (`src/SistemaFuneraria.Web/wwwroot/js/api/cobranzaApi.js`)**:
+    - `obtenerResumenCaja()`, `buscarContratoParaCobro(folio)`, `aplicarPagoMensualidad(payload)`, `aplicarAbonoCapital(payload)`, `aplicarLiquidacion(payload)`, `obtenerRecibo(folioPago)`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Implementa `cobranzaApi.js` generando una `ClaveIdempotencia` única (`crypto.randomUUID()`) por cada intención de cobro en pantalla, de modo que si el cajero hace doble clic o reintenta por red lenta se envíe la misma llave y nunca se duplique el cargo.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Protección contra doble clic mediante ClaveIdempotencia en cobranzaApi.js
+    Dado que el cajero seleccionó la mensualidad de $6,248.50 del contrato "CTR-2024-0118"
+    Cuando pulsa "Aplicar pago por $6,248.50"
+    Entonces cobranzaApi.js adjunta una ClaveIdempotencia UUID v4 que garantiza idempotencia en el servidor
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Regenera la llave UUID únicamente cuando cambia el contrato o el tipo de operación seleccionada.
+  - **Pruebas Obligatorias**: Verificación de integración con `CobranzaController`.
+  - **Blast Radius & Rollback**: Máximo 150 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-079/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-080`: Pantalla Figma `/Caja/Index` — Parte 1 (*Captura 10*: Buscador `CTR-2024-0118`, Card de Cliente con Badge `1 vencido` y 3 Tarjetas Selector `Mensualidad` / `Abono a capital` / `Liquidación`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-029`, `SF-079`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 10 — Operación diaria · Caja y cobranza*)**:
+    - Cabecera: `OPERACIÓN DIARIA` / `Caja y cobranza` / `Registra pagos, abonos a capital y liquidaciones anticipadas.` + pill superior derecha con punto verde **`● Caja abierta · Desde las 08:02`**.
+    - Columna izquierda (`Registrar movimiento` / `Localiza el contrato para aplicar un pago.`):
+      - Input buscador con ícono de lupa: `CTR-2024-0118` (soporta query string `?contrato=CTR-2024-0118` al venir desde `/Contratos`).
+      - **Card crema del cliente localizado**: Avatar circular `EV`, **Elena Vargas**, subtítulo `CTR-2024-0118 · Lote RO-B-027`, y a la derecha badge rosa **`1 vencido`**.
+      - **3 Tarjetas de Selección de Operación**:
+        1. **`Mensualidad`** (`Pago ordinario`) — con ícono de calendario/tarjeta y borde verde activo (`--forest`).
+        2. **`Abono a capital`** (`Reduce mensualidad`) — con ícono de gráfica descendente.
+        3. **`Liquidación`** (`Cierre anticipado`) — con ícono de check.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea `Pages/Caja/Index.cshtml` con el layout de 2 columnas de la *Captura 10*.
+  2. Al escribir un folio (o recibir `?contrato=CTR-2024-0118`), invoca `cobranzaApi.buscarContratoParaCobro(folio)` y renderiza la card del cliente (`EV · Elena Vargas`) y las 3 tarjetas de operación.
+  3. Al alternar entre `Mensualidad`, `Abono a capital` y `Liquidación`, actualiza automáticamente el campo `Importe a recibir` y el texto del botón principal `Aplicar pago por $...`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Localización del contrato CTR-2024-0118 en Caja y cobranza (Captura 10)
+    Dado que el cajero abre "/Caja?contrato=CTR-2024-0118"
+    Cuando la vista consulta GET "/api/v1/cobranza/contrato/CTR-2024-0118"
+    Entonces muestra la tarjeta de "Elena Vargas" con avatar "EV", "CTR-2024-0118 · Lote RO-B-027", el badge rosa "1 vencido" y selecciona por defecto la tarjeta "Mensualidad" con importe "$6,248.50"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Si el contrato ya está `Liquidado`, deshabilita las 3 tarjetas y muestra aviso `"Este contrato ya se encuentra liquidado en su totalidad"`.
+  - **Pruebas Obligatorias**: Captura comparativa contra la mitad superior izquierda de la *Captura 10*.
+  - **Blast Radius & Rollback**: Máximo 230 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-080/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-081`: Pantalla Figma `/Caja/Index` — Parte 2 (*Captura 10*: Formulario `Importe a recibir`, `Método de pago`, `Referencia`, Botón `Aplicar pago por $6,248.50`, Card `Corte del día` y Alerta `8 pagos requieren atención`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-080`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 10 — Parte inferior e izquierda/derecha*)**:
+    - Formulario de cobro:
+      - `Importe a recibir`: input con prefijo `$` y valor `6,248.50` (solo lectura en `Mensualidad` y `Liquidación`; editable en `Abono a capital`).
+      - `Método de pago`: select con `Transferencia bancaria`, `Efectivo`, `Tarjeta`.
+      - `Referencia`: input `Folio o últimos 4 dígitos`.
+      - Botón ancho completo en verde oliva (`--forest`): **`Aplicar pago por $6,248.50`**.
+    - Columna derecha:
+      - **Card `Corte del día`** (fecha `18 de noviembre de 2025`): filas `Saldo inicial` (`$2,000.00`), `Pagos recibidos` (`12`), `Ingresos del día` (`$74,982.00`), línea divisoria y **`Total en caja $76,982.00`**, más botón secundario **`Preparar corte`** (que abre modal de resumen de corte por método de pago).
+      - **Card de alerta**: ícono campana sobre fondo rosa suave, título **`8 pagos requieren atención`**, texto `Contacta a los clientes con mensualidades vencidas.`, enlace **`Revisar cartera vencida`** ($\rightarrow$ `/Contratos?tab=Vencidos`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Completa el formulario de cobro y las 2 tarjetas de la columna derecha en `Pages/Caja/Index.cshtml`.
+  2. Al hacer clic en `Aplicar pago por $6,248.50`, ejecuta `cobranzaApi.aplicarPagoMensualidad(...)`, actualiza en vivo la tarjeta `Corte del día` y el badge del Sidebar, y muestra notificación con enlace directo al recibo emitido (`/Caja/Recibo?folio=PAG-...`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Cobro en Caja actualiza en tiempo real el Corte del día y el enlace a cartera vencida (Captura 10)
+    Dado que el cajero tiene cargado el contrato "CTR-2024-0118" por "$6,248.50" con "Transferencia bancaria" y Referencia "4821"
+    Cuando hace clic en "Aplicar pago por $6,248.50"
+    Entonces el pago se registra en API, el contador "Pagos recibidos" del Corte del día incrementa en 1, "Total en caja" suma $6,248.50 y se ofrece imprimir el recibo PAG-2026-XXXXXX
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Validación de `Referencia` obligatoria cuando no es `Efectivo`; modal `Preparar corte` desglosa efectivo vs transferencias vs tarjetas.
+  - **Pruebas Obligatorias**: Captura completa de `/Caja/Index` idéntica a la *Captura 10*.
+  - **Blast Radius & Rollback**: Máximo 240 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-081/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-082`: Vista Imprimible de Recibo Oficial `/Caja/Recibo` (`PAG-2026-XXXXXX` con Desglose Capital/Interés/Saldo Posterior)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-078`, `SF-081`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Web (`Pages/Caja/Recibo.cshtml` — `RF-REC-01`, `RF-REC-02`)**:
+    - Muestra membresía institucional **Sistema Funerario · Gestión Memorial** (*Sucursal Jardines del Valle*), `Folio de Recibo` (`PAG-2026-000001`), `Fecha y hora`, `Contrato` (`CTR-2024-0118`), `Cliente` (`Elena Vargas`), `Lote` (`RO-B-027`), `Concepto` (`Mensualidad #X` / `Abono a capital` / `Liquidación`), `Método de pago` y `Referencia`.
+    - Tabla de desglose financiero: `Saldo anterior`, `Aplicado a Capital`, `Aplicado a Interés`, `Importe total pagado`, `Nuevo saldo insoluto`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Construye `Pages/Caja/Recibo.cshtml` consumiendo `GET /api/v1/cobranza/recibos/{folio}`.
+  2. Incluye botón `"Imprimir comprobante"` (`window.print()`) y botón `"Volver a Caja"` (`/Caja`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Emisión e impresión de recibo oficial PAG-2026-000001 con desglose de capital e interés (RF-REC-02)
+    Dado un pago registrado con folio "PAG-2026-000001"
+    Cuando el cajero navega a "/Caja/Recibo?folio=PAG-2026-000001"
+    Entonces se visualizan el Saldo anterior, Monto aplicado a Capital, Monto aplicado a Interés y Saldo posterior cuadrando al centavo
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Hoja de impresión limpia sin barra lateral ni topbar (`@media print`).
+  - **Pruebas Obligatorias**: Captura del recibo en pantalla y en vista de impresión.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-082/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-083`: Suite QA HTTP de Pagos Ordinarios, Orden de Cuotas y Prueba de Estrés Concurrente `ST-04` (`409 Conflict` con `Task.WhenAll`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.8.0` (Cierre de Milestone) | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-075` a `SF-082`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Tests (`tests/SistemaFuneraria.Tests/Integration/Api/CobranzaConcurrenciaTests.cs`)**: Certifica `ST-04` (`docs/03-plan-pruebas.md`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea un contrato financiado activo en PostgreSQL Testcontainers.
+  2. Dispara simultáneamente con `Task.WhenAll` 2 peticiones `POST /api/v1/cobranza/mensualidad` con distinta `ClaveIdempotencia` apuntando al mismo contrato y cuota al mismo milisegundo.
+  3. Verifica que exactamente **una** responda `200 OK` (generando un único recibo `PAG-2026-XXXXXX`) y la otra responda `409 Conflict` (`ProblemDetails`), dejando el `SaldoInsoluto` descontado una sola vez.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Certificación de concurrencia optimista xmin ante dos cajeros cobrando el mismo contrato al mismo tiempo (ST-04)
+    Dado el contrato "CTR-2024-0118" con cuota pendiente #1
+    Cuando dos peticiones HTTP POST "/api/v1/cobranza/mensualidad" se ejecutan en paralelo con Task.WhenAll
+    Entonces exactamente una petición responde 200 OK y la otra responde 409 Conflict sin duplicar el cobro ni corromper el SaldoInsoluto
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: También prueba que enviar 2 veces la **misma** `ClaveIdempotencia` devuelva el mismo recibo sin error ni doble descuento.
+  - **Pruebas Obligatorias**: `CobranzaConcurrenciaTests.cs` 100% en verde.
+  - **Blast Radius & Rollback**: Máximo 220 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-083/` (Cierra el Milestone `v0.8.0`).
+
+---
+
+## 13. Fichas Técnicas BDD — Milestone 9 (`v0.9.0`: Abono a Capital, Liquidación, Dashboard "Resumen", "Reportes" & "Configuración" — CODE FREEZE — `SF-084` a `SF-094`)
+
+#### Ficha Técnica BDD — `SF-084`: Dominio `CalculadorAbonoCapital` (100% a Capital, Plazo Fijo, Nueva Cuota `$7,523.51` en `CP-07`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 1 (`Core + Tests`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-058`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Core (`src/SistemaFuneraria.Core/Services/CalculadorAbonoCapital.cs` — `RF-ABO-01`, `RF-ABO-02`, `CP-07`)**:
+    - Recibe el `SaldoInsoluto` actual, el `MontoAbono` ($100\%$ directo a capital), el número de cuotas pendientes restantes $m$ (manteniendo el plazo original fijo) y la tasa anual del contrato.
+    - Calcula el `NuevoSaldoInsoluto = SaldoInsoluto - MontoAbono` y regenera las $m$ cuotas pendientes restantes con la fórmula francesa y ajuste al centavo en la última cuota.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Valida que el contrato no tenga cuotas `Vencida` sin cubrir (`RF-ABO-01`: primero debe estar al corriente).
+  2. Valida que `0 < MontoAbono < SaldoInsoluto` (si `MontoAbono >= SaldoInsoluto`, debe usar la operación `Liquidación`).
+  3. Verifica con prueba unitaria el caso exacto `CP-07`: Lote 2 gavetas (`$120,000`), enganche `20%`, 12 meses (`16%` anual), tras pagar las cuotas 1, 2 y 3 (`SaldoInsoluto = $74,078.00`), al aplicar un `Abono a capital` de **`$10,000.00`**, el nuevo saldo es **`$64,078.00`** y las 9 cuotas restantes (`4..12`) bajan de `$8,710.16` a **`$7,523.51`** (con ajuste al centavo en la cuota 12).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Recálculo de mensualidad mantendo plazo fijo tras Abono a Capital de $10,000.00 (CP-07)
+    Dado un financiamiento de 12 meses al 16% anual con 3 cuotas pagadas y SaldoInsoluto de $74,078.00
+    Cuando se aplica un Abono a capital de $10,000.00
+    Entonces el 100% ($10,000.00) se descuenta del capital dejando SaldoInsoluto en $64,078.00 y las 9 cuotas restantes se recalculan a $7,523.51 manteniendo el plazo original
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Rechazo de abono si hay mensualidad vencida; rechazo si `MontoAbono >= SaldoInsoluto`.
+  - **Pruebas Obligatorias**: `CalculadorAbonoCapitalTests.cs` certificando `CP-07` al centavo.
+  - **Blast Radius & Rollback**: Máximo 190 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-084/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-085`: Dominio `CalculadorLiquidacion` (Capital + Interés Devengado hasta Fecha de Corte, Cero Penalización, `$77,893.39` en `CP-08`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 1 (`Core + Tests`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-084`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Core (`src/SistemaFuneraria.Core/Services/CalculadorLiquidacion.cs` — `RF-LIQ-01`, `RF-LIQ-02`, `CP-08`)**:
+    - Calcula el monto exacto para liquidar anticipadamente un contrato: `SaldoInsoluto` + `InteresDevengado` del periodo en curso (o de cuotas vencidas no pagadas), **condonando el $100\%$ de los intereses futuros no devengados** y con **$0.00 de penalización**.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Implementa `CalcularMontoLiquidacion(financiamiento, fechaCorte)`:
+     - Suma el `SaldoInsoluto` actual más el interés devengado exigible a la fecha de corte (`CP-08`: con `SaldoInsoluto = $76,868.49` e interés del periodo en curso `$1,024.91` = **`$77,893.39`** / `$77,893.40` según redondeo `MidpointRounding.ToEven`).
+  2. Al aplicar la liquidación en la entidad `Financiamiento`, marca todas las cuotas pendientes futuras con interés condonado, establece `SaldoInsoluto = $0.00` y cambia el estado del financiamiento y del contrato a `Liquidado`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Liquidación anticipada condona intereses futuros sin penalización (CP-08)
+    Dado un financiamiento de 12 meses con 3 cuotas pagadas y SaldoInsoluto de $76,868.49
+    Cuando se calcula y ejecuta la Liquidación anticipada en el periodo 4
+    Entonces se cobra únicamente el capital insoluto más el interés devengado del periodo actual ($77,893.39), se condonan los intereses de las cuotas 5 a 12, el SaldoInsoluto queda en $0.00 y el contrato pasa a estado "Liquidado"
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Liquidación sobre un contrato ya `Liquidado` lanza `ReglaNegocioException`.
+  - **Pruebas Obligatorias**: `CalculadorLiquidacionTests.cs` certificando `CP-08`.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-085/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-086`: Dominio `EvaluadorVencimientos` con `TimeProvider` (`Pendiente` $\rightarrow$ `Vencida` con `$0.00` de Recargo Moratorio — `CP-09`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 1 (`Core + Application`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-085`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Core (`src/SistemaFuneraria.Core/Services/EvaluadorVencimientos.cs` — `RF-MOR-01`, `RF-MOR-02`, `CP-09`)**:
+    - Evalúa usando `TimeProvider` todas las cuotas en estado `Pendiente` cuya `FechaVencimiento < fechaHoy`.
+    - Cambia su estado a `Vencida` y el estado del financiamiento a `EnMora` (**Vencido** en UI), **manteniendo intacto al centavo el `MontoTotalCuota` original ($0.00 de interés moratorio o recargo)**.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Nunca uses `DateTime.Now` ni `DateTime.UtcNow`; recibe la fecha actual desde `TimeProvider.GetUtcNow()`.
+  2. Verifica que al vencer una cuota de `$6,248.50` (`CP-09`), su `Estado` cambie a `Vencida` pero `MontoTotalCuota` permanezca exactamente en `$6,248.50` (`RecargoMoratorio = $0.00`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Transición automática de cuota Pendiente a Vencida sin alterar el monto de la cuota (CP-09)
+    Dada una mensualidad #4 en estado "Pendiente" por $6,248.50 con FechaVencimiento "2025-11-02"
+    Cuando EvaluadorVencimientos se ejecuta con FakeTimeProvider en fecha "2025-11-18"
+    Entonces la mensualidad cambia a estado "Vencida", el contrato se marca con atraso y el monto a cobrar sigue siendo exactamente $6,248.50 ($0.00 de mora)
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Cuota que vence exactamente hoy (`FechaVencimiento == fechaHoy`) sigue `Pendiente` hasta el día siguiente.
+  - **Pruebas Obligatorias**: `EvaluadorVencimientosTests.cs` usando `FakeTimeProvider` (`CP-09`).
+  - **Blast Radius & Rollback**: Máximo 160 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-086/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-087`: Endpoints `POST /api/v1/cobranza/abono-capital`, `POST /api/v1/cobranza/liquidacion` y Conexión de las 3 Tarjetas en `/Caja/Index`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 2 (`Application + Api + Web JS`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-078`, `SF-081`, `SF-084`, `SF-085`, `SF-086`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **API (`CobranzaController.cs`)**:
+    - `POST /api/v1/cobranza/abono-capital`
+    - `POST /api/v1/cobranza/liquidacion`
+  - **Figma (*Captura 10 — Caja y cobranza*)**: Activa las tarjetas 2 (`Abono a capital · Reduce mensualidad`) y 3 (`Liquidación · Cierre anticipado`) en `/Caja/Index`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. En `CobranzaService`, implementa `AplicarAbonoCapitalAsync` y `AplicarLiquidacionAsync` dentro de transacciones ACID protegidas con `xmin` y `ClaveIdempotencia`.
+  2. En `/Caja/Index`, cuando el cajero selecciona la tarjeta `Abono a capital`, habilita la edición de `Importe a recibir` y muestra una previsualización de a cuánto bajará la nueva mensualidad; cuando selecciona `Liquidación`, coloca automáticamente el monto total de liquidación y bloquea el input.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Cajero selecciona la tarjeta "Liquidación" en Caja y cierra anticipadamente el contrato (Captura 10)
+    Dado que el cajero localizó un contrato activo en "/Caja"
+    Cuando hace clic en la tarjeta "Liquidación · Cierre anticipado" y pulsa "Aplicar pago por $..."
+    Entonces se invoca POST "/api/v1/cobranza/liquidacion", el contrato queda en estado "Liquidado" con saldo $0.00 y se emite el recibo correspondiente
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Conflicto `409` si intenta abonar a capital teniendo una cuota vencida pendiente de pago.
+  - **Pruebas Obligatorias**: Pruebas de servicio y controlador para ambos endpoints.
+  - **Blast Radius & Rollback**: Máximo 240 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-087/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-088`: `IDashboardReportesService` y `DashboardReportesController` (`GET /api/v1/dashboard/resumen`, `GET /api/v1/reportes/indicadores`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 2 (`Application + Api`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-068`, `SF-077`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 1 — Resumen* & *Captura 11 — Reportes*)**:
+    - `GET /api/v1/dashboard/resumen`:
+      - 4 KPIs: `VentasDelMes` (`$486,500`, `+12.4% vs. mes anterior`), `CobranzaMensual` (`$238,240`, `+8.1% vs. mes anterior`), `ContratosActivos` (`128`, `6 nuevos este mes`), `PagosVencidosCount` (`8`, `$24,860 por recuperar`).
+      - Serie de 6 meses `VentasYCobranza` (`Jun`, `Jul`, `Ago`, `Sep`, `Oct`, `Nov`).
+      - `Disponibilidad`: `TotalDisponibles` (`64`), desglose `2 gavetas (28)`, `3 gavetas (21)`, `4 gavetas (15)` y `PorcentajeOcupacion` (`64%`).
+      - `ActividadReciente`: últimos movimientos (`Cliente`, `Email`, `Iniciales`, `Movimiento`, `Referencia` `CTR-...`, `Importe`, `Estado` `Aplicado`/`Firmado`/`En revisión`, `FechaRelativa`).
+    - `GET /api/v1/reportes/indicadores?periodo=Noviembre+2025&sucursal=Jardines+del+Valle`:
+      - 3 KPIs: `ConversionCotizacion` (`32.8%`), `TicketPromedio` (`$147,420`), `IndiceMorosidad` (`6.2%`).
+      - `VentasPorTipoLote`: `Lote 2 gavetas ($198,000)`, `Lote 3 gavetas ($168,500)`, `Lote 4 gavetas ($120,000)`.
+      - `MetaMensual`: `PorcentajeAvance` (`81%`), `Acumulado` (`$486,500`), `ObjetivoMensual` (`$600,000`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Implementa consultas agregadas rápidas con `AsNoTracking()` en `DashboardReportesService.cs`.
+  2. Expón `GET /api/v1/dashboard/resumen` (`[Authorize]`) y `GET /api/v1/reportes/indicadores` (`[Authorize(Roles = "Administrador")]`), más su wrapper `reportesApi.js`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Consulta de métricas del Dashboard Resumen y desglose de disponibilidad por gavetas (Captura 1)
+    Dado el inventario y cartera de la sucursal "Jardines del Valle"
+    Cuando el cliente invoca GET "/api/v1/dashboard/resumen"
+    Entonces recibe HTTP 200 OK con los 4 KPIs superiores, la serie de 6 meses de Ventas vs Cobranza, la disponibilidad por 2, 3 y 4 gavetas y la lista de Actividad reciente
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: División por cero protegida cuando aún no hay ventas en el periodo (`0%`).
+  - **Pruebas Obligatorias**: `DashboardReportesServiceTests.cs`.
+  - **Blast Radius & Rollback**: Máximo 240 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-088/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-089`: Pantalla Figma `/Index` (`Resumen` / Dashboard — *Captura 1*: Saludo, 4 KPI Cards, Gráfica Barras 6 Meses, Dona `Disponibilidad` y `Actividad reciente`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-029`, `SF-088`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 1 — Resumen*)**:
+    - Fecha superior en mayúsculas (`MARTES, 18 DE NOVIEMBRE`), título **`Buenos días, Andrea`** (nombre dinámico del usuario autenticado), subtítulo `Este es el estado de la operación en Jardines del Valle.` y botón derecho `+ Nueva venta` ($\rightarrow$ `/Ventas/Nueva`).
+    - **4 KPI Cards**:
+      1. `Ventas del mes` (`$486,500` · `+12.4% vs. mes anterior`, ícono documento dorado).
+      2. `Cobranza mensual` (`$238,240` · `+8.1% vs. mes anterior`, ícono calendario dorado).
+      3. `Contratos activos` (`128` · `6 nuevos este mes`, ícono usuarios).
+      4. `Pagos vencidos` (`8` · `$24,860 por recuperar` en `--rose`, ícono campana rosa).
+    - **Fila central (2 tarjetas)**:
+      - Izquierda (8 cols): `Ventas y cobranza` (`Comportamiento de los últimos 6 meses`), selector `Últimos 6 meses`, leyenda `● Ventas` (`--forest`) / `● Cobranza` (`--gold`), gráfica de barras dobles (`Jun` a `Nov`, eje Y `$0` a `$500k`).
+      - Derecha (4 cols): `Disponibilidad` (`Inventario por tipo de lote`), enlace `Ver catálogo` ($\rightarrow$ `/Lotes`), dona SVG bicolor (`64 disponibles` al centro), desglose `● 2 gavetas (28)`, `● 3 gavetas (21)`, `● 4 gavetas (15)` y barra inferior `Ocupación total 64%`.
+    - **Fila inferior (`Actividad reciente`)**:
+      - Tabla con columnas `CLIENTE` (avatar circular `RM`/`LC`/`JS`, nombre y correo), `MOVIMIENTO` (`Mensualidad`, `Nueva venta`, `Abono a capital`), `REFERENCIA` (`CTR-2025-0182`), `IMPORTE` (`$6,248.50`), `ESTADO` (`Aplicado`, `Firmado`, `En revisión`), `FECHA` (`Hoy, 10:42`) y enlace `Ver todos` ($\rightarrow$ `/Contratos`).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Construye `Pages/Index.cshtml` replicando al píxel la *Captura 1*.
+  2. Renderiza la gráfica de barras dobles y la dona de disponibilidad usando SVG/CSS limpio alimentado desde `GET /api/v1/dashboard/resumen` (sin librerías pesadas externas).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Carga del Dashboard Resumen con datos reales desde el API (Captura 1)
+    Dado que Andrea Morales inicia sesión y aterriza en "/"
+    Cuando la página consume GET "/api/v1/dashboard/resumen"
+    Entonces se renderizan el saludo personalizado, los 4 KPIs, la gráfica de 6 meses, la dona de disponibilidad por gavetas y la tabla de Actividad reciente
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: 5 estados de UI completos; todos los importes con `tabular-nums`.
+  - **Pruebas Obligatorias**: Captura comparativa lado a lado contra la *Captura 1*.
+  - **Blast Radius & Rollback**: Máximo 260 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-089/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-090`: Pantalla Figma `/Reportes/Index` (*Captura 11*: Filtros `Periodo`/`Sucursal`, `Descargar reporte`, 3 KPIs, Barras `Ventas por tipo de lote` y Dona `Meta mensual 81%`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-088`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 11 — Analítica · Reportes*)**:
+    - Subtítulo: `ANALÍTICA` / Título: `Reportes` / Bajada: `Indicadores comerciales, cobranza y desempeño por periodo.` / Botón superior derecho: `Descargar reporte` (exporta CSV/impresión del reporte).
+    - Barra de filtros con 2 selects con etiqueta integrada: `Periodo: Noviembre 2025` y `Sucursal: Jardines del Valle`.
+    - **3 KPI Cards**:
+      1. `Conversión de cotización`: **`32.8%`** (`+4.2 pts vs. octubre`).
+      2. `Ticket promedio`: **`$147,420`** (`lotes de 2 y 3 gavetas`).
+      3. `Índice de morosidad`: **`6.2%`** (`meta menor a 8.0%`).
+    - **Fila inferior (2 tarjetas)**:
+      - Izquierda: `Ventas por tipo de lote` (`Participación en ingresos del mes`) con 3 barras de progreso horizontales en verde bosque (`--forest`):
+        - `Lote 2 gavetas` — **`$198,000`**
+        - `Lote 3 gavetas` — **`$168,500`**
+        - `Lote 4 gavetas` — **`$120,000`**
+      - Derecha: `Meta mensual` (`Avance comercial de noviembre`), dona circular con **`81%`** (`de la meta`) al centro, y filas inferiores `Acumulado: $486,500` y `Objetivo mensual: $600,000`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Construye `Pages/Reportes/Index.cshtml` replicando al píxel la *Captura 11*.
+  2. Conecta los selectores `Periodo` y `Sucursal` a `GET /api/v1/reportes/indicadores` y habilita la descarga CSV en el botón `Descargar reporte`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Visualización y exportación de indicadores en la pantalla Reportes (Captura 11)
+    Dado que la Administradora ingresa a "/Reportes"
+    Cuando selecciona el periodo "Noviembre 2025" y la sucursal "Jardines del Valle"
+    Entonces se muestran los 3 KPIs (Conversión, Ticket promedio, Morosidad), las barras de Ventas por tipo de lote, la dona de Meta mensual y el botón "Descargar reporte" genera el archivo CSV
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Acceso restringido a `Administrador` en el menú lateral y ruta.
+  - **Pruebas Obligatorias**: Captura comparativa lado a lado contra la *Captura 11*.
+  - **Blast Radius & Rollback**: Máximo 230 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-090/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-091`: Entidad `ConfiguracionSucursal`, `IConfiguracionUsuariosService` y `ConfiguracionController` (`Sucursal` + CRUD Admin de `Usuarios y roles`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 2 (`Core + Infrastructure + Application + Api`) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-023`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 12 — Administración · Configuración*)**:
+    - Datos de la sucursal: `Nombre comercial` (`Jardines del Valle`), `Teléfono de atención` (`55 4120 9800`), `Correo operativo` (`operacion@sistemafunerario.mx`), `Dirección` (`Av. Paseo de los Cipreses 420, Zapopan, Jalisco`).
+    - Switches operativos: `Recordatorios de pago` (`Activa avisos previos al vencimiento`) y `Resumen diario de caja` (`Envía el corte al cierre del turno`).
+    - Pestaña `Usuarios y roles`: CRUD completo de usuarios del sistema (`Administrador`, `Vendedor`, `Cajero`, activar/desactivar cuenta, desbloquear lockout y restablecer contraseña).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea la tabla/entidad `ConfiguracionSucursal` con semilla inicial idéntica a la *Captura 12* (`Jardines del Valle`, `55 4120 9800`, `operacion@sistemafunerario.mx`, `Av. Paseo de los Cipreses 420, Zapopan, Jalisco`, ambos switches en `true`).
+  2. Crea `ConfiguracionController` (`[Authorize(Roles = "Administrador")]`):
+     - `GET /api/v1/configuracion/sucursal` y `PUT /api/v1/configuracion/sucursal`.
+     - `GET /api/v1/configuracion/usuarios`, `POST /api/v1/configuracion/usuarios`, `PUT /api/v1/configuracion/usuarios/{id}`, `PATCH /api/v1/configuracion/usuarios/{id}/estado` (activar/desactivar o limpiar bloqueo `LockoutEnd`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Administradora actualiza los datos de la sucursal Jardines del Valle y gestiona usuarios (Captura 12)
+    Dado que Andrea Morales tiene rol "Administrador"
+    Cuando envía PUT "/api/v1/configuracion/sucursal" o crea un nuevo usuario con rol "Cajero" en POST "/api/v1/configuracion/usuarios"
+    Entonces los cambios se persisten en PostgreSQL y el nuevo cajero puede iniciar sesión inmediatamente
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Un administrador no puede desactivar ni quitarse el rol `Administrador` a su propia cuenta en sesión (prevención de auto-bloqueo).
+  - **Pruebas Obligatorias**: Pruebas de servicio y controlador para sucursal y CRUD de usuarios.
+  - **Blast Radius & Rollback**: Máximo 250 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-091/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-092`: Pantalla Figma `/Configuracion/Index` (*Captura 12*: Menú Vertical 5 Secciones, Formulario `Datos de la sucursal`, Switches y Pestaña CRUD `Usuarios y roles`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-091`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Figma (*Captura 12 — Administración · Configuración*)**:
+    - Subtítulo: `ADMINISTRACIÓN` / Título: `Configuración` / Bajada: `Ajustes de sucursal, usuarios, parámetros financieros y notificaciones.` / Botón superior derecho: **`Guardar cambios`**.
+    - **Columna izquierda (Menú vertical en card blanca)**:
+      1. `Datos de la sucursal` (activo en fondo crema con texto oscuro).
+      2. `Usuarios y roles`
+      3. `Planes y tasas` (muestra la matriz oficial de enganches `10%, 20%, 30%` y plazos `12, 18, 24, 48 meses`).
+      4. `Notificaciones`
+      5. `Integraciones`
+    - **Columna derecha (`Datos de la sucursal`)**:
+      - Grid 2 columnas: `Nombre comercial` (`Jardines del Valle`), `Teléfono de atención` (`55 4120 9800`).
+      - Fila completa: `Correo operativo` (`operacion@sistemafunerario.mx`).
+      - Fila completa: `Dirección` (`Av. Paseo de los Cipreses 420, Zapopan, Jalisco`).
+      - 2 filas con toggle switch verde oliva (`--forest`):
+        - `Recordatorios de pago` / `Activa avisos previos al vencimiento.`
+        - `Resumen diario de caja` / `Envía el corte al cierre del turno.`
+    - **Pestaña `Usuarios y roles`**: Tabla y modal para crear, editar rol (`Administrador`, `Vendedor`, `Cajero`), desbloquear cuenta o dar de baja usuarios.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Construye `Pages/Configuracion/Index.cshtml` y `configuracionApi.js` replicando al píxel la *Captura 12*.
+  2. Permite cambiar entre las secciones del menú vertical izquierdo (`Datos de la sucursal`, `Usuarios y roles`, `Planes y tasas`, `Notificaciones`, `Integraciones`) y guardar cambios con confirmación visual.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Edición de Datos de la sucursal y switches de notificación en Configuración (Captura 12)
+    Dado que la Administradora abre "/Configuracion"
+    Cuando modifica el "Teléfono de atención", conmuta el switch "Resumen diario de caja" y pulsa "Guardar cambios"
+    Entonces se envía PUT "/api/v1/configuracion/sucursal" y se muestra confirmación de guardado exitoso
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Validaciones de correo y teléfono a 10 dígitos; bloqueo contra auto-eliminación del administrador actual.
+  - **Pruebas Obligatorias**: Captura comparativa lado a lado contra la *Captura 12* y de la pestaña `Usuarios y roles`.
+  - **Blast Radius & Rollback**: Máximo 250 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-092/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-093`: Suite QA HTTP `CP-07` (Abono a Capital `$7,523.51`) y `CP-08` (Liquidación Anticipada `$77,893.39`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-084` a `SF-087`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Tests (`tests/SistemaFuneraria.Tests/Integration/Api/AbonoYLiquidacionControllerTests.cs`)**: Certifica por HTTP `CP-07` y `CP-08`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Crea por HTTP un contrato de 2 gavetas (`$120,000`), `20%` enganche, `12` meses (`16%` anual) y paga las cuotas 1, 2 y 3.
+  2. **Test `CP-07`**: Envía `POST /api/v1/cobranza/abono-capital` por `$10,000.00` y verifica en `GET /api/v1/ventas/{id}/amortizacion` que el `SaldoInsoluto` sea `$64,078.00` y las cuotas `4..12` sean de **`$7,523.51`** (con ajuste en la cuota 12).
+  3. **Test `CP-08`**: Sobre un segundo contrato idéntico con 3 cuotas pagadas, ejecuta la liquidación en `POST /api/v1/cobranza/liquidacion` por **`$77,893.39`** y verifica que el contrato quede en estado `Liquidado` con `SaldoInsoluto == 0.00m`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Certificación HTTP de CP-07 y CP-08 contra PostgreSQL Testcontainers
+    Dado un contrato financiado con 3 mensualidades pagadas
+    Cuando el test de integración ejecuta el Abono a Capital (CP-07) o la Liquidación Anticipada (CP-08)
+    Entonces los saldos insolutos y las cuotas recalculadas en PostgreSQL coinciden al centavo con el oráculo financiero del PRD
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Verifica también el rechazo `409 Conflict` si se intenta abonar a capital con una cuota vencida.
+  - **Pruebas Obligatorias**: `AbonoYLiquidacionControllerTests.cs` 100% en verde.
+  - **Blast Radius & Rollback**: Máximo 220 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-093/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-094`: Suite QA HTTP `CP-09` (Vencimiento sin Mora `$0.00` con `FakeTimeProvider`), Dashboard y Reportes (Cierre `v0.9.0` — CODE FREEZE)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v0.9.0` (Cierre de Milestone — **CODE FREEZE**) | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-086` a `SF-093`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Tests (`tests/SistemaFuneraria.Tests/Integration/Api/VencimientosYReportesTests.cs`)**: Certifica `CP-09` y los endpoints de `/api/v1/dashboard/resumen`, `/api/v1/reportes/indicadores` y `/api/v1/configuracion/*`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Adelanta el reloj en `WebApplicationFactory` usando `FakeTimeProvider` más allá de la fecha de vencimiento de una cuota pendiente.
+  2. Verifica que la cuota pase a `Vencida`, aparezca en el contador `PagosVencidosCount` del Dashboard y de Caja, pero su importe a cobrar tenga **$0.00 de recargo moratorio** (`CP-09`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Certificación HTTP de CP-09 (Cero interés moratorio al vencer una mensualidad)
+    Dado un contrato cuya cuota #1 vencía el día 2 del mes
+    Cuando FakeTimeProvider avanza al día 18 del mes y se consulta el contrato en Caja
+    Entonces la cuota figura como "Vencida" con badge de alerta, pero el importe exigible permanece idéntico a la cuota original ($0.00 de mora)
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: A partir del merge de `SF-094` se declara **Code Freeze funcional** rumbo a `v1.0.0`.
+  - **Pruebas Obligatorias**: `VencimientosYReportesTests.cs` 100% en verde.
+  - **Blast Radius & Rollback**: Máximo 210 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-094/` (Cierra el Milestone `v0.9.0`).
+
+---
+
+## 14. Fichas Técnicas BDD — Milestone 10 (`v1.0.0`: Hardening, Auditoría Visual 13 Capturas, UAT & Go-Live — `SF-095` a `SF-100`)
+
+#### Ficha Técnica BDD — `SF-095`: Hardening de Base de Datos e Índices PostgreSQL (Auditoría Cero Consultas `N+1`, `AsNoTracking` y Tiempos `< 200ms`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v1.0.0` | **Carril**: Carril 1 (`Infrastructure + Application`) | **Asignado a**: Gustavo Lucio (`@gustavolucio`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-094`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Infraestructura (`RNF-01`, `RNF-02`)**: Revisión de todos los servicios de lectura (`LoteService`, `ClienteService`, `CarteraContratosService`, `CobranzaService`, `DashboardReportesService`) para garantizar uso estricto de proyecciones `.Select(...)` + `.AsNoTracking()` y cero consultas `N+1`.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Audita los planes de ejecución en PostgreSQL 16 para las búsquedas de `/Lotes`, `/Clientes`, `/Contratos`, `/Caja` y `/Resumen`.
+  2. Agrega índices compuestos faltantes si alguna consulta realiza *Seq Scan* innecesario.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Tiempo de respuesta sub-200ms en endpoints de lectura y simulación (RNF-01 / RNF-02)
+    Dada una base de datos con el catálogo de 178 lotes y cartera activa
+    Cuando se miden los tiempos de respuesta de GET "/api/v1/lotes", GET "/api/v1/contratos" y POST "/api/v1/simulador/cotizar"
+    Entonces el percentil 95 de respuesta es inferior a 200ms con cero consultas N+1
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Ninguna consulta `GET` deja entidades rastreadas en el `ChangeTracker`.
+  - **Pruebas Obligatorias**: Benchmark/test de tiempos de respuesta en `Tests/Integration/Performance/`.
+  - **Blast Radius & Rollback**: Máximo 160 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-095/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-096`: Auditoría Visual Pixel-Perfect (13 Capturas Figma "Sistema Funerario" + Login) y Accesibilidad WCAG 2.2 AA
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v1.0.0` | **Carril**: Carril 3 (`Web UI`) | **Asignado a**: Juan Romero (`@juanromero`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-094`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **UI/UX (`Web`)**: Contraste $\ge 4.5:1$, navegación por teclado (`Tab`, `Enter`, `Escape` en modales), `aria-label` en botones de ícono (campana, cerrar modal), `tabular-nums` en todas las cifras financieras y fidelidad visual frente a las 13 capturas de Figma.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Recorre las 14 vistas del sistema (`/Cuenta/Login`, `/Cuenta/OlvideContrasena`, `/Index`, `/Lotes`, `/Clientes`, Modal `Registrar nuevo cliente`, `/Ventas/Nueva` Pasos 1–4, `/Contratos`, `/Contratos/Detalle`, `/Caja`, `/Caja/Recibo`, `/Reportes`, `/Configuracion`, `/ParametrosUi`).
+  2. Corrige cualquier desviación de espaciado, tipografía, bordes o etiquetas de accesibilidad.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Cumplimiento de navegación por teclado y contraste WCAG 2.2 AA en las 13 pantallas Sistema Funerario
+    Dadas las 13 pantallas de Figma y el flujo de Login renderizados en el navegador
+    Cuando se auditan con herramientas de accesibilidad y navegación por teclado
+    Entonces todas las vistas obtienen 0 errores críticos de contraste o etiquetas ARIA faltantes
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Responsividad limpia en resoluciones `1366x768`, `1440x900` y `1920x1080`.
+  - **Pruebas Obligatorias**: Álbum comparativo de las 13 capturas de Figma vs aplicación real en `docs/evidencias/SF-096/`.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-096/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-097`: Ejecución Integral del Pipeline CI/CD (`Build + Unit + Integration + Coverage >= 90% Core + Validador de Evidencias`)
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v1.0.0` | **Carril**: Carril 4 (`DevOps / QA`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-095`, `SF-096`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **CI/CD (`.github/workflows/ci-quality-gate.yml`)**: Certificación de cobertura de código ($\ge 90\%$ en `SistemaFuneraria.Core`, $\ge 85\%$ en `SistemaFuneraria.Application`) y `0` warnings de compilación.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Ejecuta `dotnet test --collect:"XPlat Code Coverage"` sobre toda la solución de 6 proyectos.
+  2. Genera el reporte consolidado de cobertura y adjúntalo en `docs/evidencias/SF-097/`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Cobertura de pruebas superior al 90% en el motor financiero Core
+    Dada la suite completa de pruebas unitarias y de integración en SistemaFuneraria.Tests
+    Cuando se ejecuta dotnet test con recolección de cobertura XPlat
+    Entonces el 100% de los tests pasan en verde y la cobertura de línea/rama de SistemaFuneraria.Core es >= 90%
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Cero tests con `[Fact(Skip = ...)]`.
+  - **Pruebas Obligatorias**: Ejecución completa en GitHub Actions y local.
+  - **Blast Radius & Rollback**: Máximo 120 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-097/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-098`: Pruebas de Aceptación de Usuario (UAT) End-to-End de los 4 Escenarios `ST-01` a `ST-04` y CRUDs de `Administrador`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v1.0.0` | **Carril**: Todos los Carriles (Lidera Reydescel + Guillermo) | **Asignado a**: Guillermo Sandoval (`@guillermosandoval`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-097`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **UAT (`docs/03-plan-pruebas.md` — `ST-01` a `ST-04`)**:
+    - `ST-01`: Venta de Contado completa y bloqueo del lote.
+    - `ST-02`: Venta a Crédito + 3 pagos ordinarios + Abono a Capital (`$10,000`) + recálculo de cuota.
+    - `ST-03`: Venta a Crédito + Liquidación anticipada sin penalización y cierre de contrato.
+    - `ST-04`: Concurrencia en Caja (`409 Conflict`) e idempotencia de recibos.
+    - `ST-05 (Nuevo)`: Ciclo completo de CRUDs de `Administrador` (Lotes, Clientes, Ventas/Contratos, Usuarios y Sucursal).
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Ejecuta y documenta con capturas reales y salidas JSON cada uno de los escenarios de sistema de principio a fin.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Aprobación UAT de los flujos críticos de negocio ST-01 a ST-05
+    Dado el sistema Sistema Funerario desplegado con sus 6 proyectos integrados
+    Cuando se ejecutan los flujos ST-01, ST-02, ST-03, ST-04 y ST-05 desde la interfaz web consumiendo la API REST
+    Entonces todos los cálculos, recibos, estados de lotes y permisos por rol funcionan sin defectos SEV-1 ni SEV-2
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Cero defectos `SEV-1` o `SEV-2` abiertos.
+  - **Pruebas Obligatorias**: Acta UAT firmada en `docs/evidencias/SF-098/`.
+  - **Blast Radius & Rollback**: Máximo 150 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-098/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-099`: Auditoría Final de las 100 Carpetas `docs/evidencias/SF-001` a `SF-100` y Matriz de Trazabilidad `02-matriz-trazabilidad.md`
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v1.0.0` | **Carril**: Carril 4 (`QA Gate`) | **Asignado a**: Edgar Acevedo (`@edgaracevedo`) | **Revisor Tech Lead**: Reydescel | **Dependencias**: `SF-098`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Documentación (`docs/02-matriz-trazabilidad.md` & `docs/evidencias/`)**: Verifica que cada requisito funcional (`RF-*`), no funcional (`RNF-*`), caso de prueba (`CP-01` a `CP-10`, `ST-01` a `ST-04`) y pantalla de Figma (*Capturas 1 a 13* + Login) tenga su ticket y su evidencia verificable.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Ejecuta el script validador sobre todo el directorio `docs/evidencias/`.
+  2. Actualiza el estado final de `docs/02-matriz-trazabilidad.md` a `100% Cubierto y Certificado`.
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Verificación de trazabilidad 100% entre Requisitos, Pantallas Figma, Tickets y Pruebas
+    Dado el repositorio candidato a Release v1.0.0
+    Cuando se audita docs/02-matriz-trazabilidad.md y docs/evidencias/
+    Entonces el 100% de los tickets completados cuentan con su README.md de evidencia y sus pruebas automatizadas en verde
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: Ningún enlace roto en la documentación de `/docs`.
+  - **Pruebas Obligatorias**: Script `validate-evidence.sh --all` retorna código `0`.
+  - **Blast Radius & Rollback**: Máximo 150 LOCs. Rollback: `git revert <commit-sha>`.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-099/`.
+
+---
+
+#### Ficha Técnica BDD — `SF-100`: Release Oficial `v1.0.0` (`main`), Tag Git Anotado, `README.md` de Despliegue y Manual Operativo "Sistema Funerario · Gestión Memorial"
+- **Estado**: **Pendiente ⏳** | **Milestone**: `v1.0.0` (Cierre de Proyecto — **GO-LIVE**) | **Carril**: Liderazgo Técnico | **Asignado a**: Reydescel (`@reydescel`) | **Revisor QA**: Edgar Acevedo | **Dependencias**: `SF-099`
+- **Mapa de Alineación (Cero Disparidad)**:
+  - **Release (`README.md`, `CHANGELOG.md`, Git Tag `v1.0.0`)**:
+    - Documentación ejecutiva de arranque en 1 comando (`docker compose up -d` + `dotnet run` para `SistemaFuneraria.Api` y `SistemaFuneraria.Web`), credenciales de prueba por rol (`Administrador`, `Vendedor`, `Cajero`) y guía de operación del sistema **Sistema Funerario · Gestión Memorial**.
+- **Flujo Paso a Paso (Guía Trainee)**:
+  1. Realiza el merge final `dev` $\rightarrow$ `main` tras la aprobación del Quality Gate de Edgar Acevedo (`SF-099`).
+  2. Crea el tag Git anotado `v1.0.0` y publica las notas de versión con el resumen de los 10 Milestones (`v0.1.0` a `v1.0.0`).
+- **Escenarios BDD (Gherkin)**:
+  ```gherkin
+  Escenario: Despliegue limpio desde cero de la versión v1.0.0 en rama main
+    Dado un entorno limpio con Docker y .NET 8 SDK
+    Cuando un evaluador clona la rama "main" en el tag "v1.0.0" y sigue los pasos del README.md
+    Entonces PostgreSQL 16, SistemaFuneraria.Api y SistemaFuneraria.Web levantan sin errores, aplican las migraciones y semillas automáticamente y todas las pruebas de dotnet test pasan al 100%
+  ```
+- **DoD Extenso**:
+  - **Edge Cases & Validaciones**: `git status` limpio, `dotnet test --configuration Release` 100% en verde, tag `v1.0.0` firmado.
+  - **Pruebas Obligatorias**: Smoke test completo post-merge en `main`.
+  - **Blast Radius & Rollback**: Máximo 180 LOCs. Rollback: revert del merge commit en `main` al tag estable previo.
+  - **Carpeta de Evidencia**: `docs/evidencias/SF-100/` (**¡PROYECTO SISTEMA FUNERARIO `v1.0.0` ENTREGADO!**).

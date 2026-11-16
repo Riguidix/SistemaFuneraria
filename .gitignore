@@ -1,0 +1,67 @@
+## .NET / C# Core & Build
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+out/
+build/
+*.binlog
+
+## Visual Studio & Rider Cache / User Settings
+.vs/
+.idea/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.DotSettings.user
+_ReSharper*/
+
+## Visual Studio Code (permite launch/tasks si se agregan en el futuro)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## Test & Coverage Results
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+
+## NuGet & Packages
+*.nupkg
+*.snupkg
+**/packages/*
+!**/packages/build/
+project.lock.json
+project.assets.json
+
+## Environment, Secrets & Local Overrides
+*.local.json
+appsettings.Local.json
+.env
+.env.local
+docker-compose.override.yml
+
+## macOS & Windows OS Artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+## Temporary files & Crash dumps
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+*.dmp
+*.mdmp

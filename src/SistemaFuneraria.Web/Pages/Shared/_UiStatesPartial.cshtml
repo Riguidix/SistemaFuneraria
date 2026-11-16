@@ -1,0 +1,28 @@
+<!-- ========================================================
+     KIT DE ESTADOS UI: Toasts y Modal de Confirmación (SF-027)
+     ======================================================== -->
+
+<!-- Contenedor Flotante de Toasts Accesibles -->
+<div id="sf-toast-container" class="position-fixed top-0 end-0 p-3" style="z-index: 1080;" aria-live="polite"></div>
+
+<!-- Modal Genérico Redondeado de Confirmación (Esquinas de 24px - Captura 4 de Figma) -->
+<div class="modal fade" id="sf-confirm-modal" tabindex="-1" aria-labelledby="sf-confirm-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content rounded-4 border-0 shadow-lg p-3 bg-white" style="border-radius: 24px !important;">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3">
+                    <i id="sf-confirm-icon" class="fa-solid fa-triangle-exclamation text-warning fs-1"></i>
+                </div>
+                <h4 class="fw-bold mb-2 text-dark" id="sf-confirm-title" style="font-size: 1.25rem;">¿Estás seguro?</h4>
+                <p class="text-muted mb-0 small" id="sf-confirm-message" style="font-size: 0.95rem; line-height: 1.5;">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer border-0 p-3 pt-0 d-flex justify-content-center gap-2">
+                <button type="button" id="sf-cancel-btn" class="btn btn-outline-secondary rounded-3 px-4 py-2 fw-medium border-secondary-subtle">Cancelar</button>
+                <button type="button" id="sf-confirm-btn" class="btn text-white rounded-3 px-4 py-2 fw-semibold" style="background-color: var(--sf-primary-olive, #2D4224);">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Importación del Módulo Vanilla JS de Estados UI -->
+<script src="~/js/ui/uiStates.js" asp-append-version="true"></script>
