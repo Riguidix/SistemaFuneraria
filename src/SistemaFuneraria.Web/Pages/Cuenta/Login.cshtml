@@ -1,19 +1,19 @@
 @page
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @model SistemaFuneraria.Web.Pages.Cuenta.LoginModel
 @{
     Layout = null;
     ViewData["Title"] = "Iniciar sesión - Sistema Funerario";
+    var apiBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5180";
 }
 <!DOCTYPE html>
 <html lang="es-MX">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="api-base-url" content="@apiBaseUrl" />
     <title>@ViewData["Title"]</title>
-    <!-- Bootstrap 5.3.8 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='/lib/bootstrap/dist/css/bootstrap.min.css';" />
-    <!-- Font Awesome 7.3.1 (Cero SVGs inline) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <style>
         * {
@@ -433,24 +433,8 @@
 
     <!-- Scripts -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function cargarCredencialesDemo(role) {
-            var emailInput = document.getElementById('Input_Email');
-            var passwordInput = document.getElementById('Input_Password');
-            if (!emailInput || !passwordInput) return;
-
-            if (role === 'admin') {
-                emailInput.value = 'andrea.morales@funeraria.mx';
-                passwordInput.value = 'Admin2026*';
-            } else if (role === 'vendedor') {
-                emailInput.value = 'roberto.mendez@funeraria.mx';
-                passwordInput.value = 'Ventas2026*';
-            } else if (role === 'cajero') {
-                emailInput.value = 'cajero@funeraria.mx';
-                passwordInput.value = 'Caja2026*';
-            }
-        }
-    </script>
+    <script src="~/js/api/apiClient.js" asp-append-version="true"></script>
+    <script src="~/js/api/authApi.js" asp-append-version="true"></script>
     <script src="~/js/pages/loginPage.js" asp-append-version="true"></script>
 </body>
 </html>

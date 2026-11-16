@@ -11,6 +11,7 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <PackageReference Include="NetArchTest.Rules" />
   </ItemGroup>
@@ -24,6 +25,7 @@
     <ProjectReference Include="..\..\src\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj" />
     <ProjectReference Include="..\..\src\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\SistemaFuneraria.Web\SistemaFuneraria.Web.csproj" />
+    <ProjectReference Include="..\..\src\SistemaFuneraria.Api\SistemaFuneraria.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
