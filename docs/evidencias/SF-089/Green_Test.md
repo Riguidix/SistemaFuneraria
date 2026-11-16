@@ -33,7 +33,7 @@
 
 ### 2. Evidencia de Ejecución GREEN
 ```bash
-dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~DashboardPageTests" --logger "console;verbosity=normal"
+dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~DashboardPageTests" --no-build -v normal
 ```
 
 ```text
@@ -42,16 +42,26 @@ Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...
 1 archivos de prueba en total coincidieron con el patrón especificado.
-  Aprobada SistemaFuneraria.Tests.Unit.Web.DashboardPageTests.Dashboard_OnGet_DebeCargarKpisGraficasYActividadRecienteConformeFigma [12 ms]
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.33)
+[xUnit.net 00:00:00.09]   Discovering: SistemaFuneraria.Tests
+[xUnit.net 00:00:00.24]   Discovered:  SistemaFuneraria.Tests
+[xUnit.net 00:00:00.24]   Starting:    SistemaFuneraria.Tests
+[xUnit.net 00:00:00.31]   Finished:    SistemaFuneraria.Tests
+  Correctas SistemaFuneraria.Tests.Unit.Web.DashboardPageTests.Dashboard_OnGet_DebeCargarKpisGraficasYActividadRecienteConformeFigma [15 ms]
 
-Correctas! - Con error:     0, Superado:     1, Omitido:     0, Total:     1, Duración: 14 ms - SistemaFuneraria.Tests.dll (net8.0)
-Total de la suite: 289 pruebas ejecutadas, 289 aprobadas (100% GREEN).
+La serie de pruebas se ejecutó correctamente.
+Pruebas totales: 1
+     Correcto: 1
+ Tiempo total: 0.8930 Segundos
 ```
 
 ---
 
-### 3. Fidelidad Figma Verificada (Cero Fantasía)
-- Grid de 4 tarjetas KPI superiores con colores semánticos exactos.
-- Gráfica comparativa de 6 meses con escalas y tooltip.
-- Gráfica de dona de disponibilidad con conic-gradient y centro blanco.
-- Tabla de actividad reciente con avatares circulares y formato monetario tabular.
+### 3. Evidencia Visual Verificada (Cero Fantasía)
+![Dashboard Resumen](./vista_dashboard_resumen.jpg)
+
+### 4. Fidelidad Figma Verificada (Cero Fantasía)
+- Grid de 4 tarjetas KPI superiores con colores semánticos exactos (`Ventas del mes $486,500`, `Cobranza mensual $238,240`, `Contratos activos 128`, `Pagos vencidos 8`).
+- Gráfica comparativa de 6 meses (Jun-Nov) con escalas y leyenda (`● Ventas`, `● Cobranza`).
+- Gráfica de dona de disponibilidad con 64 disponibles y desglose por tipo de gaveta (28, 21, 15) y ocupación total 64%.
+- Tabla de actividad reciente con 4 registros, avatares circulares y formato monetario tabular.
