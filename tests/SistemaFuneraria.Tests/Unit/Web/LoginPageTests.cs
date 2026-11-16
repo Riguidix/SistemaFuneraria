@@ -40,6 +40,23 @@ public class LoginPageTests
     }
 
     [Fact]
+    public void Login_OnPost_ConCredencialesValidas_DebeRedirigirAResumen()
+    {
+        // Arrange
+        var pageModel = new LoginModel();
+        pageModel.Input.Email = "andrea@serenia.mx";
+        pageModel.Input.Password = "Password123!";
+
+        // Act
+        var result = pageModel.OnPost();
+
+        // Assert
+        result.Should().BeOfType<RedirectToPageResult>();
+        var redirect = (RedirectToPageResult)result;
+        redirect.PageName.Should().Be("/Resumen/Index");
+    }
+
+    [Fact]
     public void OlvideContrasena_OnPost_DebeMostrarMensajeUniformeSeguro()
     {
         // Arrange

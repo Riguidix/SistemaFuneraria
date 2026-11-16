@@ -1,5 +1,7 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using SistemaFuneraria.Web.Pages;
+using ResumenModel = SistemaFuneraria.Web.Pages.Resumen.IndexModel;
 using Xunit;
 
 namespace SistemaFuneraria.Tests.Unit.Web;
@@ -10,7 +12,7 @@ public class DashboardPageTests
     public void Dashboard_OnGet_DebeCargarKpisGraficasYActividadRecienteConformeFigma()
     {
         // Arrange
-        var pageModel = new IndexModel();
+        var pageModel = new ResumenModel();
 
         // Act
         pageModel.OnGet();
@@ -40,5 +42,20 @@ public class DashboardPageTests
         pageModel.ActividadReciente[0].Referencia.Should().Be("CTR-2025-0182");
         pageModel.ActividadReciente[0].Importe.Should().Be(6248.50m);
         pageModel.ActividadReciente[0].Estado.Should().Be("Aplicado");
+    }
+
+    [Fact]
+    public void Root_Index_OnGet_DebeRedirigirALogin()
+    {
+        // Arrange
+        var rootModel = new IndexModel();
+
+        // Act
+        var result = rootModel.OnGet();
+
+        // Assert
+        result.Should().BeOfType<RedirectToPageResult>();
+        var redirect = (RedirectToPageResult)result;
+        redirect.PageName.Should().Be("/Cuenta/Login");
     }
 }

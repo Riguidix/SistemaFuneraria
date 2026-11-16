@@ -46,7 +46,7 @@ public class LoginModel : PageModel
         if (Input.Email.EndsWith("@serenia.mx", StringComparison.OrdinalIgnoreCase) ||
             Input.Email.Contains("@", StringComparison.OrdinalIgnoreCase))
         {
-            return RedirectToPage("/Clientes/Index");
+            return RedirectToPage("/Resumen/Index");
         }
 
         return Page();
