@@ -34,7 +34,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 ```
 
 ```text
-Serie de pruebas para C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Serie de pruebas para tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...

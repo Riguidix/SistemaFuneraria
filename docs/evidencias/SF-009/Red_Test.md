@@ -25,10 +25,10 @@ dotnet test --filter "FullyQualifiedName~CalculadoraTasasTests"
 
 ### 4. Salida de Terminal (Falla Esperada)
 ```text
-C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\Core\CalculadoraTasasTests.cs(26,38): error CS0103: El nombre 'CalculadoraFinanciamiento' no existe en el contexto actual. [C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
-C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\Core\CalculadoraTasasTests.cs(44,38): error CS0103: El nombre 'CalculadoraFinanciamiento' no existe en el contexto actual. [C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
-C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\Core\CalculadoraTasasTests.cs(61,42): error CS0103: El nombre 'CalculadoraFinanciamiento' no existe en el contexto actual. [C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
-C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\Core\CalculadoraTasasTests.cs(79,32): error CS0103: El nombre 'CalculadoraFinanciamiento' no existe en el contexto actual. [C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+tests\SistemaFuneraria.Tests\Core\CalculadoraTasasTests.cs(26,38): error CS0103: El nombre 'CalculadoraFinanciamiento' no existe en el contexto actual. [tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+tests\SistemaFuneraria.Tests\Core\CalculadoraTasasTests.cs(44,38): error CS0103: El nombre 'CalculadoraFinanciamiento' no existe en el contexto actual. [tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+tests\SistemaFuneraria.Tests\Core\CalculadoraTasasTests.cs(61,42): error CS0103: El nombre 'CalculadoraFinanciamiento' no existe en el contexto actual. [tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+tests\SistemaFuneraria.Tests\Core\CalculadoraTasasTests.cs(79,32): error CS0103: El nombre 'CalculadoraFinanciamiento' no existe en el contexto actual. [tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
 
 Error al compilar.
     0 Advertencia(s)

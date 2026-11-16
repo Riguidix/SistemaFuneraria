@@ -29,7 +29,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 
 ### 4. Salida de Terminal (Falla Esperada)
 ```text
-Serie de pruebas para C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Serie de pruebas para tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...
@@ -39,8 +39,8 @@ Iniciando la ejecución de pruebas, espere...
   Error:
     System.NotImplementedException : The method or operation is not implemented.
   Seguimiento de la pila:
-    at SistemaFuneraria.Core.Calculos.CalculadoraFinanciamiento.CalcularEnganche(Decimal precioLote, Int32 porcentajeEnganche) in C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria\src\SistemaFuneraria.Core\Calculos\CalculadoraFinanciamiento.cs:line 41
-    at SistemaFuneraria.Tests.Unit.Core.CalculadoraEngancheTests.CalcularEnganche_ConLoteBasicoYEngancheVeintePorCiento_DebeCalcularEngancheYCapitalExactos() in C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\Core\CalculadoraEngancheTests.cs:line 26
+    at SistemaFuneraria.Core.Calculos.CalculadoraFinanciamiento.CalcularEnganche(Decimal precioLote, Int32 porcentajeEnganche) in src\SistemaFuneraria.Core\Calculos\CalculadoraFinanciamiento.cs:line 41
+    at SistemaFuneraria.Tests.Unit.Core.CalculadoraEngancheTests.CalcularEnganche_ConLoteBasicoYEngancheVeintePorCiento_DebeCalcularEngancheYCapitalExactos() in tests\SistemaFuneraria.Tests\Unit\Core\CalculadoraEngancheTests.cs:line 26
 
 [xUnit.net 00:00:00.63]     SistemaFuneraria.Tests.Unit.Core.CalculadoraEngancheTests.CalcularEnganche_ConCombinacionesCatalogoAutorizado_DebeCalcularEngancheYCapitalAlCentavo(precioLote: 120000.00, porcentajeEnganche: 10, engancheEsperado: 12000.00, capitalEsperado: 108000.00) [FAIL]
   Error:

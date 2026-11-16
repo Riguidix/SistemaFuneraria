@@ -15,4 +15,4 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
   - `SF-030 (BDD): Login Administrador exitoso y control RBAC en /api/v1/admin/usuarios`: **Superada** (`200 OK` para `Administrador`; `403 Forbidden` para `Vendedor` y `Cajero`).
   - `SF-030 (BDD): 5 intentos fallidos bloquean la cuenta con 423 Locked (15 minutos)`: **Superada**.
   - `SF-030 (BDD): /api/v1/auth/olvide-contrasena aplica jitter anti-timing >= 200ms`: **Superada**.
-- **Validador CI de evidencias:** Sin rutas locales (`/Users/` o `C:\`) en `docs/evidencias/SF-030`.
+- **Validador CI de evidencias:** Sin rutas absolutas locales en `docs/evidencias/`.

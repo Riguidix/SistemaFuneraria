@@ -30,13 +30,13 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 ```text
   Determining projects to restore...
   All projects are up-to-date for restore.
-  SistemaFuneraria.Core -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
-  SistemaFuneraria.Application -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\bin\Debug\net8.0\SistemaFuneraria.Application.dll
-  SistemaFuneraria.Infrastructure -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Infrastructure\bin\Debug\net8.0\SistemaFuneraria.Infrastructure.dll
-  SistemaFuneraria.Web -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\bin\Debug\net8.0\SistemaFuneraria.Web.dll
-  SistemaFuneraria.Api -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\bin\Debug\net8.0\SistemaFuneraria.Api.dll
-  SistemaFuneraria.Tests -> C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+  SistemaFuneraria.Core -> src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
+  SistemaFuneraria.Application -> src\SistemaFuneraria.Application\bin\Debug\net8.0\SistemaFuneraria.Application.dll
+  SistemaFuneraria.Infrastructure -> src\SistemaFuneraria.Infrastructure\bin\Debug\net8.0\SistemaFuneraria.Infrastructure.dll
+  SistemaFuneraria.Web -> src\SistemaFuneraria.Web\bin\Debug\net8.0\SistemaFuneraria.Web.dll
+  SistemaFuneraria.Api -> src\SistemaFuneraria.Api\bin\Debug\net8.0\SistemaFuneraria.Api.dll
+  SistemaFuneraria.Tests -> tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -49,7 +49,7 @@ Passed!  - Failed:     0, Passed:     8, Skipped:     0, Total:     8, Duration:
 
 ### 4. Verificación de Regresión (Suite No-Integración Completa)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...

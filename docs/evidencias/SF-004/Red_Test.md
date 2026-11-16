@@ -35,7 +35,7 @@ Error Message:
  Stack Trace:
    at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
    at FluentAssertions.Execution.TestEngine.Throw(String message)
-   at SistemaFuneraria.Tests.Unit.CulturaEsMxTests.ConfiguracionGlobal_SinMiddleware_NoAplicaCulturaEsMx() in C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\CulturaEsMxTests.cs:line 48
+   at SistemaFuneraria.Tests.Unit.CulturaEsMxTests.ConfiguracionGlobal_SinMiddleware_NoAplicaCulturaEsMx() in tests\SistemaFuneraria.Tests\Unit\CulturaEsMxTests.cs:line 48
 
 Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1, Duration: 42 ms
 ```
