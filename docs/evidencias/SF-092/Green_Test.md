@@ -32,7 +32,7 @@
 
 ### 2. Evidencia de Ejecución GREEN
 ```bash
-dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~ConfiguracionPageTests" --logger "console;verbosity=normal"
+dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~ConfiguracionPageTests" --no-build -v normal
 ```
 
 ```text
@@ -41,15 +41,44 @@ Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...
 1 archivos de prueba en total coincidieron con el patrón especificado.
-  Aprobada SistemaFuneraria.Tests.Unit.Web.ConfiguracionPageTests.Configuracion_OnGet_DebeCargarDatosDeSucursalYSwitchesConformeFigmaCaptura12 [11 ms]
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.33)
+[xUnit.net 00:00:00.08]   Discovering: SistemaFuneraria.Tests
+[xUnit.net 00:00:00.20]   Discovered:  SistemaFuneraria.Tests
+[xUnit.net 00:00:00.21]   Starting:    SistemaFuneraria.Tests
+[xUnit.net 00:00:00.27]   Finished:    SistemaFuneraria.Tests
+  Correctas SistemaFuneraria.Tests.Unit.Web.ConfiguracionPageTests.Configuracion_OnGet_DebeCargarDatosDeSucursalYSwitchesConformeFigmaCaptura12 [15 ms]
 
-Correctas! - Con error:     0, Superado:     1, Omitido:     0, Total:     1, Duración: 14 ms - SistemaFuneraria.Tests.dll (net8.0)
-Total de la suite: 290 pruebas ejecutadas, 290 aprobadas (100% GREEN).
+La serie de pruebas se ejecutó correctamente.
+Pruebas totales: 1
+     Correcto: 1
+ Tiempo total: 0.7995 Segundos
 ```
 
 ---
 
-### 3. Fidelidad Figma Verificada (Cero Fantasía)
-- Submenú de 5 opciones completamente reactivo con cambio instantáneo de panel.
-- Estilos visuales exactos: fondo crema `#FAF8F5`, texto verde Serenia `#2D4224` e icono activo en verde.
-- Paneles completos para las 5 secciones del sistema.
+### 3. Evidencias Visuales Verificadas (Cero Fantasía — 5 Secciones)
+
+#### 1. Datos de la Sucursal
+![Datos de la sucursal](./vista_configuracion_sucursal.png)
+
+#### 2. Usuarios y Roles
+![Usuarios y roles](./vista_configuracion_usuarios.jpg)
+
+#### 3. Planes y Tasas
+![Planes y tasas](./vista_configuracion_planes.jpg)
+
+#### 4. Notificaciones
+![Notificaciones](./vista_configuracion_notificaciones.jpg)
+
+#### 5. Integraciones
+![Integraciones](./vista_configuracion_integraciones.jpg)
+
+---
+
+### 4. Fidelidad Figma Verificada (Cero Fantasía)
+- Submenú vertical de 5 opciones completamente reactivo con cambio instantáneo de panel sin recargar la página.
+- **Datos de la sucursal:** Formulario con los 6 campos oficiales y 2 switches operativos en verde olivo (`--forest`).
+- **Usuarios y roles:** Tabla interactiva con avatares circulares (`AM`, `CM`, `GR`), badges de roles RBAC y botón `+ Nuevo usuario`.
+- **Planes y tasas:** Tarjetas de precios para lotes Básico, Familiar y Preferencial, tabla de plazos/tasas (12, 18, 24, 48 meses) y switch de descuento por liquidación anticipada (10%).
+- **Notificaciones:** Canales habilitados (Correo, WhatsApp/SMS) y disparadores de eventos automáticos con switches accesibles.
+- **Integraciones:** Tarjetas de estado para Facturación CFDI 4.0 SAT, Terminal de tarjetas, SMTP Transaccional y Webhooks/APIs.
