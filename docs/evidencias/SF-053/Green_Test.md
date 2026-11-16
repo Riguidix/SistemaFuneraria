@@ -35,7 +35,7 @@
 
 ### 2. Evidencia de Ejecución de Pruebas GREEN
 ```bash
-dotnet test --filter "FullyQualifiedName~Paso2LoteTests"
+dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~Paso2LoteTests" --no-build -v normal
 ```
 
 ```text
@@ -44,20 +44,39 @@ Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...
 1 archivos de prueba en total coincidieron con el patrón especificado.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.33)
+[xUnit.net 00:00:00.08]   Discovering: SistemaFuneraria.Tests
+[xUnit.net 00:00:00.20]   Discovered:  SistemaFuneraria.Tests
+[xUnit.net 00:00:00.20]   Starting:    SistemaFuneraria.Tests
+[xUnit.net 00:00:00.27]   Finished:    SistemaFuneraria.Tests
+  Correctas SistemaFuneraria.Tests.Unit.Web.Paso2LoteTests.ObtenerOpcionesLotes_DebeRetornarTresOpcionesFigmaCaptura6 [14 ms]
+  Correctas SistemaFuneraria.Tests.Unit.Web.Paso2LoteTests.BuscarPorClave_ConClaveExistente_DebeRetornarLoteCorrecto [2 ms]
 
-Correctas! - Con error:     0, Superado:     2, Omitido:     0, Total:     2, Duración: 3 ms - SistemaFuneraria.Tests.dll (net8.0)
-```
-
-Suite completa de pruebas unitarias:
-```bash
-dotnet test --filter "FullyQualifiedName!~Integration"
-```
-
-```text
-Correctas! - Con error:     0, Superado:   299, Omitido:     0, Total:   299, Duración: 667 ms - SistemaFuneraria.Tests.dll (net8.0)
+La serie de pruebas se ejecutó correctamente.
+Pruebas totales: 2
+     Correcto: 2
+ Tiempo total: 0.8098 Segundos
 ```
 
 ---
 
-### 3. Conclusión de Calidad
-El Paso 2 cumple al 100% con los criterios de aceptación y sincronización en vivo con el panel de cotización, manteniendo un Blast Radius inferior a 190 LOCs.
+### 3. Evidencia Visual Verificada (Cero Fantasía)
+![Wizard Paso 2 Selección de Lote](./vista_nueva_venta_paso2.png)
+
+---
+
+### 4. Fidelidad Figma Verificada (Cero Fantasía — Captura 6)
+- **Cabecera comercial:** Kicker `PROCESO COMERCIAL`, título `Nueva venta` y pill `✓ Borrador guardado`.
+- **Stepper horizontal de 4 pasos:**
+  - Paso 1 `Cliente` marcado como completado con checkmark `✓`.
+  - Paso 2 `Lote · Selección` activo en círculo verde bosque institucional (`#2D4224`).
+  - Pasos 3 `Financiamiento` y 4 `Confirmación` pendientes.
+- **Tarjeta Central de Selección:**
+  - Título `Selecciona el lote` / Subtítulo `Elige una opción disponible para continuar.`
+  - 3 tarjetas horizontales interactivas:
+    1. `JN-A-042` | Jardín Norte (`2 gavetas · Andador A`) | `$120,000` (Activa por defecto con borde `#2D4224` y fondo sutil `#FAFBF9`).
+    2. `JC-C-118` | Jardín Central (`3 gavetas · Andador C`) | `$150,000`.
+    3. `RO-E-081` | Robles (`4 gavetas · Andador E`) | `$180,000`.
+  - Botones inferiores `Anterior` (regresa al Paso 1 conservando titular) y `Continuar →` (avanza al Paso 3).
+- **Panel Lateral Fijo (`RESUMEN DE COTIZACIÓN`):**
+  - Sincronización en tiempo real: al seleccionar un lote, se actualiza el tipo (`Lote Básico`), la cuadrícula 2x4 con la celda correspondiente iluminada (`42`), la clave (`JN-A-042`), capacidad (`2 gavetas`), precio de lista y el `TOTAL ESTIMADO` (`$120,000.00`).
