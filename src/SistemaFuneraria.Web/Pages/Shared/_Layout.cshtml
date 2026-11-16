@@ -16,6 +16,7 @@
 </head>
 @{
     var rutaActual = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    bool esResumen = string.Equals(rutaActual, "/Index", StringComparison.OrdinalIgnoreCase) || string.Equals(rutaActual, "/", StringComparison.OrdinalIgnoreCase);
     bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
     bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
     bool esContratos = rutaActual.StartsWith("/Contratos", StringComparison.OrdinalIgnoreCase);
@@ -30,7 +31,7 @@
         <aside class="funeraria-sidebar" aria-label="Navegación principal Funeraria">
             <div>
                 <!-- Logotipo e Identidad de Marca Funeraria -->
-                <a href="/Clientes" class="funeraria-brand mb-3">
+                <a href="/" class="funeraria-brand mb-3">
                     <div class="funeraria-brand-icon" aria-hidden="true">F</div>
                     <div>
                         <div class="funeraria-brand-title">Funeraria</div>
@@ -41,9 +42,9 @@
                 <!-- SECCIÓN: OPERACIÓN -->
                 <div class="funeraria-nav-section-title">OPERACIÓN</div>
                 <ul class="funeraria-nav-list" role="navigation">
-                    <!-- 1. Resumen (Inerte) -->
+                    <!-- 1. Resumen (Dashboard Operativo · SF-089) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Resumen (No navegable)">
+                        <a href="/" class="funeraria-nav-item @(esResumen ? "active" : "")" @(esResumen ? "aria-current=\"page\"" : "") title="Resumen">
                             <i class="fa-solid fa-table-cells-large fa-fw" aria-hidden="true"></i>
                             <span>Resumen</span>
                         </a>

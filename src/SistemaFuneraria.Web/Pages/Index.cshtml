@@ -1,47 +1,377 @@
 @page
 @model IndexModel
 @{
-    ViewData["Title"] = "Panel Principal";
-    decimal ejemploLoteBasico = 120000.00m;
+    ViewData["Title"] = "Dashboard Operativo";
 }
 
-<div class="row g-4 mb-4">
-    <div class="col-12 text-center py-4 bg-white rounded shadow-sm border">
-        <h1 class="h2 fw-bold text-dark mb-2">Sistema de Venta y Financiamiento de Lotes Funerarios</h1>
-        <p class="text-secondary lead mb-0">Gestión de catálogo, cotizaciones con amortización francesa y control de cobranza.</p>
+<!-- ========================================================
+     ENCABEZADO DE PÁGINA (FIGMA CAPTURA 1 · SF-089)
+     ======================================================== -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="text-uppercase fw-semibold small text-muted mb-1" style="letter-spacing: 0.08em; font-size: 0.75rem;">
+            @Model.FechaKicker
+        </div>
+        <h1 class="h2 fw-bold text-dark mb-1">
+            Buenos días, @Model.Saludo
+        </h1>
+        <p class="text-muted mb-0 small">
+            @Model.Subtitulo
+        </p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <a href="/Ventas/Nueva" class="btn text-white px-3 py-2 rounded-3 fw-medium shadow-sm d-inline-flex align-items-center"
+           style="background-color: var(--sf-primary-olive, #2D4224); border-color: var(--sf-primary-olive, #2D4224);">
+            <i class="fa-solid fa-plus me-2" aria-hidden="true"></i> + Nueva venta
+        </a>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title text-dark">Catálogo de Lotes</h5>
-                <p class="card-text text-muted">Consulta de planes disponibles: 2, 3 y 4 gavetas con precios fijos de lista.</p>
-                <div class="p-3 bg-light rounded text-center mb-3">
-                    <span class="small text-muted d-block">Precio base (2 gavetas):</span>
-                    <span class="fs-4 text-success fw-bold formato-moneda">@ejemploLoteBasico.ToString("C")</span>
+<!-- ========================================================
+     FILA 1: 4 TARJETAS KPI SUPERIORES (ROW G-3 MB-4)
+     ======================================================== -->
+<div class="row g-3 mb-4">
+    <!-- KPI 1: Ventas del mes -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="bg-white rounded-4 shadow-sm border p-3 p-xl-4 h-100 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="small text-muted fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Ventas del mes</span>
+                <div class="d-flex align-items-center justify-content-center rounded-circle"
+                     style="width: 38px; height: 38px; background-color: #EBF5EB;">
+                    <i class="fa-solid fa-file-invoice-dollar text-success fs-5" aria-hidden="true"></i>
                 </div>
-                <a asp-page="/Catalogo/Index" class="btn btn-outline-dark w-100">Ver Catálogo</a>
+            </div>
+            <div>
+                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                    $@Model.VentasMes.ToString("#,##0")
+                </div>
+                <div class="text-success small fw-semibold d-flex align-items-center">
+                    <i class="fa-solid fa-arrow-trend-up me-1" aria-hidden="true"></i>
+                    @Model.VentasMesComparativa
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title text-dark">Venta y Financiamiento</h5>
-                <p class="card-text text-muted">Wizard guiado de venta en 4 pasos: contado o crédito con enganche flexible y plazos a 12, 18, 24 o 48 meses.</p>
-                <a asp-page="/Ventas/Nueva" class="btn btn-dark w-100 mt-4">Iniciar Venta</a>
+
+    <!-- KPI 2: Cobranza mensual -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="bg-white rounded-4 shadow-sm border p-3 p-xl-4 h-100 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="small text-muted fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Cobranza mensual</span>
+                <div class="d-flex align-items-center justify-content-center rounded-circle"
+                     style="width: 38px; height: 38px; background-color: #E8F0FE;">
+                    <i class="fa-solid fa-credit-card text-primary fs-5" aria-hidden="true"></i>
+                </div>
+            </div>
+            <div>
+                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                    $@Model.CobranzaMensual.ToString("#,##0")
+                </div>
+                <div class="text-success small fw-semibold d-flex align-items-center">
+                    <i class="fa-solid fa-arrow-trend-up me-1" aria-hidden="true"></i>
+                    @Model.CobranzaMensualComparativa
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h5 class="card-title text-dark">Módulo de Caja</h5>
-                <p class="card-text text-muted">Cobro de mensualidades ordinarias, abonos extraordinarios a capital y liquidación anticipada con 10% de descuento.</p>
-                <a asp-page="/Caja/Index" class="btn btn-outline-secondary w-100 mt-4">Acceder a Caja</a>
+
+    <!-- KPI 3: Contratos activos -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="bg-white rounded-4 shadow-sm border p-3 p-xl-4 h-100 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="small text-muted fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Contratos activos</span>
+                <div class="d-flex align-items-center justify-content-center rounded-circle"
+                     style="width: 38px; height: 38px; background-color: #FEF7E6;">
+                    <i class="fa-solid fa-users text-warning-emphasis fs-5" aria-hidden="true"></i>
+                </div>
+            </div>
+            <div>
+                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                    @Model.ContratosActivos
+                </div>
+                <div class="text-muted small fw-medium">
+                    @Model.ContratosNuevos
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI 4: Pagos vencidos -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="bg-white rounded-4 shadow-sm border p-3 p-xl-4 h-100 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="small text-muted fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Pagos vencidos</span>
+                <div class="d-flex align-items-center justify-content-center rounded-circle"
+                     style="width: 38px; height: 38px; background-color: #FDF2F2;">
+                    <i class="fa-solid fa-bell text-danger fs-5" aria-hidden="true"></i>
+                </div>
+            </div>
+            <div>
+                <div class="display-6 fw-bold text-danger sf-money mb-1">
+                    @Model.PagosVencidos
+                </div>
+                <div class="text-danger small fw-semibold">
+                    $@Model.MontoPorRecuperar.ToString("#,##0") por recuperar
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ========================================================
+     FILA 2: GRÁFICAS DE VENTAS/COBRANZA Y DISPONIBILIDAD
+     ======================================================== -->
+<div class="row g-4 mb-4">
+    <!-- Columna Izquierda (col-lg-8): Ventas y cobranza -->
+    <div class="col-12 col-lg-8">
+        <div class="bg-white rounded-4 shadow-sm border p-4 h-100 d-flex flex-column justify-content-between">
+            <!-- Header de Tarjeta -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h2 class="h5 fw-bold text-dark mb-0">Ventas y cobranza</h2>
+                    <p class="text-muted small mb-0">Comportamiento de los últimos 6 meses.</p>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Leyenda de colores -->
+                    <div class="d-flex align-items-center gap-3 small">
+                        <span class="d-flex align-items-center gap-1">
+                            <span class="d-inline-block rounded-circle" style="width: 10px; height: 10px; background-color: #2D4224;"></span>
+                            <span class="text-muted">Ventas</span>
+                        </span>
+                        <span class="d-flex align-items-center gap-1">
+                            <span class="d-inline-block rounded-circle" style="width: 10px; height: 10px; background-color: #C59D52;"></span>
+                            <span class="text-muted">Cobranza</span>
+                        </span>
+                    </div>
+                    <!-- Selector de rango -->
+                    <select class="form-select form-select-sm rounded-3 w-auto border-secondary-subtle">
+                        <option selected>Últimos 6 meses</option>
+                        <option>Año 2025</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Gráfica de Barras Dobles (CSS Responsivo con líneas guía) -->
+            <div class="sf-chart-container position-relative pt-3 pb-1" style="height: 240px;">
+                <!-- Líneas Guía Horizontales del Eje Y -->
+                <div class="sf-grid-lines position-absolute w-100 h-100 top-0 start-0 d-flex flex-column justify-content-between pe-2" style="pointer-events: none; z-index: 1;">
+                    <div class="d-flex align-items-center text-muted" style="font-size: 0.7rem;">
+                        <span style="width: 42px;">$500k</span>
+                        <div class="flex-grow-1 border-bottom border-light-subtle"></div>
+                    </div>
+                    <div class="d-flex align-items-center text-muted" style="font-size: 0.7rem;">
+                        <span style="width: 42px;">$400k</span>
+                        <div class="flex-grow-1 border-bottom border-light-subtle"></div>
+                    </div>
+                    <div class="d-flex align-items-center text-muted" style="font-size: 0.7rem;">
+                        <span style="width: 42px;">$300k</span>
+                        <div class="flex-grow-1 border-bottom border-light-subtle"></div>
+                    </div>
+                    <div class="d-flex align-items-center text-muted" style="font-size: 0.7rem;">
+                        <span style="width: 42px;">$200k</span>
+                        <div class="flex-grow-1 border-bottom border-light-subtle"></div>
+                    </div>
+                    <div class="d-flex align-items-center text-muted" style="font-size: 0.7rem;">
+                        <span style="width: 42px;">$100k</span>
+                        <div class="flex-grow-1 border-bottom border-light-subtle"></div>
+                    </div>
+                    <div class="d-flex align-items-center text-muted" style="font-size: 0.7rem;">
+                        <span style="width: 42px;">$0k</span>
+                        <div class="flex-grow-1 border-bottom border-secondary-subtle"></div>
+                    </div>
+                </div>
+
+                <!-- Barras por mes alineadas con flexbox -->
+                <div class="sf-bars-wrapper position-relative h-100 d-flex justify-content-around align-items-end ps-5 pe-2" style="z-index: 2;">
+                    @foreach (var punto in Model.DatosGrafica)
+                    {
+                        <div class="d-flex flex-column align-items-center h-100 justify-content-end" style="width: 14%;">
+                            <div class="d-flex align-items-end justify-content-center gap-1 w-100" style="height: 200px;">
+                                <!-- Barra Ventas (Verde Olivo Serenia) -->
+                                <div class="sf-bar sf-bar-ventas rounded-top-2"
+                                     style="height: @(punto.PorcentajeVentas)%; width: 14px; background-color: #2D4224; transition: height 0.3s ease;"
+                                     title="@punto.Mes · Ventas: $@punto.Ventas.ToString("#,##0")">
+                                </div>
+                                <!-- Barra Cobranza (Dorado Serenia) -->
+                                <div class="sf-bar sf-bar-cobranza rounded-top-2"
+                                     style="height: @(punto.PorcentajeCobranza)%; width: 14px; background-color: #C59D52; transition: height 0.3s ease;"
+                                     title="@punto.Mes · Cobranza: $@punto.Cobranza.ToString("#,##0")">
+                                </div>
+                            </div>
+                            <!-- Etiqueta del Mes -->
+                            <span class="small text-muted fw-semibold mt-2" style="font-size: 0.75rem;">@punto.Mes</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna Derecha (col-lg-4): Disponibilidad -->
+    <div class="col-12 col-lg-4">
+        <div class="bg-white rounded-4 shadow-sm border p-4 h-100 d-flex flex-column justify-content-between">
+            <!-- Header de Tarjeta -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h2 class="h5 fw-bold text-dark mb-0">Disponibilidad</h2>
+                    <p class="text-muted small mb-0">Inventario por tipo de lote.</p>
+                </div>
+                <a href="/Catalogo" class="text-decoration-none small fw-semibold text-success d-inline-flex align-items-center">
+                    Ver catálogo <i class="fa-solid fa-chevron-right ms-1 small" aria-hidden="true"></i>
+                </a>
+            </div>
+
+            <!-- Gráfica de Dona Central (CSS Conic-Gradient con anillo) -->
+            <div class="d-flex justify-content-center my-3">
+                <div class="sf-donut-chart position-relative rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                     style="width: 140px; height: 140px; background: conic-gradient(#2D4224 0% 43.75%, #C59D52 43.75% 76.56%, #7D9B76 76.56% 100%);">
+                    <!-- Agujero interior blanco de la dona -->
+                    <div class="bg-white rounded-circle d-flex flex-column align-items-center justify-content-center shadow-sm"
+                         style="width: 96px; height: 96px;">
+                        <span class="display-6 fw-bold text-dark sf-money lh-1">@Model.LotesDisponibles</span>
+                        <span class="small text-muted" style="font-size: 0.75rem;">disponibles</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Desglose de Lotes -->
+            <div class="d-flex justify-content-around text-center border-top border-light-subtle pt-3 mb-3">
+                <div>
+                    <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                        <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background-color: #2D4224;"></span>
+                        <span class="small text-muted" style="font-size: 0.75rem;">2 gavetas</span>
+                    </div>
+                    <div class="fw-bold sf-money text-dark fs-5">@Model.Lotes2Gavetas</div>
+                </div>
+                <div class="border-start border-light-subtle"></div>
+                <div>
+                    <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                        <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background-color: #C59D52;"></span>
+                        <span class="small text-muted" style="font-size: 0.75rem;">3 gavetas</span>
+                    </div>
+                    <div class="fw-bold sf-money text-dark fs-5">@Model.Lotes3Gavetas</div>
+                </div>
+                <div class="border-start border-light-subtle"></div>
+                <div>
+                    <div class="d-flex align-items-center justify-content-center gap-1 mb-1">
+                        <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background-color: #7D9B76;"></span>
+                        <span class="small text-muted" style="font-size: 0.75rem;">4 gavetas</span>
+                    </div>
+                    <div class="fw-bold sf-money text-dark fs-5">@Model.Lotes4Gavetas</div>
+                </div>
+            </div>
+
+            <!-- Barra de Ocupación -->
+            <div>
+                <div class="progress rounded-pill mb-1" style="height: 8px; background-color: #EFECE6;">
+                    <div class="progress-bar rounded-pill" role="progressbar"
+                         style="width: @(Model.OcupacionPorcentaje)%; background-color: #2D4224;"
+                         aria-valuenow="@Model.OcupacionPorcentaje" aria-valuemin="0" aria-valuemax="100">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center small text-muted">
+                    <span>Ocupación total</span>
+                    <span class="fw-bold text-dark">@Model.OcupacionPorcentaje%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================
+     FILA 3: TARJETA INFERIOR "ACTIVIDAD RECIENTE"
+     ======================================================== -->
+<div class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+    <!-- Header de Tarjeta -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h5 fw-bold text-dark mb-0">Actividad reciente</h2>
+            <p class="text-muted small mb-0">Últimos movimientos registrados en el sistema.</p>
+        </div>
+        <a href="/Caja" class="text-decoration-none small fw-semibold text-success d-inline-flex align-items-center">
+            Ver todos <i class="fa-solid fa-chevron-right ms-1 small" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    <!-- Tabla de Movimientos Responsiva -->
+    <div class="table-responsive">
+        <table class="table align-middle mb-0" style="font-size: 0.9rem;">
+            <thead class="table-light text-muted small">
+                <tr>
+                    <th scope="col" class="border-0 fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Cliente</th>
+                    <th scope="col" class="border-0 fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Movimiento</th>
+                    <th scope="col" class="border-0 fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Referencia</th>
+                    <th scope="col" class="border-0 fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Importe</th>
+                    <th scope="col" class="border-0 fw-semibold text-uppercase" style="letter-spacing: 0.04em;">Estado</th>
+                    <th scope="col" class="border-0 fw-semibold text-uppercase text-end" style="letter-spacing: 0.04em;">Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var mov in Model.ActividadReciente)
+                {
+                    <tr>
+                        <!-- Columna Cliente con Avatar Circular -->
+                        <td class="py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                     style="width: 36px; height: 36px; min-width: 36px; background-color: #485635; font-size: 0.8rem;">
+                                    @mov.Iniciales
+                                </div>
+                                <div>
+                                    <div class="fw-semibold text-dark">@mov.Cliente</div>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">@mov.Correo</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Columna Movimiento -->
+                        <td class="py-3 text-secondary">
+                            @mov.Movimiento
+                        </td>
+
+                        <!-- Columna Referencia -->
+                        <td class="py-3">
+                            <span class="badge bg-light text-dark border px-2 py-1 fw-medium" style="font-family: monospace;">
+                                @mov.Referencia
+                            </span>
+                        </td>
+
+                        <!-- Columna Importe -->
+                        <td class="py-3 sf-money fw-bold text-dark">
+                            $@mov.Importe.ToString("#,##0.00")
+                        </td>
+
+                        <!-- Columna Estado -->
+                        <td class="py-3">
+                            @if (mov.Estado == "Aplicado")
+                            {
+                                <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-medium">
+                                    <i class="fa-solid fa-circle-check me-1 small" aria-hidden="true"></i> Aplicado
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-1 rounded-pill fw-medium">
+                                    <i class="fa-solid fa-clock me-1 small" aria-hidden="true"></i> Pendiente
+                                </span>
+                            }
+                        </td>
+
+                        <!-- Columna Fecha -->
+                        <td class="py-3 text-muted text-end small">
+                            @mov.Fecha
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* Efecto hover suave en las barras de la gráfica */
+    .sf-bar:hover {
+        filter: brightness(1.15);
+        cursor: pointer;
+    }
+</style>
