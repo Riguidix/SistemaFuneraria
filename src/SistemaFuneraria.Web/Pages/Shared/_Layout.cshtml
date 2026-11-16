@@ -1,13 +1,16 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var apiBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5180";
+}
 <!DOCTYPE html>
 <html lang="es-MX">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Funeraria</title>
+    <meta name="api-base-url" content="@apiBaseUrl" />
+    <title>@ViewData["Title"] - Sistema Funerario</title>
     <!-- Bootstrap 5.3.8 (RNF-06) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='/lib/bootstrap/dist/css/bootstrap.min.css';" />
-    <!-- CDN de Font Awesome (SF-020) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <!-- Hoja de estilos del tema Funeraria (SF-019 / SF-020) y Tokens Oficiales (SF-025) -->
     <link rel="stylesheet" href="~/css/sistema-tokens.css" asp-append-version="true" />
@@ -87,8 +90,8 @@
                 </ul>
 
                 <!-- SECCIÓN: ADMINISTRACIÓN -->
-                <div class="funeraria-nav-section-title">ADMINISTRACIÓN</div>
-                <ul class="funeraria-nav-list" role="navigation">
+                <div class="funeraria-nav-section-title" data-roles="Administrador">ADMINISTRACIÓN</div>
+                <ul class="funeraria-nav-list" role="navigation" data-roles="Administrador">
                     <!-- 7. Reportes (Inerte) -->
                     <li>
                         <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Reportes (No navegable)">
@@ -136,7 +139,7 @@
                 <div class="funeraria-branch-picker">
                     <span class="funeraria-branch-kicker">SUCURSAL</span>
                     <div class="funeraria-branch-selector" title="Cambiar sucursal">
-                        <span>Jardines del Valle</span>
+                        <span data-auth-branch>Jardines del Valle</span>
                         <i class="fa-solid fa-chevron-down ms-1 small" aria-hidden="true"></i>
                     </div>
                 </div>
@@ -149,14 +152,16 @@
                         <span class="funeraria-notification-dot" aria-hidden="true"></span>
                     </a>
 
-                    <!-- Perfil de Usuario Funeraria -->
+                    <!-- Perfil de Usuario -->
                     <div class="funeraria-user-profile" title="Perfil de usuario">
-                        <div class="funeraria-avatar-am" aria-hidden="true">AM</div>
+                        <div class="funeraria-avatar-am" aria-hidden="true" data-auth-initials>--</div>
                         <div>
-                            <div class="funeraria-user-name">Andrea Morales</div>
-                            <div class="funeraria-user-role">Administradora</div>
+                            <div class="funeraria-user-name" data-auth-name>Invitado</div>
+                            <div class="funeraria-user-role" data-auth-role>Sin sesión</div>
                         </div>
-                        <i class="fa-solid fa-chevron-down ms-1 text-muted small" aria-hidden="true"></i>
+                        <button type="button" id="btnLogout" class="btn btn-sm btn-link text-muted p-0 ms-2" title="Cerrar sesión" aria-label="Cerrar sesión">
+                            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -190,7 +195,32 @@
 
     <!-- Bootstrap 5.3.8 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/lib/bootstrap/dist/js/bootstrap.bundle.min.js';"></script>
+    <script src="~/js/api/apiClient.js" asp-append-version="true"></script>
+    <script src="~/js/api/authApi.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (!window.authApi) return;
+            window.authApi.applyRolePermissions(document);
+            var session = window.authApi.getSession();
+            if (session) {
+                var initialsEl = document.querySelector("[data-auth-initials]");
+                var nameEl = document.querySelector("[data-auth-name]");
+                var roleEl = document.querySelector("[data-auth-role]");
+                var branchEl = document.querySelector("[data-auth-branch]");
+                if (initialsEl) initialsEl.textContent = session.iniciales || "--";
+                if (nameEl) nameEl.textContent = session.nombreCompleto || session.correo || "Usuario";
+                if (roleEl) roleEl.textContent = session.rol || "";
+                if (branchEl && session.sucursal) branchEl.textContent = session.sucursal;
+            }
+            var btnLogout = document.getElementById("btnLogout");
+            if (btnLogout) {
+                btnLogout.addEventListener("click", function () {
+                    window.authApi.logout();
+                });
+            }
+        });
+    </script>
 
     <!-- Kit Reutilizable de Estados UI (SF-027) -->
     <partial name="_UiStatesPartial" />
