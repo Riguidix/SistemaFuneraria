@@ -21,6 +21,7 @@
     bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
     bool esContratos = rutaActual.StartsWith("/Contratos", StringComparison.OrdinalIgnoreCase);
     bool esCaja = rutaActual.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase) || rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
+    bool esNuevaVenta = rutaActual.StartsWith("/Ventas", StringComparison.OrdinalIgnoreCase);
     bool esParametrosUi = rutaActual.StartsWith("/ParametrosUi", StringComparison.OrdinalIgnoreCase);
     bool esReportes = rutaActual.StartsWith("/Reportes", StringComparison.OrdinalIgnoreCase);
     bool esConfiguracion = rutaActual.StartsWith("/Configuracion", StringComparison.OrdinalIgnoreCase);
@@ -65,9 +66,9 @@
                             <span>Clientes</span>
                         </a>
                     </li>
-                    <!-- 4. + Nueva venta (Inerte) -->
+                    <!-- 4. + Nueva venta (Activo SF-051) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Nueva venta (No navegable)">
+                        <a href="/Ventas/Nueva" class="funeraria-nav-item @(esNuevaVenta ? "active" : "")" @(esNuevaVenta ? "aria-current=\"page\"" : "") title="Nueva venta">
                             <i class="fa-solid fa-circle-plus fa-fw" aria-hidden="true"></i>
                             <span>+ Nueva venta</span>
                         </a>
