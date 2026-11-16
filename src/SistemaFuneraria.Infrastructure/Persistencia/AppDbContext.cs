@@ -12,6 +12,7 @@ namespace SistemaFuneraria.Infrastructure.Persistencia;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<IdentityUser>(options), IAppDbContext
 {
     public DbSet<Cliente> Clientes => Set<Cliente>();
+    public DbSet<Lote> Lotes => Set<Lote>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
