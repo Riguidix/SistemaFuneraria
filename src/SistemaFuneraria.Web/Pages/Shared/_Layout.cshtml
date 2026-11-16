@@ -1,15 +1,19 @@
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var apiBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5180";
+}
 <!DOCTYPE html>
 <html lang="es-MX">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Funeraria</title>
+    <meta name="api-base-url" content="@apiBaseUrl" />
+    <title>@ViewData["Title"] - Sistema Funerario</title>
     <!-- Bootstrap 5.3.8 (RNF-06) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='/lib/bootstrap/dist/css/bootstrap.min.css';" />
-    <!-- CDN de Font Awesome (SF-020) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <!-- Hoja de estilos del tema Funeraria (SF-019 / SF-020) -->
+    <!-- Hoja de estilos del tema Funeraria (SF-019 / SF-020) y Tokens Oficiales (SF-025) -->
+    <link rel="stylesheet" href="~/css/sistema-tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/funeraria-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
@@ -17,7 +21,9 @@
     var rutaActual = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
     bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
-    bool esCobranza = rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
+    bool esContratos = rutaActual.StartsWith("/Contratos", StringComparison.OrdinalIgnoreCase);
+    bool esCaja = rutaActual.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase) || rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
+    bool esParametrosUi = rutaActual.StartsWith("/ParametrosUi", StringComparison.OrdinalIgnoreCase);
 }
 <body class="funeraria-app">
     <div class="funeraria-wrapper">
@@ -66,16 +72,16 @@
                             <span>+ Nueva venta</span>
                         </a>
                     </li>
-                    <!-- 5. Contratos (Inerte) -->
+                    <!-- 5. Contratos (Activo SF-070) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Contratos (No navegable)">
+                        <a href="/Contratos" class="funeraria-nav-item @(esContratos ? "active" : "")" @(esContratos ? "aria-current=\"page\"" : "") title="Contratos">
                             <i class="fa-solid fa-file-lines fa-fw" aria-hidden="true"></i>
                             <span>Contratos</span>
                         </a>
                     </li>
-                    <!-- 6. Caja y cobranza (Funcional Ticket 036) -->
+                    <!-- 6. Caja y cobranza (Figma Captura 10 · SF-080) -->
                     <li>
-                        <a href="/Cobranza" class="funeraria-nav-item @(esCobranza ? "active" : "")" @(esCobranza ? "aria-current=\"page\"" : "") title="Caja y cobranza">
+                        <a href="/Caja" class="funeraria-nav-item @(esCaja ? "active" : "")" @(esCaja ? "aria-current=\"page\"" : "") title="Caja y cobranza">
                             <i class="fa-solid fa-cash-register fa-fw" aria-hidden="true"></i>
                             <span>Caja y cobranza</span>
                             <span class="funeraria-badge-gold">8</span>
@@ -84,8 +90,8 @@
                 </ul>
 
                 <!-- SECCIÓN: ADMINISTRACIÓN -->
-                <div class="funeraria-nav-section-title">ADMINISTRACIÓN</div>
-                <ul class="funeraria-nav-list" role="navigation">
+                <div class="funeraria-nav-section-title" data-roles="Administrador">ADMINISTRACIÓN</div>
+                <ul class="funeraria-nav-list" role="navigation" data-roles="Administrador">
                     <!-- 7. Reportes (Inerte) -->
                     <li>
                         <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Reportes (No navegable)">
@@ -100,9 +106,9 @@
                             <span>Configuración</span>
                         </a>
                     </li>
-                    <!-- 9. Parámetros UI (Inerte) -->
+                    <!-- 9. Parámetros UI (Activo SF-025) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Parámetros UI (No navegable)">
+                        <a href="/ParametrosUi" class="funeraria-nav-item @(esParametrosUi ? "active" : "")" @(esParametrosUi ? "aria-current=\"page\"" : "") title="Parámetros UI">
                             <i class="fa-solid fa-sliders fa-fw" aria-hidden="true"></i>
                             <span>Parámetros UI</span>
                         </a>
@@ -133,7 +139,7 @@
                 <div class="funeraria-branch-picker">
                     <span class="funeraria-branch-kicker">SUCURSAL</span>
                     <div class="funeraria-branch-selector" title="Cambiar sucursal">
-                        <span>Jardines del Valle</span>
+                        <span data-auth-branch>Jardines del Valle</span>
                         <i class="fa-solid fa-chevron-down ms-1 small" aria-hidden="true"></i>
                     </div>
                 </div>
@@ -146,14 +152,16 @@
                         <span class="funeraria-notification-dot" aria-hidden="true"></span>
                     </a>
 
-                    <!-- Perfil de Usuario Funeraria -->
+                    <!-- Perfil de Usuario -->
                     <div class="funeraria-user-profile" title="Perfil de usuario">
-                        <div class="funeraria-avatar-am" aria-hidden="true">AM</div>
+                        <div class="funeraria-avatar-am" aria-hidden="true" data-auth-initials>--</div>
                         <div>
-                            <div class="funeraria-user-name">Andrea Morales</div>
-                            <div class="funeraria-user-role">Administradora</div>
+                            <div class="funeraria-user-name" data-auth-name>Invitado</div>
+                            <div class="funeraria-user-role" data-auth-role>Sin sesión</div>
                         </div>
-                        <i class="fa-solid fa-chevron-down ms-1 text-muted small" aria-hidden="true"></i>
+                        <button type="button" id="btnLogout" class="btn btn-sm btn-link text-muted p-0 ms-2" title="Cerrar sesión" aria-label="Cerrar sesión">
+                            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -187,7 +195,35 @@
 
     <!-- Bootstrap 5.3.8 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/lib/bootstrap/dist/js/bootstrap.bundle.min.js';"></script>
+    <script src="~/js/api/apiClient.js" asp-append-version="true"></script>
+    <script src="~/js/api/authApi.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (!window.authApi) return;
+            window.authApi.applyRolePermissions(document);
+            var session = window.authApi.getSession();
+            if (session) {
+                var initialsEl = document.querySelector("[data-auth-initials]");
+                var nameEl = document.querySelector("[data-auth-name]");
+                var roleEl = document.querySelector("[data-auth-role]");
+                var branchEl = document.querySelector("[data-auth-branch]");
+                if (initialsEl) initialsEl.textContent = session.iniciales || "--";
+                if (nameEl) nameEl.textContent = session.nombreCompleto || session.correo || "Usuario";
+                if (roleEl) roleEl.textContent = session.rol || "";
+                if (branchEl && session.sucursal) branchEl.textContent = session.sucursal;
+            }
+            var btnLogout = document.getElementById("btnLogout");
+            if (btnLogout) {
+                btnLogout.addEventListener("click", function () {
+                    window.authApi.logout();
+                });
+            }
+        });
+    </script>
+
+    <!-- Kit Reutilizable de Estados UI (SF-027) -->
+    <partial name="_UiStatesPartial" />
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
