@@ -3,9 +3,9 @@
 | Campo | Detalle |
 |---|---|
 | **Ticket de Trabajo** | SF-092 |
-| **Título del Ticket** | Pantalla Principal de Configuración (Captura 12 de Figma): Submenú de 5 Secciones, Datos de la Sucursal y Switches Operativos |
+| **Título del Ticket** | Pantalla Principal de Configuración (Captura 12 de Figma): Submenú Reactivo de 5 Secciones, Datos de la Sucursal y Switches Operativos |
 | **Caso de Prueba Relacionado** | RNF-01 (Usabilidad y Accesibilidad) / RNF-06 (Bootstrap 5.3.8 y Diseño Memorial) |
-| **Fecha y Hora de Ejecución** | 16/11/2026 00:40 |
+| **Fecha y Hora de Ejecución** | 16/11/2026 00:48 |
 | **Desarrollador / Tester** | Juan Romero (Senior Frontend Architect) / Edgar Acevedo (Lead QA) |
 | **Rama Git** | SF-019/VistaConfiguracion |
 
@@ -14,16 +14,19 @@
 ### 1. Resumen de Implementación
 * **`src/SistemaFuneraria.Web/Pages/Configuracion/Index.cshtml`:**
   * **Encabezado:** Kicker `ADMINISTRACIÓN`, título `Configuración`, subtítulo y botón primario con icono `<button id="btnGuardarCambios"><i class="fa-solid fa-floppy-disk me-2"></i> Guardar cambios</button>` con feedback toast.
-  * **Layout de 2 Columnas (`row g-4 mb-4`):**
-    * **Columna Izquierda (`col-lg-3 col-md-4`):** Tarjeta con submenú vertical de 5 secciones con iconos (`Datos de la sucursal` activo en fondo crema `#FAF8F5` y texto `#2D4224`, `Usuarios y roles`, `Planes y tasas`, `Notificaciones`, `Integraciones`).
-    * **Columna Derecha (`col-lg-9 col-md-8`):** Formulario "Datos de la sucursal" con los 6 campos oficiales (`Nombre comercial`, `Teléfono`, `Correo`, `Domicilio`, `Ciudad`, `Código postal`).
-  * **Switches de Automatización:** Toggles Bootstrap estilizados con verde olivo Serenia (`.sf-switch-olive:checked { background-color: #2D4224; border-color: #2D4224; }`) para `Recordatorios de pago` y `Resumen diario de caja`.
+  * **Submenú de 5 Secciones 100% Interactivo:**
+    1. **Datos de la sucursal:** Formulario con los 6 campos oficiales (`Nombre comercial`, `Teléfono`, `Correo`, `Domicilio`, `Ciudad`, `Código postal`) y los 2 switches de automatización en verde olivo (`Recordatorios de pago` y `Resumen diario de caja`).
+    2. **Usuarios y roles:** Tabla interactiva de colaboradores (`Andrea Morales`, `Carlos Mendoza`, `Guadalupe Ramos`) con avatares, badges de rol y estado, y resumen informativo de permisos RBAC.
+    3. **Planes y tasas:** Tarjetas de precios de lista de lotes (Básico, Familiar, Preferencial) y tabla de plazos/tasas (12, 18, 24, 48 meses) con switch de bono por liquidación anticipada.
+    4. **Notificaciones:** Configuración de canales (Email, WhatsApp/SMS) y switches de disparadores automáticos (pago aplicado, alerta preventiva, mora).
+    5. **Integraciones:** Tarjetas de servicios externos (Facturación CFDI 4.0 SAT, Terminal bancaria, SMTP y Webhooks).
+  * **Navegación Dinámica sin Recargas:** Controlador JavaScript que alterna la clase `.active`, estilos de resaltado crema/verde y visibilidad inmediata de los 5 paneles.
 * **`src/SistemaFuneraria.Web/Pages/Configuracion/Index.cshtml.cs`:**
-  * PageModel `IndexModel` implementado con propiedades predefinidas según Figma.
+  * PageModel `IndexModel` con propiedades y colecciones DTOs (`Usuarios`, `PlanesLotes`, `TasasPlazos`).
 * **`src/SistemaFuneraria.Web/Pages/Shared/_Layout.cshtml`:**
-  * Enlace activo "Configuración" en la sección ADMINISTRACIÓN del Sidebar hacia `/Configuracion` con detección reactiva (`esConfiguracion`).
+  * Enlace activo "Configuración" en la sección ADMINISTRACIÓN del Sidebar hacia `/Configuracion`.
 * **`tests/SistemaFuneraria.Tests/Unit/Web/ConfiguracionPageTests.cs`:**
-  * Prueba unitaria que valida la inicialización y consistencia de datos de la sucursal y switches.
+  * Prueba unitaria que valida la inicialización y consistencia de datos de las 5 secciones.
 
 ---
 
@@ -47,7 +50,6 @@ Total de la suite: 290 pruebas ejecutadas, 290 aprobadas (100% GREEN).
 ---
 
 ### 3. Fidelidad Figma Verificada (Cero Fantasía)
-- Grid de 2 columnas responsivo con submenú vertical de 5 ítems.
-- Datos prellenados de Jardines del Valle idénticos a Captura 12.
-- Switches de automatización operativa en fondo crema con toggle verde olivo `#2D4224`.
-- Botón superior "Guardar cambios" con confirmación visual.
+- Submenú de 5 opciones completamente reactivo con cambio instantáneo de panel.
+- Estilos visuales exactos: fondo crema `#FAF8F5`, texto verde Serenia `#2D4224` e icono activo en verde.
+- Paneles completos para las 5 secciones del sistema.

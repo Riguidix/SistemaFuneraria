@@ -27,5 +27,12 @@ public class ConfiguracionPageTests
         pageModel.RecordatoriosPagoActivo.Should().BeTrue("Los recordatorios de pago deben estar activados por defecto");
         pageModel.ResumenDiarioCajaActivo.Should().BeTrue("El resumen diario de caja debe estar activado por defecto");
         pageModel.SeccionActiva.Should().Be("DatosSucursal");
+
+        // Assert - Secciones del Submenú (Usuarios, Planes y Tasas)
+        pageModel.Usuarios.Should().HaveCount(3);
+        pageModel.Usuarios[0].Nombre.Should().Be("Andrea Morales");
+        pageModel.PlanesLotes.Should().HaveCount(3);
+        pageModel.PlanesLotes[0].Nombre.Should().Be("Lote Básico");
+        pageModel.TasasPlazos.Should().HaveCount(4);
     }
 }
