@@ -32,7 +32,7 @@
 
 ### 2. Evidencia de Ejecución GREEN
 ```bash
-dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~ReportesPageTests" --logger "console;verbosity=normal"
+dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~ReportesPageTests" --no-build -v normal
 ```
 
 ```text
@@ -41,17 +41,27 @@ Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...
 1 archivos de prueba en total coincidieron con el patrón especificado.
-  Aprobada SistemaFuneraria.Tests.Unit.Web.ReportesPageTests.Reportes_OnGet_DebeCargarKpisAnaliticaYMetasConformeFigmaCaptura11 [12 ms]
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.33)
+[xUnit.net 00:00:00.08]   Discovering: SistemaFuneraria.Tests
+[xUnit.net 00:00:00.23]   Discovered:  SistemaFuneraria.Tests
+[xUnit.net 00:00:00.23]   Starting:    SistemaFuneraria.Tests
+[xUnit.net 00:00:00.29]   Finished:    SistemaFuneraria.Tests
+  Correctas SistemaFuneraria.Tests.Unit.Web.ReportesPageTests.Reportes_OnGet_DebeCargarKpisAnaliticaYMetasConformeFigmaCaptura11 [14 ms]
 
-Correctas! - Con error:     0, Superado:     1, Omitido:     0, Total:     1, Duración: 14 ms - SistemaFuneraria.Tests.dll (net8.0)
-Total de la suite: 290 pruebas ejecutadas, 290 aprobadas (100% GREEN).
+La serie de pruebas se ejecutó correctamente.
+Pruebas totales: 1
+     Correcto: 1
+ Tiempo total: 0.8441 Segundos
 ```
 
 ---
 
-### 3. Fidelidad Figma Verificada (Cero Fantasía)
-- Kicker `ANALÍTICA` y acción `Descargar reporte`.
-- Filtros interactivos de periodo y sucursal.
-- 3 tarjetas KPI con iconos circulares y contrastes accesibles.
-- Barras horizontales proporcionales en verde olivo Serenia.
-- Dona de meta mensual estilizada con `conic-gradient` sin dependencias externas pesadas.
+### 3. Evidencia Visual Verificada (Cero Fantasía)
+![Reportes y Analítica](./vista_reportes_analitica.jpg)
+
+### 4. Fidelidad Figma Verificada (Cero Fantasía)
+- Kicker `ANALÍTICA`, título `Reportes` y acción `Descargar reporte`.
+- Filtros interactivos de periodo (`Noviembre 2025`) y sucursal (`Jardines del Valle`).
+- 3 tarjetas KPI con iconos circulares y contrastes accesibles (`Conversión de cotización 32.8%`, `Ticket promedio $147,420`, `Índice de morosidad 6.2%`).
+- Barras horizontales proporcionales en verde olivo Serenia (`Lote 2 gavetas $198,000`, `Lote 3 gavetas $168,500`, `Lote 4 gavetas $120,000`).
+- Dona de meta mensual estilizada con `conic-gradient` al `81%`, acumulado (`$486,500`) y objetivo mensual (`$600,000`) sin dependencias externas pesadas.
