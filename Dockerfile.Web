@@ -1,0 +1,23 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY Directory.Build.props Directory.Packages.props global.json ./
+COPY src/SistemaFuneraria.Core/SistemaFuneraria.Core.csproj src/SistemaFuneraria.Core/
+COPY src/SistemaFuneraria.Application/SistemaFuneraria.Application.csproj src/SistemaFuneraria.Application/
+COPY src/SistemaFuneraria.Web/SistemaFuneraria.Web.csproj src/SistemaFuneraria.Web/
+
+RUN dotnet restore src/SistemaFuneraria.Web/SistemaFuneraria.Web.csproj
+
+COPY src/SistemaFuneraria.Core/ src/SistemaFuneraria.Core/
+COPY src/SistemaFuneraria.Application/ src/SistemaFuneraria.Application/
+COPY src/SistemaFuneraria.Web/ src/SistemaFuneraria.Web/
+
+RUN dotnet publish src/SistemaFuneraria.Web/SistemaFuneraria.Web.csproj -c Release -o /app/publish --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+COPY --from=build /app/publish .
+ENTRYPOINT ["dotnet", "SistemaFuneraria.Web.dll"]

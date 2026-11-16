@@ -23,9 +23,9 @@ Demostrar que los métodos de validación de negocio O(1) (`EsPrecioAutorizado`,
 
 ### 4. Salida de Terminal (Falla Esperada)
 ```text
-C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria\src\SistemaFuneraria.Core\Comun\ParametrosNegocio.cs(37,20): error CS1002: Se esperaba ; [C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria\src\SistemaFuneraria.Core\SistemaFuneraria.Core.csproj]
-C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\Core\ParametrosNegocioTests.cs(14,26): error CS0117: 'ParametrosNegocio' no contiene una definición para 'EsPrecioAutorizado'
-C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\Core\ParametrosNegocioTests.cs(24,26): error CS0117: 'ParametrosNegocio' no contiene una definición para 'EsEngancheAutorizado'
+src\SistemaFuneraria.Core\Comun\ParametrosNegocio.cs(37,20): error CS1002: Se esperaba ; [src\SistemaFuneraria.Core\SistemaFuneraria.Core.csproj]
+tests\SistemaFuneraria.Tests\Unit\Core\ParametrosNegocioTests.cs(14,26): error CS0117: 'ParametrosNegocio' no contiene una definición para 'EsPrecioAutorizado'
+tests\SistemaFuneraria.Tests\Unit\Core\ParametrosNegocioTests.cs(24,26): error CS0117: 'ParametrosNegocio' no contiene una definición para 'EsEngancheAutorizado'
 
 ERROR al compilar.
     0 Advertencia(s)

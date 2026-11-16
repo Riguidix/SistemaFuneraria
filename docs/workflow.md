@@ -163,19 +163,21 @@ git push origin feature/SF-010-calculadora-financiamiento
 
 ### Paso 7: Abre tu Pull Request (PR) en GitHub
 1. Ve al repositorio en GitHub. Verás un botón amarillo que dice **"Compare & pull request"**. Haz clic en él.
-2. **Base:** `dev` $\leftarrow$ **Compare:** `feature/SF-010-calculadora-financiamiento`.
+2. **Base:** `dev` $\leftarrow$ **Compare:** `feature/SF-XXX-nombre-corto` (ej. `feature/SF-019-proyecto-api`).
 3. Llena la plantilla de Pull Request que aparecerá automáticamente en pantalla:
-   * Describe qué problema resolviste y cómo lo implementaste.
-   * **Crea y sube tus evidencias TDD en Markdown:** Crea la carpeta `docs/evidencias/SF-XXX/` y adentro genera `Red_Test.md` (falla previa) y `Green_Test.md` (pase exitoso) usando las plantillas de `docs/evidencias/README.md`.
-   * Confirma que tu PR no excede las 300 líneas de código (Blast Radius $\le 300$ LOCs).
-4. Asigna como revisores a un compañero de equipo (Revisión Par) y al **Tech Lead**.
+   * Describe qué problema resolviste y cómo lo implementaste (indicando la capa: `Core`, `Application`, `Infrastructure`, `Api`, `Web` o `Tests`).
+   * **Crea y sube tus evidencias TDD en Markdown:** Crea la carpeta `docs/evidencias/SF-XXX/` y adentro genera `Red_Test.md` (falla previa) y `Green_Test.md` (pase exitoso, más captura de pantalla si el ticket pertenece a `Web`/Figma) usando las plantillas de `docs/evidencias/README.md`.
+   * Confirma que tu PR no excede las 300 líneas de código (Blast Radius $\le 300$ LOCs; objetivo ideal $\le 250$ LOCs).
+4. Asigna obligatoriamente a los revisores en orden:
+   * **Revisor Paso 1 (Obligatorio):** **Edgar Acevedo** (QA & DevOps Gatekeeper).
+   * **Revisor Paso 2 (Obligatorio):** **Reydescel** (Tech Lead / Arquitecto).
 5. Haz clic en **Create Pull Request**.
 
 ---
 
-### Paso 8: Revisión y Aprobación (Doble Filtro de Calidad)
-* Tu compañero de equipo revisará tu código y dejará comentarios o su aprobación.
-* El **Tech Lead** hará la revisión técnica final.
+### Paso 8: Revisión y Aprobación (Doble Filtro: QA Edgar $\rightarrow$ Tech Lead Reydescel)
+* **Filtro 1 — Edgar Acevedo (QA & Evidencias):** Verifica que el PR incluya `docs/evidencias/SF-XXX/Red_Test.md` y `Green_Test.md`, que el límite de Blast Radius ($\le 300$ LOCs) se cumpla y que las pruebas HTTP/unitarias estén en verde. Sin su aprobación, el PR no pasa a merge.
+* **Filtro 2 — Reydescel (Tech Lead):** Verifica la Clean Architecture de 6 proyectos (cero referencias de `Web` a `Infrastructure`/BD, cero NuGets en `Core`) y el contrato de datos DTO/API.
 * **GitHub Actions CI** compilará y ejecutará las pruebas automáticamente en el servidor. Si el CI se pone en rojo ❌, revisa el log, corrige el error en tu computadora, haz commit y vuelve a subir (`git push`).
 * Una vez aprobado con doble check verde ✅, el Tech Lead hará **Squash and Merge** a `dev`.
 * En ese momento, GitHub moverá automáticamente tu tarjeta a **Done (Completado)**.

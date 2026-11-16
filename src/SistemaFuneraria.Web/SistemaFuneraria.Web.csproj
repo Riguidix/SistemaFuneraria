@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj" />
-    <ProjectReference Include="..\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
