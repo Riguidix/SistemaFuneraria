@@ -22,6 +22,7 @@
     bool esContratos = rutaActual.StartsWith("/Contratos", StringComparison.OrdinalIgnoreCase);
     bool esCaja = rutaActual.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase) || rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
     bool esParametrosUi = rutaActual.StartsWith("/ParametrosUi", StringComparison.OrdinalIgnoreCase);
+    bool esConfiguracion = rutaActual.StartsWith("/Configuracion", StringComparison.OrdinalIgnoreCase);
 }
 <body class="funeraria-app">
     <div class="funeraria-wrapper">
@@ -97,9 +98,9 @@
                             <span>Reportes</span>
                         </a>
                     </li>
-                    <!-- 8. Configuración (Inerte) -->
+                    <!-- 8. Configuración (Activo SF-092 · Captura 12) -->
                     <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Configuración (No navegable)">
+                        <a href="/Configuracion" class="funeraria-nav-item @(esConfiguracion ? "active" : "")" @(esConfiguracion ? "aria-current=\"page\"" : "") title="Configuración">
                             <i class="fa-solid fa-gear fa-fw" aria-hidden="true"></i>
                             <span>Configuración</span>
                         </a>
