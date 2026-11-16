@@ -77,10 +77,25 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-await IdentitySeed.SeedAsync(app.Services);
-
 if (app.Environment.IsDevelopment())
 {
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    
+        if (db.Database.IsRelational())
+        {
+            await db.Database.MigrateAsync();
+        }
+    
+        await IdentitySeed.SeedAsync(app.Services);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Error al migrar o sembrar la base de datos en Development.");
+    }
+
     app.UseSwagger(options =>
     {
         options.SerializeAsV2 = true;
