@@ -54,6 +54,7 @@ Cada registro refleja una corrida formal. Cuando una prueba resulta `Fallida`, g
 | **Casos Límite y Redondeo BVA** | Unit | `GeneradorAmortizacionTests.cs` | `Generar_EnCualquierPlazoAutorizado_UltimoPeriodoDebeCerrarSaldoEnCeroExacto` | 5 pruebas | `Aprobado` (PR #70 / SF-011) |
 | **Validación de Entradas EP** | Unit | `SimuladorServiceTests.cs` | `Simular_ConParametrosNoAutorizados_DebeRetornarFallo` | 6 pruebas | `Aprobado` (PR #69 / SF-013) |
 | **Transaccionalidad y Concurrencia** | Integration | `PostgresConexionTests.cs` | `CanConnect_PostgresContainer_DebeAbrirConexion` | 1 prueba | `Aprobado` (PR #63 / SF-002) |
+| **QA Gate v0.2.0 (Auth, Lockout, RBAC y /health)** | Integration HTTP | `AuthYUsuariosAdminHttpTests.cs` | `Health_DebeRetornar200Ok`, `AdminUsuarios_DebePermitirAdministradorYRechazarVendedorYCajero`, `Login_AlQuintoIntentoFallido_DebeRetornar423Locked`, `OlvideContrasena_DebeAplicarJitterMinimo200Ms` | 4 pruebas | `Aprobado` (SF-030) |
 
 ---
 

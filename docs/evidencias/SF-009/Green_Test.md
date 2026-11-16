@@ -25,9 +25,9 @@ dotnet test --filter "FullyQualifiedName~CalculadoraTasasTests"
 ```text
 Determinando los proyectos que se van a restaurar...
 Todos los proyectos están actualizados para la restauración.
-SistemaFuneraria.Core -> C:\Users\PC\SistemaFuneraria\src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
-SistemaFuneraria.Tests -> C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll
-Serie de pruebas para C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+SistemaFuneraria.Core -> src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
+SistemaFuneraria.Tests -> tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll
+Serie de pruebas para tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 Versión 17.11.1 de VSTest
 
 Iniciando la ejecución de pruebas, espere...

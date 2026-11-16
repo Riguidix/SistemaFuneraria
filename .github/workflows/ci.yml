@@ -41,6 +41,13 @@ jobs:
       - name: 🔨 Compilar solución en Release
         run: dotnet build --no-restore --configuration Release
 
+      - name: 🔍 Validar evidencias sin rutas locales
+        run: |
+          if grep -rnE -i "(/Users/|C:\\\\|C:/Users/)" docs/evidencias/ 2>/dev/null; then
+            echo "::error::Se detectaron rutas locales absolutas en docs/evidencias/."
+            exit 1
+          fi
+
       - name: 🧪 Ejecutar Suite de Pruebas (xUnit)
         env:
           ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=funeraria_test;Username=postgres;Password=postgres_test_password"

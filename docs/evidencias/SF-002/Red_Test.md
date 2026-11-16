@@ -36,12 +36,12 @@ powershell -Command "& { try { (New-Object Net.Sockets.TcpClient).Connect('127.0
 ### 3. Salida de Terminal (Falla Esperada / RED)
 
 ```text
-PS C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria> Test-Path docker-compose.yml; Test-Path .env.example; Test-Path scripts/db/init.sql
+PS <repo>> Test-Path docker-compose.yml; Test-Path .env.example; Test-Path scripts/db/init.sql
 False
 False
 False
 
-PS C:\Users\gaalz\OneDrive\Documents\GitHub\SistemaFuneraria> powershell -Command "& { try { (New-Object Net.Sockets.TcpClient).Connect('127.0.0.1', 5432); 'CONNECTED' } catch { 'CONNECTION_REFUSED: ' + `$_.Exception.Message } }"
+PS <repo>> powershell -Command "& { try { (New-Object Net.Sockets.TcpClient).Connect('127.0.0.1', 5432); 'CONNECTED' } catch { 'CONNECTION_REFUSED: ' + `$_.Exception.Message } }"
 CONNECTION_REFUSED: Excepción al llamar a "Connect" con los argumentos "2": "Intento de acceso a un socket no permitido por sus permisos de acceso 127.0.0.1:5432"
 ```
 
