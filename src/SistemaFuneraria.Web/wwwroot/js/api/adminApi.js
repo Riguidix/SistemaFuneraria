@@ -1,80 +1,73 @@
 /**
- * Módulo de API para administración de usuarios y roles (SF-029).
- * Consume los endpoints REST de /api/v1/admin/usuarios.
+ * Opciones inyectables para {@link adminApi}.
+ * @typedef {Object} AdminApiOptions
+ * @property {import("./apiClient")} [client] Cliente HTTP alternativo (por defecto `apiClient`).
  */
-export const adminApi = {
+
+const ADMIN_USUARIOS_ENDPOINT = "/api/v1/admin/usuarios";
+
+/**
+ * Resuelve la instancia de `apiClient` compatible con navegador y Node.
+ * @param {AdminApiOptions} [opts]
+ * @returns {import("./apiClient")}
+ */
+function resolveClient(opts) {
+    if (opts && opts.client) {
+        return opts.client;
+    }
+    if (typeof window !== "undefined" && window.apiClient) {
+        return window.apiClient;
+    }
+    if (typeof require === "function") {
+        return require("./apiClient.js");
+    }
+    throw new Error("apiClient no está disponible. Asegúrate de cargar apiClient.js antes de adminApi.js.");
+}
+
+/**
+ * Módulo de API para administración de usuarios y roles (`SF-029`).
+ * Delega todas las peticiones a `apiClient` (JWT Bearer + RFC 7807 ProblemDetails).
+ */
+const adminApi = {
     /**
      * Obtiene la lista completa de usuarios operativos del sistema.
-     * @param {string} apiBase - URL base del endpoint.
-     * @returns {Promise<Array>} Lista de usuarios.
+     * @param {AdminApiOptions} [opts]
+     * @returns {Promise<Array<Object>>}
      */
-    async listarUsuarios(apiBase = '/api/v1/admin/usuarios') {
-        const response = await fetch(apiBase, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' }
-        });
-        if (!response.ok) {
-            throw new Error(`Error al listar usuarios (${response.status})`);
-        }
-        return await response.json();
-    },
+    listarUsuarios: (opts = {}) => resolveClient(opts).get(ADMIN_USUARIOS_ENDPOINT, opts),
 
     /**
      * Registra un nuevo usuario en el sistema.
-     * @param {Object} data - Datos del usuario (NombreCompleto, Correo, Password, Rol, Sucursal).
-     * @param {string} apiBase - URL base del endpoint.
-     * @returns {Promise<Object>} Usuario creado.
+     * @param {{ nombreCompleto: string, correo: string, password: string, rol: string, sucursal?: string }} data
+     * @param {AdminApiOptions} [opts]
+     * @returns {Promise<Object>}
      */
-    async crearUsuario(data, apiBase = '/api/v1/admin/usuarios') {
-        const response = await fetch(apiBase, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) {
-            throw new Error(`Error al crear usuario (${response.status})`);
-        }
-        return await response.json();
-    },
+    crearUsuario: (data, opts = {}) => resolveClient(opts).post(ADMIN_USUARIOS_ENDPOINT, data, opts),
 
     /**
      * Actualiza información de perfil, rol o desbloquea una cuenta.
-     * @param {string} id - Identificador de usuario.
-     * @param {Object} data - Datos actualizados (NombreCompleto, Rol, Sucursal, Desbloquear).
-     * @param {string} apiBase - URL base del endpoint.
-     * @returns {Promise<Object>} Usuario actualizado.
+     * @param {string} id Identificador del usuario.
+     * @param {{ nombreCompleto?: string, rol?: string, sucursal?: string, desbloquear?: boolean }} data
+     * @param {AdminApiOptions} [opts]
+     * @returns {Promise<Object>}
      */
-    async actualizarUsuario(id, data, apiBase = '/api/v1/admin/usuarios') {
-        const response = await fetch(`${apiBase}/${encodeURIComponent(id)}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-        if (!response.ok) {
-            throw new Error(`Error al actualizar usuario (${response.status})`);
-        }
-        return await response.json();
-    },
+    actualizarUsuario: (id, data, opts = {}) =>
+        resolveClient(opts).put(`${ADMIN_USUARIOS_ENDPOINT}/${encodeURIComponent(id)}`, data, opts),
 
     /**
-     * Elimina un usuario del sistema (prohíbe auto-eliminación).
-     * @param {string} id - Identificador de usuario.
-     * @param {string} apiBase - URL base del endpoint.
-     * @returns {Promise<boolean>} True si fue exitoso.
+     * Elimina un usuario del sistema (prohíbe auto-eliminación en el servidor).
+     * @param {string} id Identificador del usuario.
+     * @param {AdminApiOptions} [opts]
+     * @returns {Promise<null>}
      */
-    async eliminarUsuario(id, apiBase = '/api/v1/admin/usuarios') {
-        const response = await fetch(`${apiBase}/${encodeURIComponent(id)}`, {
-            method: 'DELETE'
-        });
-        if (!response.ok) {
-            throw new Error(`Error al eliminar usuario (${response.status})`);
-        }
-        return response.status === 204;
-    }
+    eliminarUsuario: (id, opts = {}) =>
+        resolveClient(opts).delete(`${ADMIN_USUARIOS_ENDPOINT}/${encodeURIComponent(id)}`, opts)
 };
+
+if (typeof window !== "undefined") {
+    window.adminApi = adminApi;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = adminApi;
+}

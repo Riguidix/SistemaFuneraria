@@ -21,15 +21,16 @@ const SESSION_STORAGE_KEY = "sf_session";
 class ApiError extends Error {
     /**
      * @param {string} message Mensaje legible del error (prioriza `detail` o `title` de ProblemDetails).
-     * @param {{ status?: number, title?: string|null, detail?: string|null, errors?: Record<string, string[]>|null }} [meta]
+     * @param {{ status?: number, title?: string|null, detail?: string|null, errors?: Record<string, string[]>|null, payload?: any }} [meta]
      */
-    constructor(message, { status = 0, title = null, detail = null, errors = null } = {}) {
+    constructor(message, { status = 0, title = null, detail = null, errors = null, payload = null } = {}) {
         super(message);
         this.name = "ApiError";
         this.status = status;
         this.title = title;
         this.detail = detail;
         this.errors = errors;
+        this.payload = payload;
     }
 }
 
@@ -203,7 +204,8 @@ async function request(endpoint, method, options = {}, data = null) {
             status: response.status,
             title: payload?.title ?? null,
             detail: payload?.detail ?? null,
-            errors: payload?.errors ?? null
+            errors: payload?.errors ?? null,
+            payload
         });
     }
 
