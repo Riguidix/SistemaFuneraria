@@ -27,7 +27,7 @@
 
 ### 2. Evidencia de Ejecución de Pruebas GREEN
 ```bash
-dotnet test --filter "FullyQualifiedName~NuevaVentaShellTests"
+dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~NuevaVentaShellTests" --no-build -v normal
 ```
 
 ```text
@@ -36,20 +36,32 @@ Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...
 1 archivos de prueba en total coincidieron con el patrón especificado.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.33)
+[xUnit.net 00:00:00.13]   Discovering: SistemaFuneraria.Tests
+[xUnit.net 00:00:00.28]   Discovered:  SistemaFuneraria.Tests
+[xUnit.net 00:00:00.28]   Starting:    SistemaFuneraria.Tests
+[xUnit.net 00:00:00.36]   Finished:    SistemaFuneraria.Tests
+  Correctas SistemaFuneraria.Tests.Unit.Web.NuevaVentaShellTests.NuevaVenta_OnGet_DebeInicializarPaso1YResumenDeCotizacionConformeFigma [24 ms]
 
-Correctas! - Con error:     0, Superado:     1, Omitido:     0, Total:     1, Duración: < 1 ms - SistemaFuneraria.Tests.dll (net8.0)
-```
-
-Suite completa de pruebas unitarias:
-```bash
-dotnet test --filter "FullyQualifiedName!~Integration"
-```
-
-```text
-Correctas! - Con error:     0, Superado:   294, Omitido:     0, Total:   294, Duración: 1 s - SistemaFuneraria.Tests.dll (net8.0)
+La serie de pruebas se ejecutó correctamente.
+Pruebas totales: 1
+     Correcto: 1
+ Tiempo total: 1.0526 Segundos
 ```
 
 ---
 
-### 3. Conclusión de Calidad
-Todos los criterios de aceptación y especificaciones de diseño Figma (Capturas 5 a 8) fueron verificados con éxito sin impacto negativo sobre el resto de la aplicación.
+### 3. Evidencia Visual Verificada (Cero Fantasía)
+![Shell del Wizard Nueva Venta](./vista_nueva_venta_shell.png)
+
+---
+
+### 4. Fidelidad Figma Verificada (Cero Fantasía — Captura 5)
+- **Cabecera comercial:** Kicker `PROCESO COMERCIAL`, título `Nueva venta`, bajada descriptiva y badge `✓ Borrador guardado`.
+- **Stepper horizontal de 4 pasos:** `1 Cliente`, `2 Lote`, `3 Financiamiento`, `4 Confirmación`, con paso 1 activo en verde olivo (`#2D4224`).
+- **Formulario Paso 1:** Buscador de cliente, divisor `O CAPTURA SUS DATOS`, campos Nombre(s), Apellidos, CURP, Teléfono, Correo electrónico y botones `Anterior` / `Continuar →`.
+- **Panel Lateral Fijo (`RESUMEN DE COTIZACIÓN`):**
+  - Título dinámico: `Lote Básico`.
+  - Cuadrícula de gavetas 2x4 (`A`, `B`, `42`, `43` / `C`, `44`, `45`, `46`) con gaveta `42` iluminada en verde bosque (`#2D4224`).
+  - Clave `JN-A-042`, Capacidad `2 gavetas`, Precio de lista `$120,000.00`.
+  - Recuadro inferior con total estimado `$120,000.00` e indicación `Importes expresados en MXN`.
