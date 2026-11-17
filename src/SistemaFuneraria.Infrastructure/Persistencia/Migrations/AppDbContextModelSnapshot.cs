@@ -286,6 +286,70 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SistemaFuneraria.Core.Entidades.Lote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AndadorFila")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("andador_fila");
+
+                    b.Property<string>("Clave")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("clave");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("estado");
+
+                    b.Property<int>("Gavetas")
+                        .HasColumnType("integer")
+                        .HasColumnName("gavetas");
+
+                    b.Property<decimal>("PrecioContado")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("precio_contado");
+
+                    b.Property<string>("Seccion")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("seccion");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Clave")
+                        .IsUnique()
+                        .HasDatabaseName("ix_lotes_clave");
+
+                    b.HasIndex("Seccion", "Estado", "Gavetas")
+                        .HasDatabaseName("ix_lotes_filtros");
+
+                    b.ToTable("lotes", null, t =>
+                        {
+                            t.HasCheckConstraint("lotes_estado_check", "estado IN ('Disponible', 'Reservado', 'Vendido', 'Mantenimiento')");
+
+                            t.HasCheckConstraint("lotes_gavetas_check", "gavetas IN (2, 3, 4)");
+
+                            t.HasCheckConstraint("lotes_precio_contado_check", "precio_contado > 0");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
