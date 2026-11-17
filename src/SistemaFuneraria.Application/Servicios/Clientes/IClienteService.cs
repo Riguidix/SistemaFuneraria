@@ -38,4 +38,8 @@ public interface IClienteService
     /// <param name="cancellationToken">Token de cancelación opcional.</param>
     /// <returns>Colección de sólo lectura de clientes.</returns>
     Task<Resultado<IReadOnlyList<ClienteDto>>> ListarClientesAsync(CancellationToken cancellationToken = default);
+
+    Task<Resultado> ActualizarClienteAsync(Guid id, ActualizarClienteRequest request, CancellationToken cancellationToken = default);
+
+    Task<Resultado> EliminarClienteAsync(Guid id, CancellationToken cancellationToken = default);
 }

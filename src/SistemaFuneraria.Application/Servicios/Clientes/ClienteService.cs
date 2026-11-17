@@ -121,4 +121,65 @@ public class ClienteService(IAppDbContext context) : IClienteService
             
         return dtos;
     }
+
+    public async Task<Resultado> ActualizarClienteAsync(Guid id, ActualizarClienteRequest request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var cliente = await context.Clientes.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            if (cliente is null)
+            {
+                return Resultado.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
+            }
+
+            var curpNormalizada = request.Curp?.Trim().ToUpperInvariant() ?? string.Empty;
+            var correoNormalizado = request.Correo?.Trim().ToLowerInvariant() ?? string.Empty;
+
+            var existeCurp = await context.Clientes.AnyAsync(c => c.Curp == curpNormalizada && c.Id != id, cancellationToken);
+            if (existeCurp)
+            {
+                return Resultado.Fallo("Ya existe un cliente registrado con esa CURP.");
+            }
+
+            var existeCorreo = await context.Clientes.AnyAsync(c => c.Correo == correoNormalizado && c.Id != id, cancellationToken);
+            if (existeCorreo)
+            {
+                return Resultado.Fallo("Ya existe un cliente registrado con ese correo electrónico.");
+            }
+
+            cliente.Actualizar(request.Nombre, request.Apellidos, curpNormalizada, request.Telefono, correoNormalizado, request.Direccion);
+            await context.SaveChangesAsync(cancellationToken);
+
+            return Resultado.Exito();
+        }
+        catch (ReglaNegocioException ex)
+        {
+            return Resultado.Fallo(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return Resultado.Fallo(ex.Message);
+        }
+    }
+
+    public async Task<Resultado> EliminarClienteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var cliente = await context.Clientes.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            if (cliente is null)
+            {
+                return Resultado.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
+            }
+
+            context.Clientes.Remove(cliente);
+            await context.SaveChangesAsync(cancellationToken);
+
+            return Resultado.Exito();
+        }
+        catch (Exception ex)
+        {
+            return Resultado.Fallo(ex.Message);
+        }
+    }
 }

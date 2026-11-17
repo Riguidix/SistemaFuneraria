@@ -134,4 +134,74 @@ public class Cliente
             direccionNormalizada,
             DateTimeOffset.UtcNow);
     }
+
+    public void Actualizar(
+        string nombre,
+        string apellidos,
+        string curp,
+        string telefono,
+        string correo,
+        string direccion)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+            throw new ReglaNegocioException("El nombre del cliente es obligatorio.");
+        }
+        string nombreNormalizado = nombre.Trim();
+        if (nombreNormalizado.Length > 100)
+        {
+            throw new ReglaNegocioException("El nombre del cliente no puede exceder los 100 caracteres.");
+        }
+
+        if (string.IsNullOrWhiteSpace(apellidos))
+        {
+            throw new ReglaNegocioException("Los apellidos del cliente son obligatorios.");
+        }
+        string apellidosNormalizado = apellidos.Trim();
+        if (apellidosNormalizado.Length > 100)
+        {
+            throw new ReglaNegocioException("Los apellidos del cliente no pueden exceder los 100 caracteres.");
+        }
+
+        if (string.IsNullOrWhiteSpace(curp))
+        {
+            throw new ReglaNegocioException("El CURP del cliente es obligatorio.");
+        }
+        string curpNormalizado = curp.Trim().ToUpperInvariant();
+        if (!RegexCurp.IsMatch(curpNormalizado))
+        {
+            throw new ReglaNegocioException($"El CURP '{curp}' es inválido. Debe contener exactamente 18 caracteres alfanuméricos.");
+        }
+
+        if (string.IsNullOrWhiteSpace(telefono))
+        {
+            throw new ReglaNegocioException("El teléfono del cliente es obligatorio.");
+        }
+        string telefonoNormalizado = telefono.Trim();
+        if (!RegexTelefono.IsMatch(telefonoNormalizado))
+        {
+            throw new ReglaNegocioException($"El teléfono '{telefono}' es inválido. Debe contener exactamente 10 dígitos numéricos.");
+        }
+
+        if (string.IsNullOrWhiteSpace(correo))
+        {
+            throw new ReglaNegocioException("El correo electrónico del cliente es obligatorio.");
+        }
+        string correoNormalizado = correo.Trim().ToLowerInvariant();
+        if (correoNormalizado.Length > 255)
+        {
+            throw new ReglaNegocioException("El correo electrónico no puede exceder los 255 caracteres.");
+        }
+        if (!RegexCorreo.IsMatch(correoNormalizado))
+        {
+            throw new ReglaNegocioException($"El correo electrónico '{correo}' tiene un formato inválido.");
+        }
+
+        Nombre = nombreNormalizado;
+        Apellidos = apellidosNormalizado;
+        Curp = curpNormalizado;
+        Telefono = telefonoNormalizado;
+        Correo = correoNormalizado;
+        Direccion = string.IsNullOrWhiteSpace(direccion) ? "Sin dirección registrada" : direccion.Trim();
+    }
 }
