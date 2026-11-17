@@ -20,7 +20,7 @@ dotnet test --filter "FullyQualifiedName~LoginPageTests" --logger "console;verbo
 Iniciando la ejecución de pruebas, espere...
 1 archivos de prueba en total coincidieron con el patrón especificado.
 
-C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\Web\LoginPageTests.cs(4,34): error CS0234: El tipo o el nombre del espacio de nombres 'Cuenta' no existe en el espacio de nombres 'SistemaFuneraria.Web.Pages' (¿falta alguna referencia de ensamblado?) [C:\Users\PC\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+tests\SistemaFuneraria.Tests\Unit\Web\LoginPageTests.cs(4,34): error CS0234: El tipo o el nombre del espacio de nombres 'Cuenta' no existe en el espacio de nombres 'SistemaFuneraria.Web.Pages' (¿falta alguna referencia de ensamblado?) [tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
 
 ERROR al compilar.
     1 Errores

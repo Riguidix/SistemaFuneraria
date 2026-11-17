@@ -25,17 +25,17 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --no-rest
 
 ### 3. Salida Real de Terminal (Pase Exitoso)
 ```text
-  SistemaFuneraria.Core -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
-  SistemaFuneraria.Application -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\bin\Debug\net8.0\SistemaFuneraria.Application.dll
-  SistemaFuneraria.Infrastructure -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Infrastructure\bin\Debug\net8.0\SistemaFuneraria.Infrastructure.dll
-  SistemaFuneraria.Web -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\bin\Debug\net8.0\SistemaFuneraria.Web.dll
-  SistemaFuneraria.Tests -> C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+  SistemaFuneraria.Core -> src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
+  SistemaFuneraria.Application -> src\SistemaFuneraria.Application\bin\Debug\net8.0\SistemaFuneraria.Application.dll
+  SistemaFuneraria.Infrastructure -> src\SistemaFuneraria.Infrastructure\bin\Debug\net8.0\SistemaFuneraria.Infrastructure.dll
+  SistemaFuneraria.Web -> src\SistemaFuneraria.Web\bin\Debug\net8.0\SistemaFuneraria.Web.dll
+  SistemaFuneraria.Tests -> tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.12.0 (x64)
 
 Starting test execution, please wait...
 A total of 1 test files matched the specified pattern.
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll
+tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll
 [xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 10.0.14)
 [xUnit.net 00:00:00.06]   Discovering: SistemaFuneraria.Tests
 [xUnit.net 00:00:00.09]   Discovered:  SistemaFuneraria.Tests

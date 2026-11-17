@@ -27,20 +27,20 @@ dotnet build tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj
 ### 3. Salida Real de Terminal (Falla Esperada / RED)
 ```text
   Determining projects to restore...
-  Restored C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj (in 1.19 sec).
-  Restored C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\SistemaFuneraria.Web.csproj (in 660 ms).
-  Restored C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj (in 509 ms).
-  Restored C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Core\SistemaFuneraria.Core.csproj (in 133 ms).
-  Restored C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj (in 4.89 sec).
-  SistemaFuneraria.Core -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
-  SistemaFuneraria.Application -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\bin\Debug\net8.0\SistemaFuneraria.Application.dll
-  SistemaFuneraria.Infrastructure -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Infrastructure\bin\Debug\net8.0\SistemaFuneraria.Infrastructure.dll
-  SistemaFuneraria.Web -> C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\bin\Debug\net8.0\SistemaFuneraria.Web.dll
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\ClienteContratosTests.cs(4,46): error CS0234: The type or namespace name 'Clientes' does not exist in the namespace 'SistemaFuneraria.Application.Servicios' (are you missing an assembly reference?) [C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+  Restored src\SistemaFuneraria.Application\SistemaFuneraria.Application.csproj (in 1.19 sec).
+  Restored src\SistemaFuneraria.Web\SistemaFuneraria.Web.csproj (in 660 ms).
+  Restored src\SistemaFuneraria.Infrastructure\SistemaFuneraria.Infrastructure.csproj (in 509 ms).
+  Restored src\SistemaFuneraria.Core\SistemaFuneraria.Core.csproj (in 133 ms).
+  Restored tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj (in 4.89 sec).
+  SistemaFuneraria.Core -> src\SistemaFuneraria.Core\bin\Debug\net8.0\SistemaFuneraria.Core.dll
+  SistemaFuneraria.Application -> src\SistemaFuneraria.Application\bin\Debug\net8.0\SistemaFuneraria.Application.dll
+  SistemaFuneraria.Infrastructure -> src\SistemaFuneraria.Infrastructure\bin\Debug\net8.0\SistemaFuneraria.Infrastructure.dll
+  SistemaFuneraria.Web -> src\SistemaFuneraria.Web\bin\Debug\net8.0\SistemaFuneraria.Web.dll
+tests\SistemaFuneraria.Tests\Application\ClienteContratosTests.cs(4,46): error CS0234: The type or namespace name 'Clientes' does not exist in the namespace 'SistemaFuneraria.Application.Servicios' (are you missing an assembly reference?) [tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
 
 Build FAILED.
 
-C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\ClienteContratosTests.cs(4,46): error CS0234: The type or namespace name 'Clientes' does not exist in the namespace 'SistemaFuneraria.Application.Servicios' (are you missing an assembly reference?) [C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
+tests\SistemaFuneraria.Tests\Application\ClienteContratosTests.cs(4,46): error CS0234: The type or namespace name 'Clientes' does not exist in the namespace 'SistemaFuneraria.Application.Servicios' (are you missing an assembly reference?) [tests\SistemaFuneraria.Tests\SistemaFuneraria.Tests.csproj]
     0 Warning(s)
     1 Error(s)
 

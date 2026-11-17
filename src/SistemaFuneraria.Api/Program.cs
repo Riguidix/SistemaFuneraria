@@ -53,17 +53,23 @@ builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbConte
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ISimuladorService, SimuladorService>();
 
+var allowedOriginsRaw = builder.Configuration["Cors:AllowedOrigins"];
+var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsRaw)
+    ? new[] { "http://localhost:5080", "https://localhost:7080" }
+    : allowedOriginsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(corsPolicy, policy =>
     {
-        policy.WithOrigins("http://localhost:5080", "https://localhost:7080")
+        policy.WithOrigins(allowedOrigins)
               .WithHeaders("Authorization", "Content-Type")
               .AllowAnyMethod();
     });
 });
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -77,25 +83,36 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+var autoMigrate = builder.Configuration.GetValue<bool?>("Database:AutoMigrate")
+    ?? app.Environment.IsDevelopment();
+var seedDemoUsers = builder.Configuration.GetValue<bool?>("Database:SeedDemoUsers")
+    ?? app.Environment.IsDevelopment();
+
+if (autoMigrate || seedDemoUsers)
 {
     try
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-        if (db.Database.IsRelational())
+
+        if (autoMigrate && db.Database.IsRelational())
         {
             await db.Database.MigrateAsync();
         }
-    
-        await IdentitySeed.SeedAsync(app.Services);
+
+        if (seedDemoUsers)
+        {
+            await IdentitySeed.SeedAsync(app.Services);
+        }
     }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "Error al migrar o sembrar la base de datos en Development.");
+        app.Logger.LogError(ex, "Error al migrar o sembrar la base de datos al iniciar la API.");
     }
+}
 
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger(options =>
     {
         options.SerializeAsV2 = true;
@@ -111,6 +128,7 @@ app.UseCors(corsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();

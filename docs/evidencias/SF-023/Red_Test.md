@@ -27,7 +27,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 
 ### 4. Salida Real de Terminal (Falla Esperada)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -39,8 +39,8 @@ A total of 1 test files matched the specified pattern.
   Error Message:
    System.NotImplementedException : SF-023: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.AuthController.Login(LoginRequest request) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\AuthController.cs:line 20
-   at SistemaFuneraria.Tests.Unit.Api.IniciarSesionUsuarioTests.Login_ConQuintoIntentoFallido_DebeBloquearCuentaYRetornar423Locked() in C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\Api\IniciarSesionUsuarioTests.cs:line 188
+     at SistemaFuneraria.Api.Controllers.V1.AuthController.Login(LoginRequest request) in src\SistemaFuneraria.Api\Controllers\V1\AuthController.cs:line 20
+   at SistemaFuneraria.Tests.Unit.Api.IniciarSesionUsuarioTests.Login_ConQuintoIntentoFallido_DebeBloquearCuentaYRetornar423Locked() in tests\SistemaFuneraria.Tests\Unit\Api\IniciarSesionUsuarioTests.cs:line 188
   Failed SF-023: Login con 3 intentos fallidos debe retornar 401 Unauthorized y advertencia preventiva [42 ms]
   Error Message:
    System.NotImplementedException : SF-023: Fase RED.
