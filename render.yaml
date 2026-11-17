@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: sistema-funeraria-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile.Api
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__Key
+        generateValue: true
+      - key: Jwt__Issuer
+        value: SistemaFuneraria.Api
+      - key: Jwt__Audience
+        value: SistemaFuneraria.Web
+      - key: Cors__AllowedOrigins
+        sync: false
+      - key: Database__AutoMigrate
+        value: "true"
+      - key: Database__SeedDemoUsers
+        value: "false"
+
+  - type: web
+    name: sistema-funeraria-web
+    runtime: docker
+    dockerfilePath: ./Dockerfile.Web
+    plan: free
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ApiSettings__BaseUrl
+        sync: false
