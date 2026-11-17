@@ -64,7 +64,7 @@ public class ClienteService(IAppDbContext context) : IClienteService
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (cliente == null)
-            return Resultado<ClienteDto>.Fallo("Cliente no encontrado.");
+            return Resultado<ClienteDto>.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
         
         return MapearADto(cliente);
     }
@@ -82,7 +82,7 @@ public class ClienteService(IAppDbContext context) : IClienteService
             .FirstOrDefaultAsync(c => c.Curp == curpNormalizada, cancellationToken);
 
         if (cliente == null)
-            return Resultado<ClienteDto>.Fallo("Cliente no encontrado.");
+            return Resultado<ClienteDto>.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
 
         return MapearADto(cliente);
     }
