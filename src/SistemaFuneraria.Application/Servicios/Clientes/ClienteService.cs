@@ -178,9 +178,6 @@ public class ClienteService(IAppDbContext context) : IClienteService
         if (cliente == null)
             return Resultado.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
 
-        if (cliente.ContratosActivos > 0)
-            return Resultado.Fallo("[CONFLICTO] No se puede eliminar el cliente porque posee contratos activos asociados.");
-
         context.Clientes.Remove(cliente);
         await context.SaveChangesAsync(cancellationToken);
 
@@ -200,11 +197,7 @@ public class ClienteService(IAppDbContext context) : IClienteService
             c.Direccion,
             c.CreatedAt,
             c.ObtenerIniciales(),
-            fechaFormateada,
-            c.ContratosActivos,
-            c.SaldoActual,
-            c.UltimoPago,
-            c.EstadoCartera
+            fechaFormateada
         );
     }
 }

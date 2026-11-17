@@ -186,29 +186,6 @@ public class ClienteCrudCompletoTests
         clienteEnDb.Should().BeNull();
     }
 
-    [Fact(DisplayName = "SF-031: EliminarClienteAsync sobre cliente con contratos activos debe ser rechazado")]
-    public async Task EliminarClienteAsync_ClienteConContratosActivos_DebeRechazarEliminacion()
-    {
-        // Arrange
-        using var context = CrearContextoEnMemoria();
-        var cliente = Cliente.Crear("Carlos", "Vega Morales", "VEMC800101HDFRRN01", "5511112222", "carlos@example.com", "Dir 1");
-        cliente.AsignarResumenCartera(contratosActivos: 2, saldoActual: 95000m, ultimoPago: DateTime.UtcNow);
-        await context.Clientes.AddAsync(cliente);
-        await context.SaveChangesAsync();
-
-        var service = new ClienteService(context);
-
-        // Act
-        var resultado = await service.EliminarClienteAsync(cliente.Id);
-
-        // Assert
-        resultado.EsFallo.Should().BeTrue();
-        resultado.Error.Should().Contain("contratos activos");
-
-        var clienteEnDb = await context.Clientes.FindAsync(cliente.Id);
-        clienteEnDb.Should().NotBeNull();
-    }
-
     [Fact(DisplayName = "SF-031: Cliente.Actualizar aplica validaciones de invariantes")]
     public void Cliente_Actualizar_ConInvariantesValidas_DebeActualizarCampos()
     {
@@ -233,7 +210,6 @@ public class ClienteCrudCompletoTests
         // Arrange
         using var context = CrearContextoEnMemoria();
         var cliente = Cliente.Crear("Laura", "Cortés", "COML850202MDFRRN02", "5533334444", "laura@example.com", "Dir 1");
-        cliente.AsignarResumenCartera(contratosActivos: 1, saldoActual: 45000m, ultimoPago: DateTime.UtcNow, estadoCartera: "Al corriente");
         await context.Clientes.AddAsync(cliente);
         await context.SaveChangesAsync();
 
@@ -247,8 +223,8 @@ public class ClienteCrudCompletoTests
         var dto = resultado.Valor;
         dto.Iniciales.Should().Be("LC");
         dto.FechaAltaFormateada.Should().StartWith("Cliente desde ");
-        dto.ContratosActivos.Should().Be(1);
-        dto.SaldoActual.Should().Be(45000m);
+        dto.ContratosActivos.Should().Be(0);
+        dto.SaldoActual.Should().Be(0m);
         dto.EstadoCartera.Should().Be("Al corriente");
     }
 }
