@@ -55,6 +55,7 @@ Cada registro refleja una corrida formal. Cuando una prueba resulta `Fallida`, g
 | **Validación de Entradas EP** | Unit | `SimuladorServiceTests.cs` | `Simular_ConParametrosNoAutorizados_DebeRetornarFallo` | 6 pruebas | `Aprobado` (PR #69 / SF-013) |
 | **Transaccionalidad y Concurrencia** | Integration | `PostgresConexionTests.cs` | `CanConnect_PostgresContainer_DebeAbrirConexion` | 1 prueba | `Aprobado` (PR #63 / SF-002) |
 | **QA Gate v0.2.0 (Auth, Lockout, RBAC y /health)** | Integration HTTP | `AuthYUsuariosAdminHttpTests.cs` | `Health_DebeRetornar200Ok`, `AdminUsuarios_DebePermitirAdministradorYRechazarVendedorYCajero`, `Login_AlQuintoIntentoFallido_DebeRetornar423Locked`, `OlvideContrasena_DebeAplicarJitterMinimo200Ms` | 4 pruebas | `Aprobado` (SF-030) |
+| **QA Gate v0.4.0 (Catálogo de Lotes, KPIs y CP-01)** | Integration HTTP | `LotesControllerTests.cs` | `CP01_FiltroCombinadoLotesDisponibles_DebeRetornarLotesConCriteriosExactos`, `ResumenKpis_DebeCalcularDisponiblesPrecioDesdeYSeccionConMasEspacio`, `BusquedaSinCoincidencias_DebeRetornar200OkConItemsVacio`, `SeguridadRbac_CrearLote_VendedorDebeRecibir403YAdminDebeCrear` | 4 pruebas | `Aprobado` (SF-047) |
 
 ---
 
