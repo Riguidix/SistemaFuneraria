@@ -38,7 +38,7 @@
 
 ### 2. Evidencia de Ejecución de Pruebas GREEN
 ```bash
-dotnet test --filter "FullyQualifiedName~Paso4ConfirmacionTests"
+dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~Paso4ConfirmacionTests" --no-build -v normal
 ```
 
 ```text
@@ -47,20 +47,41 @@ Versión 17.11.1 (x64) de VSTest
 
 Iniciando la ejecución de pruebas, espere...
 1 archivos de prueba en total coincidieron con el patrón especificado.
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 8.0.33)
+[xUnit.net 00:00:00.25]   Discovering: SistemaFuneraria.Tests
+[xUnit.net 00:00:00.40]   Discovered:  SistemaFuneraria.Tests
+[xUnit.net 00:00:00.41]   Starting:    SistemaFuneraria.Tests
+[xUnit.net 00:00:00.58]   Finished:    SistemaFuneraria.Tests
+  Correctas SistemaFuneraria.Tests.Unit.Web.Paso4ConfirmacionTests.PuedeGenerarContrato_SinCheckboxMarcado_DebeSerFalso [115 ms]
+  Correctas SistemaFuneraria.Tests.Unit.Web.Paso4ConfirmacionTests.PuedeGenerarContrato_ConDatosCompletosYCheckboxMarcado_DebeSerVerdadero [3 ms]
 
-Correctas! - Con error:     0, Superado:     2, Omitido:     0, Total:     2, Duración: 4 ms - SistemaFuneraria.Tests.dll (net8.0)
-```
-
-Suite completa de pruebas unitarias:
-```bash
-dotnet test --filter "FullyQualifiedName!~Integration"
-```
-
-```text
-Correctas! - Con error:     0, Superado:   303, Omitido:     0, Total:   303, Duración: 718 ms - SistemaFuneraria.Tests.dll (net8.0)
+La serie de pruebas se ejecutó correctamente.
+Pruebas totales: 2
+     Correcto: 2
+ Tiempo total: 1.3879 Segundos
 ```
 
 ---
 
-### 3. Conclusión de Calidad
-El Paso 4 cumple al 100% con los criterios de aceptación de la Captura 8 de Figma, cerrando el flujo completo de 4 pasos del Wizard de Nueva Venta con un Blast Radius inferior a 220 LOCs.
+### 3. Evidencia Visual Verificada (Cero Fantasía)
+![Wizard Paso 4 Confirmación de Venta](./vista_nueva_venta_paso4.png)
+
+---
+
+### 4. Fidelidad Figma Verificada (Cero Fantasía — Captura 8)
+- **Cabecera comercial:** Kicker `PROCESO COMERCIAL`, título `Nueva venta` y pill `✓ Borrador guardado`.
+- **Stepper horizontal de 4 pasos:**
+  - Pasos 1 `Cliente`, 2 `Lote` y 3 `Financiamiento` completados con checkmark verde `✓`.
+  - Paso 4 `Confirmación · Resumen` activo con círculo 4 oscuro institucional (`#2D4224`).
+- **Tarjeta Central de Confirmación:**
+  - Título `Confirma la operación` y subtítulo `Revisa la información antes de generar el contrato.`.
+  - **Grid 2x2 de tarjetas resumen (fondo crema suave `#FAF8F5`):**
+    1. `Cliente`: **Mariana Torres Aguirre** / `mariana.torres@email.mx`.
+    2. `Lote`: **JN-A-042 - Jardín Norte** / `2 gavetas`.
+    3. `Precio`: **`$120,000.00`** / `Enganche de $24,000.00`.
+    4. `Financiamiento`: **`24 pagos de $4887.54`** / `Tasa anual fija del 20%`.
+  - Checkbox institucional `#chkConfirmarDatos`: `Confirmo que los datos fueron revisados con el cliente.`.
+  - Botón `Anterior` (regresa al Paso 3 conservando todos los datos intactos).
+  - Botón primario verde bosque `#btnGenerarContrato`: `✓ Generar contrato` (bloqueado por defecto hasta marcar la casilla de verificación).
+- **Panel Lateral Fijo (`RESUMEN DE COTIZACIÓN`):**
+  - Mantiene sincronizado el lote (`Lote Básico`, cuadrícula 2x4 con celda `42` verde, clave `JN-A-042`, capacidad `2 gavetas`, precio de lista y total estimado `$120,000.00`).
