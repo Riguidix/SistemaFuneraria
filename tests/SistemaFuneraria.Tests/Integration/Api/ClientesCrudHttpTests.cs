@@ -49,6 +49,12 @@ public class ClientesCrudHttpTests : IClassFixture<AuthHttpPipelineTests.ApiFact
         return request;
     }
 
+    private static async Task<Guid> LeerIdCreadoAsync(HttpResponseMessage response)
+    {
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return doc.RootElement.GetProperty("id").GetGuid();
+    }
+
     [Fact(DisplayName = "SF-038 (BDD): Ciclo completo CRUD de clientes y exportación CSV")]
     public async Task CicloCompleto_CrudClientes_DebeCrearBuscarActualizarYExportar()
     {
@@ -65,11 +71,10 @@ public class ClientesCrudHttpTests : IClassFixture<AuthHttpPipelineTests.ApiFact
 
         using var postReq = CrearRequest(HttpMethod.Post, "/api/v1/clientes", token, altaRequest);
         var postRes = await _client.SendAsync(postReq);
-        postRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        postRes.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var clienteIdJson = await postRes.Content.ReadAsStringAsync();
-        clienteIdJson.Should().NotBeNullOrWhiteSpace();
-        var clienteId = Guid.Parse(clienteIdJson.Trim('"', '\n', '\r'));
+        var clienteId = await LeerIdCreadoAsync(postRes);
+        clienteId.Should().NotBeEmpty();
 
         using var searchReq = CrearRequest(HttpMethod.Get, "/api/v1/clientes?filtro=Castañeda", token);
         var searchRes = await _client.SendAsync(searchReq);
@@ -100,8 +105,8 @@ public class ClientesCrudHttpTests : IClassFixture<AuthHttpPipelineTests.ApiFact
         csvContent.Should().Contain("5598765432");
     }
 
-    [Fact(DisplayName = "SF-038 (BDD): Validación BVA de teléfono no conforme y CURP duplicada")]
-    public async Task ValidacionBva_TelefonoYCurp_DebeRetornar400BadRequest()
+    [Fact(DisplayName = "SF-038 (BDD): Validación BVA de teléfono no conforme (400) y CURP duplicada (409)")]
+    public async Task ValidacionBva_TelefonoYCurp_DebeRetornar400Y409Conflict()
     {
         var token = await AutenticarComoAsync("andrea.morales@sistemafunerario.mx", "Sistema Funerario2026!");
 
@@ -124,17 +129,17 @@ public class ClientesCrudHttpTests : IClassFixture<AuthHttpPipelineTests.ApiFact
         );
         using var postBase = CrearRequest(HttpMethod.Post, "/api/v1/clientes", token, clienteBase);
         var resBase = await _client.SendAsync(postBase);
-        resBase.StatusCode.Should().Be(HttpStatusCode.OK);
+        resBase.StatusCode.Should().Be(HttpStatusCode.Created);
 
         var curpDuplicada = new RegistrarClienteRequest(
             "Otro", "Nombre", "BASE900101HDFRRN01", "5599887766", "otro@email.mx", "Calle 4"
         );
         using var postDup = CrearRequest(HttpMethod.Post, "/api/v1/clientes", token, curpDuplicada);
         var resDup = await _client.SendAsync(postDup);
-        resDup.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        resDup.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
-    [Fact(DisplayName = "SF-038 (BDD): RBAC en DELETE /api/v1/clientes: Vendedor 403 Forbidden y Administrador permitido")]
+    [Fact(DisplayName = "SF-038 (BDD): RBAC en DELETE /api/v1/clientes: Vendedor 403 Forbidden y Administrador 204 NoContent")]
     public async Task SeguridadRbac_EliminarCliente_VendedorDebeRecibir403YAdminDebeEliminar()
     {
         var adminToken = await AutenticarComoAsync("andrea.morales@sistemafunerario.mx", "Sistema Funerario2026!");
@@ -145,9 +150,8 @@ public class ClientesCrudHttpTests : IClassFixture<AuthHttpPipelineTests.ApiFact
         );
         using var postReq = CrearRequest(HttpMethod.Post, "/api/v1/clientes", adminToken, clienteBorrar);
         var postRes = await _client.SendAsync(postReq);
-        postRes.StatusCode.Should().Be(HttpStatusCode.OK);
-        var idJson = await postRes.Content.ReadAsStringAsync();
-        var clienteId = Guid.Parse(idJson.Trim('"', '\n', '\r'));
+        postRes.StatusCode.Should().Be(HttpStatusCode.Created);
+        var clienteId = await LeerIdCreadoAsync(postRes);
 
         using var delVendedorReq = CrearRequest(HttpMethod.Delete, $"/api/v1/clientes/{clienteId}", vendedorToken);
         var delVendedorRes = await _client.SendAsync(delVendedorReq);
@@ -155,7 +159,7 @@ public class ClientesCrudHttpTests : IClassFixture<AuthHttpPipelineTests.ApiFact
 
         using var delAdminReq = CrearRequest(HttpMethod.Delete, $"/api/v1/clientes/{clienteId}", adminToken);
         var delAdminRes = await _client.SendAsync(delAdminReq);
-        delAdminRes.StatusCode.Should().Be(HttpStatusCode.OK);
+        delAdminRes.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         using var getReq = CrearRequest(HttpMethod.Get, $"/api/v1/clientes/{clienteId}", adminToken);
         var getRes = await _client.SendAsync(getReq);
