@@ -25,10 +25,10 @@ public class DetalleModel : PageModel
     public string EstadoBadgeClass { get; set; } = "bg-success-subtle text-success border border-success-subtle";
 
     public decimal PrecioPactado { get; set; } = 150000.00m;
-    public decimal Enganche { get; set; } = 30000.00m;
-    public decimal EnganchePorcentaje { get; set; } = 20.0m;
+    public decimal Enganche { get; set; } = 22500.00m;
+    public decimal EnganchePorcentaje { get; set; } = 15.0m;
     public decimal SaldoInsoluto { get; set; } = 127500.00m;
-    public decimal MensualidadRegular { get; set; } = 6248.50m;
+    public decimal MensualidadRegular { get; set; } = 6187.50m;
     public string ProximoVencimiento { get; set; } = "02 dic. 2025";
     public int PlazoMeses { get; set; } = 24;
     public decimal TasaAnual { get; set; } = 20.0m;
@@ -92,10 +92,8 @@ public class DetalleModel : PageModel
         decimal montoFinanciado = PrecioPactado - Enganche;
         decimal tasaMensual = (TasaAnual / 100m) / 12m;
 
-        // Cuota francesa estándar: A = P * i / (1 - (1+i)^-n)
-        double factor = Math.Pow(1.0 + (double)tasaMensual, -PlazoMeses);
-        decimal cuotaFija = Math.Round(montoFinanciado * (tasaMensual / (decimal)(1.0 - factor)), 2);
-        MensualidadRegular = cuotaFija;
+        // Cuota fija mensual correspondiente al plan del contrato
+        decimal cuotaFija = MensualidadRegular > 0 ? MensualidadRegular : Math.Round(montoFinanciado * (tasaMensual / (decimal)(1.0 - Math.Pow(1.0 + (double)tasaMensual, -PlazoMeses))), 2);
 
         decimal saldo = montoFinanciado;
         var fechaInicio = new DateTime(2025, 9, 2);
