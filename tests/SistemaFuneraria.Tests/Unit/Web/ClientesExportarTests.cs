@@ -42,7 +42,9 @@ public class ClientesExportarTests
         var clientes = new List<ClienteExportDto>
         {
             new("Laura Castañeda", "55 1284 9021", "CAL951118MDFRR01", "1 activo", "$127,500.00", "18 nov. 2025", "Al corriente"),
-            new("Roberto Méndez", "55 4390 1178", "MER920315HDFNN02", "1 activo", "$58,743.20", "18 nov. 2025", "Al corriente")
+            new("Roberto Méndez", "55 4390 1178", "MER920315HDFNN02", "1 activo", "$58,743.20", "18 nov. 2025", "Al corriente"),
+            new("Elena Vargas", "55 9021 3364", "VAE880820MDFRR03", "2 activos", "$76,180.40", "02 oct. 2025", "Pago vencido"),
+            new("Jorge Salinas", "55 6653 0871", "SAJ900110HDFLL04", "1 activo", "$94,265.80", "17 nov. 2025", "En revisión")
         };
 
         // Act
@@ -52,6 +54,8 @@ public class ClientesExportarTests
         // Assert
         contenido.Should().Contain("Laura Castañeda,55 1284 9021,CAL951118MDFRR01,1 activo,\"$127,500.00\",18 nov. 2025,Al corriente");
         contenido.Should().Contain("Roberto Méndez,55 4390 1178,MER920315HDFNN02,1 activo,\"$58,743.20\",18 nov. 2025,Al corriente");
+        contenido.Should().Contain("Elena Vargas,55 9021 3364,VAE880820MDFRR03,2 activos,\"$76,180.40\",02 oct. 2025,Pago vencido");
+        contenido.Should().Contain("Jorge Salinas,55 6653 0871,SAJ900110HDFLL04,1 activo,\"$94,265.80\",17 nov. 2025,En revisión");
     }
 
     [Fact]
