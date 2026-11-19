@@ -12,11 +12,19 @@ namespace SistemaFuneraria.Infrastructure.Persistencia;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<IdentityUser>(options), IAppDbContext
 {
     public DbSet<Cliente> Clientes => Set<Cliente>();
+    public DbSet<Lote> Lotes => Set<Lote>();
+    public DbSet<Venta> Ventas => Set<Venta>();
+    public DbSet<Financiamiento> Financiamientos => Set<Financiamiento>();
+    public DbSet<Mensualidad> Mensualidades => Set<Mensualidad>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
+        modelBuilder.HasSequence<long>("seq_contratos_folio")
+            .StartsAt(190)
+            .IncrementsBy(1);
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }
 }
