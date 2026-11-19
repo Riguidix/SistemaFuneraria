@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.Servicios.Clientes;
+using SistemaFuneraria.Application.Servicios.Lotes;
 using SistemaFuneraria.Application.Servicios.Simulador;
 using SistemaFuneraria.Infrastructure.Persistencia;
 
@@ -52,6 +53,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ISimuladorService, SimuladorService>();
+builder.Services.AddScoped<ILoteService, LoteService>();
 
 var allowedOriginsRaw = builder.Configuration["Cors:AllowedOrigins"];
 var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsRaw)
@@ -103,6 +105,7 @@ if (autoMigrate || seedDemoUsers)
         if (seedDemoUsers)
         {
             await IdentitySeed.SeedAsync(app.Services);
+            await LoteSeed.SeedAsync(app.Services);
         }
     }
     catch (Exception ex)

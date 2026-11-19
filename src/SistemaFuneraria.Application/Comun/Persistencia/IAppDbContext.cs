@@ -9,5 +9,6 @@ namespace SistemaFuneraria.Application.Comun.Persistencia;
 public interface IAppDbContext
 {
     DbSet<Cliente> Clientes { get; }
+    DbSet<Lote> Lotes { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
