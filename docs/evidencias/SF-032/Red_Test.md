@@ -30,7 +30,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 
 ### 3. Salida Real de Terminal (Fase RED)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -47,42 +47,42 @@ A total of 1 test files matched the specified pattern.
   Error Message:
    System.NotImplementedException : SF-032: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Eliminar(Guid id, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 46
+     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Eliminar(Guid id, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 46
   Failed SF-032: ObtenerPorId con cliente existente debe retornar 200 OK [474 ms]
   Error Message:
    System.NotImplementedException : SF-032: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.ClientesController.ObtenerPorId(Guid id, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 27
+     at SistemaFuneraria.Api.Controllers.V1.ClientesController.ObtenerPorId(Guid id, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 27
   Failed SF-032: Registrar con datos válidos debe retornar 201 Created [2 ms]
   Error Message:
    System.NotImplementedException : SF-032: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Registrar(RegistrarClienteRequest request, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 33
+     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Registrar(RegistrarClienteRequest request, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 33
   Failed SF-032: ExportarDirectorio debe retornar archivo CSV UTF-8 con cabecera y datos [34 ms]
   Error Message:
    System.NotImplementedException : SF-032: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.ClientesController.ExportarDirectorio(CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 52
+     at SistemaFuneraria.Api.Controllers.V1.ClientesController.ExportarDirectorio(CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 52
   Failed SF-032 (BDD): Eliminar cliente sin contratos por Administrador debe retornar 200 OK o 204 NoContent [16 ms]
   Error Message:
    System.NotImplementedException : SF-032: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Eliminar(Guid id, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 46
+     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Eliminar(Guid id, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 46
   Failed SF-032: Buscar con filtro debe retornar 200 OK con clientes coincidentes [3 ms]
   Error Message:
    System.NotImplementedException : SF-032: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Buscar(String filtro, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 21
+     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Buscar(String filtro, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 21
   Failed SF-032 (BDD): Actualizar con datos válidos por Administrador debe retornar 200 OK [1 ms]
   Error Message:
    System.NotImplementedException : SF-032: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Actualizar(Guid id, ActualizarClienteRequest request, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 39
+     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Actualizar(Guid id, ActualizarClienteRequest request, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 39
   Failed SF-032: Registrar con datos inválidos debe retornar 400 Bad Request [< 1 ms]
   Error Message:
    System.NotImplementedException : SF-032: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Registrar(RegistrarClienteRequest request, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 33
+     at SistemaFuneraria.Api.Controllers.V1.ClientesController.Registrar(RegistrarClienteRequest request, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\ClientesController.cs:line 33
 [xUnit.net 00:00:01.07]     SF-032: Buscar sin filtro debe retornar 200 OK con todos los clientes [FAIL]
 [xUnit.net 00:00:01.08]     SF-032: Actualizar cliente inexistente debe retornar 404 Not Found [FAIL]
 [xUnit.net 00:00:01.08]     SF-032: ObtenerPorId con cliente inexistente debe retornar 404 Not Found [FAIL]

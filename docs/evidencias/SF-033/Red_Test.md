@@ -31,7 +31,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 
 ### 3. Salida Real de Terminal (Fase RED)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -45,19 +45,19 @@ A total of 1 test files matched the specified pattern.
 [xUnit.net 00:00:01.07]     SF-033: clientesApi.js debe utilizar la ruta base /api/v1/clientes y /exportar [FAIL]
   Failed SF-033: clientesApi.js debe soportar UMD (window.clientesApi y module.exports) [395 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
   Failed SF-033: clientesApi.js debe delegar las operaciones HTTP en apiClient [1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
   Failed SF-033: exportarDirectorio debe configurar descarga del archivo directorio-clientes.csv [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
   Failed SF-033: clientesApi.js debe exponer listar, obtenerPorId, registrar, actualizar, eliminar y exportarDirectorio [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
   Failed SF-033: clientesApi.js debe utilizar la ruta base /api/v1/clientes y /exportar [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\clientesApi.js', but found False.
 
 Failed!  - Failed:     7, Passed:     0, Skipped:     0, Total:     7, Duration: 5 ms - SistemaFuneraria.Tests.dll (net8.0)
 ```
