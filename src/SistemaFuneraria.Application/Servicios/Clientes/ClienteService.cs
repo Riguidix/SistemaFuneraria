@@ -22,11 +22,11 @@ public class ClienteService(IAppDbContext context) : IClienteService
 
             var existeCurp = await context.Clientes.AnyAsync(c => c.Curp == curpNormalizada, cancellationToken);
             if (existeCurp)
-                return Resultado<Guid>.Fallo("Ya existe un cliente registrado con esa CURP.");
+                return Resultado<Guid>.Fallo("[CONFLICTO] Ya existe un cliente registrado con esa CURP.");
 
             var existeCorreo = await context.Clientes.AnyAsync(c => c.Correo == correoNormalizado, cancellationToken);
             if (existeCorreo)
-                return Resultado<Guid>.Fallo("Ya existe un cliente registrado con ese correo electrónico.");
+                return Resultado<Guid>.Fallo("[CONFLICTO] Ya existe un cliente registrado con ese correo electrónico.");
             
             var cliente = Cliente.Crear(
                 request.Nombre,
