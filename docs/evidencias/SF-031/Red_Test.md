@@ -31,7 +31,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 
 ### 4. Salida Real de Terminal (Fase RED)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -41,8 +41,8 @@ A total of 1 test files matched the specified pattern.
   Error Message:
    System.NotImplementedException : SF-031: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Clientes.ClienteService.ActualizarClienteAsync(Guid id, ActualizarClienteRequest request, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Clientes\ClienteService.cs:line 113
-   at SistemaFuneraria.Tests.Application.ClienteCrudCompletoTests.ActualizarClienteAsync_ConDatosValidos_DebePersistirCambios() in C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Application\ClienteCrudCompletoTests.cs:line 114
+     at SistemaFuneraria.Application.Servicios.Clientes.ClienteService.ActualizarClienteAsync(Guid id, ActualizarClienteRequest request, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Clientes\ClienteService.cs:line 113
+   at SistemaFuneraria.Tests.Application.ClienteCrudCompletoTests.ActualizarClienteAsync_ConDatosValidos_DebePersistirCambios() in tests\SistemaFuneraria.Tests\Application\ClienteCrudCompletoTests.cs:line 114
 [xUnit.net 00:00:04.08]     SF-031: Cliente.Actualizar aplica validaciones de invariantes [FAIL]
 [xUnit.net 00:00:04.12]     SF-031: ActualizarClienteAsync con Correo duplicado en otro cliente debe fallar [FAIL]
 [xUnit.net 00:00:04.15]     SF-031: BuscarClientesAsync por CURP o teléfono debe retornar coincidencias [FAIL]
