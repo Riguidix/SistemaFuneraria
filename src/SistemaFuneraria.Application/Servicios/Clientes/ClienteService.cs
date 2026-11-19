@@ -7,9 +7,8 @@ using SistemaFuneraria.Core.Excepciones;
 namespace SistemaFuneraria.Application.Servicios.Clientes;
 
 /// <summary>
-/// Implementación del caso de uso de gestión de clientes (SF-018).
-/// Orquesta la validación de negocio del cliente (CURP válida, teléfono obligatorio)
-/// y coordina la persistencia en base de datos.
+/// Implementación del caso de uso de gestión de clientes (SF-018, SF-031).
+/// Orquesta la validación de negocio del cliente, búsqueda por filtros, actualización y ciclo de vida.
 /// </summary>
 public class ClienteService(IAppDbContext context) : IClienteService
 {
@@ -23,11 +22,11 @@ public class ClienteService(IAppDbContext context) : IClienteService
 
             var existeCurp = await context.Clientes.AnyAsync(c => c.Curp == curpNormalizada, cancellationToken);
             if (existeCurp)
-                return Resultado<Guid>.Fallo("Ya existe un cliente registrado con esa CURP.");
+                return Resultado<Guid>.Fallo("[CONFLICTO] Ya existe un cliente registrado con esa CURP.");
 
             var existeCorreo = await context.Clientes.AnyAsync(c => c.Correo == correoNormalizado, cancellationToken);
             if (existeCorreo)
-                return Resultado<Guid>.Fallo("Ya existe un cliente registrado con ese correo electrónico.");
+                return Resultado<Guid>.Fallo("[CONFLICTO] Ya existe un cliente registrado con ese correo electrónico.");
             
             var cliente = Cliente.Crear(
                 request.Nombre,
@@ -65,18 +64,9 @@ public class ClienteService(IAppDbContext context) : IClienteService
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (cliente == null)
-            return Resultado<ClienteDto>.Fallo("Cliente no encontrado.");
+            return Resultado<ClienteDto>.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
         
-        return new ClienteDto(
-            cliente.Id, 
-            cliente.Nombre, 
-            cliente.Apellidos, 
-            cliente.Curp, 
-            cliente.Telefono, 
-            cliente.Correo, 
-            cliente.Direccion, 
-            cliente.CreatedAt
-        );
+        return MapearADto(cliente);
     }
 
     /// <inheritdoc />
@@ -92,18 +82,9 @@ public class ClienteService(IAppDbContext context) : IClienteService
             .FirstOrDefaultAsync(c => c.Curp == curpNormalizada, cancellationToken);
 
         if (cliente == null)
-            return Resultado<ClienteDto>.Fallo("Cliente no encontrado.");
+            return Resultado<ClienteDto>.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
 
-        return new ClienteDto(
-            cliente.Id, 
-            cliente.Nombre, 
-            cliente.Apellidos, 
-            cliente.Curp, 
-            cliente.Telefono, 
-            cliente.Correo, 
-            cliente.Direccion, 
-            cliente.CreatedAt
-        );
+        return MapearADto(cliente);
     }
 
     /// <inheritdoc />
@@ -115,46 +96,74 @@ public class ClienteService(IAppDbContext context) : IClienteService
             .ThenBy(c => c.Nombre)
             .ToListAsync(cancellationToken);
 
-        var dtos = clientes.Select(c => new ClienteDto(
-            c.Id, c.Nombre, c.Apellidos, c.Curp, c.Telefono, c.Correo, c.Direccion, c.CreatedAt
-        )).ToList();
+        var dtos = clientes.Select(MapearADto).ToList();
             
         return dtos;
     }
 
+    /// <inheritdoc />
+    public async Task<Resultado<IReadOnlyList<ClienteDto>>> BuscarClientesAsync(string? filtro, CancellationToken cancellationToken = default)
+    {
+        var query = context.Clientes.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(filtro))
+        {
+            string f = filtro.Trim().ToLowerInvariant();
+            query = query.Where(c =>
+                c.Nombre.ToLower().Contains(f) ||
+                c.Apellidos.ToLower().Contains(f) ||
+                c.Curp.ToLower().Contains(f) ||
+                c.Telefono.Contains(f));
+        }
+
+        var clientes = await query
+            .OrderBy(c => c.Apellidos)
+            .ThenBy(c => c.Nombre)
+            .ToListAsync(cancellationToken);
+
+        var dtos = clientes.Select(MapearADto).ToList();
+        return dtos;
+    }
+
+    /// <inheritdoc />
     public async Task<Resultado> ActualizarClienteAsync(Guid id, ActualizarClienteRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
             var cliente = await context.Clientes.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-            if (cliente is null)
-            {
+            if (cliente == null)
                 return Resultado.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
-            }
 
             var curpNormalizada = request.Curp?.Trim().ToUpperInvariant() ?? string.Empty;
             var correoNormalizado = request.Correo?.Trim().ToLowerInvariant() ?? string.Empty;
 
-            var existeCurp = await context.Clientes.AnyAsync(c => c.Curp == curpNormalizada && c.Id != id, cancellationToken);
+            var existeCurp = await context.Clientes.AnyAsync(c => c.Id != id && c.Curp == curpNormalizada, cancellationToken);
             if (existeCurp)
-            {
-                return Resultado.Fallo("Ya existe un cliente registrado con esa CURP.");
-            }
+                return Resultado.Fallo("[CONFLICTO] Ya existe otro cliente registrado con esa CURP.");
 
-            var existeCorreo = await context.Clientes.AnyAsync(c => c.Correo == correoNormalizado && c.Id != id, cancellationToken);
+            var existeCorreo = await context.Clientes.AnyAsync(c => c.Id != id && c.Correo == correoNormalizado, cancellationToken);
             if (existeCorreo)
-            {
-                return Resultado.Fallo("Ya existe un cliente registrado con ese correo electrónico.");
-            }
+                return Resultado.Fallo("[CONFLICTO] Ya existe otro cliente registrado con ese correo electrónico.");
 
-            cliente.Actualizar(request.Nombre, request.Apellidos, curpNormalizada, request.Telefono, correoNormalizado, request.Direccion);
+            cliente.Actualizar(
+                request.Nombre,
+                request.Apellidos,
+                curpNormalizada,
+                request.Telefono,
+                correoNormalizado,
+                request.Direccion
+            );
+
             await context.SaveChangesAsync(cancellationToken);
-
             return Resultado.Exito();
         }
-        catch (ReglaNegocioException ex)
+        catch (OperationCanceledException)
         {
-            return Resultado.Fallo(ex.Message);
+            throw;
+        }
+        catch (ReglaNegocioException reglaEx)
+        {
+            return Resultado.Fallo(reglaEx.Message);
         }
         catch (Exception ex)
         {
@@ -162,24 +171,33 @@ public class ClienteService(IAppDbContext context) : IClienteService
         }
     }
 
+    /// <inheritdoc />
     public async Task<Resultado> EliminarClienteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var cliente = await context.Clientes.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-            if (cliente is null)
-            {
-                return Resultado.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
-            }
+        var cliente = await context.Clientes.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        if (cliente == null)
+            return Resultado.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
 
-            context.Clientes.Remove(cliente);
-            await context.SaveChangesAsync(cancellationToken);
+        context.Clientes.Remove(cliente);
+        await context.SaveChangesAsync(cancellationToken);
 
-            return Resultado.Exito();
-        }
-        catch (Exception ex)
-        {
-            return Resultado.Fallo(ex.Message);
-        }
+        return Resultado.Exito();
+    }
+
+    private static ClienteDto MapearADto(Cliente c)
+    {
+        string fechaFormateada = $"Cliente desde {c.CreatedAt:MMM. yyyy}";
+        return new ClienteDto(
+            c.Id,
+            c.Nombre,
+            c.Apellidos,
+            c.Curp,
+            c.Telefono,
+            c.Correo,
+            c.Direccion,
+            c.CreatedAt,
+            c.ObtenerIniciales(),
+            fechaFormateada
+        );
     }
 }

@@ -4,7 +4,7 @@ using SistemaFuneraria.Core.Excepciones;
 namespace SistemaFuneraria.Core.Entidades;
 
 /// <summary>
-/// Entidad de dominio Cliente que encapsula los datos del comprador y sus invariantes de negocio (SF-015).
+/// Entidad de dominio Cliente que encapsula los datos del comprador y sus invariantes de negocio (SF-015, SF-031).
 /// Cumple con las especificaciones del ERD v1.1 (Sección 3.2).
 /// </summary>
 public class Cliente
@@ -58,150 +58,96 @@ public class Cliente
         string correo,
         string direccion)
     {
-        // 1. Validaciones de Nombre
-        if (string.IsNullOrWhiteSpace(nombre))
-        {
-            throw new ReglaNegocioException("El nombre del cliente es obligatorio.");
-        }
-        string nombreNormalizado = nombre.Trim();
-        if (nombreNormalizado.Length > 100)
-        {
-            throw new ReglaNegocioException("El nombre del cliente no puede exceder los 100 caracteres.");
-        }
+        var (nombreNorm, apellidosNorm, curpNorm, telefonoNorm, correoNorm) =
+            NormalizarYValidarDatosBasicos(nombre, apellidos, curp, telefono, correo);
 
-        // 2. Validaciones de Apellidos
-        if (string.IsNullOrWhiteSpace(apellidos))
-        {
-            throw new ReglaNegocioException("Los apellidos del cliente son obligatorios.");
-        }
-        string apellidosNormalizado = apellidos.Trim();
-        if (apellidosNormalizado.Length > 100)
-        {
-            throw new ReglaNegocioException("Los apellidos del cliente no pueden exceder los 100 caracteres.");
-        }
-
-        // 3. Validaciones de CURP (18 caracteres alfanuméricos en mayúsculas)
-        if (string.IsNullOrWhiteSpace(curp))
-        {
-            throw new ReglaNegocioException("El CURP del cliente es obligatorio.");
-        }
-        string curpNormalizado = curp.Trim().ToUpperInvariant();
-        if (!RegexCurp.IsMatch(curpNormalizado))
-        {
-            throw new ReglaNegocioException($"El CURP '{curp}' es inválido. Debe contener exactamente 18 caracteres alfanuméricos.");
-        }
-
-        // 4. Validaciones de Teléfono (Exactamente 10 dígitos numéricos)
-        if (string.IsNullOrWhiteSpace(telefono))
-        {
-            throw new ReglaNegocioException("El teléfono del cliente es obligatorio.");
-        }
-        string telefonoNormalizado = telefono.Trim();
-        if (!RegexTelefono.IsMatch(telefonoNormalizado))
-        {
-            throw new ReglaNegocioException($"El teléfono '{telefono}' es inválido. Debe contener exactamente 10 dígitos numéricos.");
-        }
-
-        // 5. Validaciones de Correo Electrónico (Normalizado en minúsculas, max 255 chars)
-        if (string.IsNullOrWhiteSpace(correo))
-        {
-            throw new ReglaNegocioException("El correo electrónico del cliente es obligatorio.");
-        }
-        string correoNormalizado = correo.Trim().ToLowerInvariant();
-        if (correoNormalizado.Length > 255)
-        {
-            throw new ReglaNegocioException("El correo electrónico no puede exceder los 255 caracteres.");
-        }
-        if (!RegexCorreo.IsMatch(correoNormalizado))
-        {
-            throw new ReglaNegocioException($"El correo electrónico '{correo}' tiene un formato inválido.");
-        }
-
-        // 6. Validaciones de Dirección
         if (string.IsNullOrWhiteSpace(direccion))
         {
             throw new ReglaNegocioException("La dirección del cliente es obligatoria.");
         }
-        string direccionNormalizada = direccion.Trim();
 
         return new Cliente(
             Guid.NewGuid(),
-            nombreNormalizado,
-            apellidosNormalizado,
-            curpNormalizado,
-            telefonoNormalizado,
-            correoNormalizado,
-            direccionNormalizada,
+            nombreNorm,
+            apellidosNorm,
+            curpNorm,
+            telefonoNorm,
+            correoNorm,
+            direccion.Trim(),
             DateTimeOffset.UtcNow);
     }
 
+    /// <summary>
+    /// Actualiza los datos editables del cliente aplicando las mismas invariantes de dominio (SF-031).
+    /// </summary>
     public void Actualizar(
         string nombre,
         string apellidos,
         string curp,
         string telefono,
         string correo,
-        string direccion)
+        string? direccion = null)
+    {
+        var (nombreNorm, apellidosNorm, curpNorm, telefonoNorm, correoNorm) =
+            NormalizarYValidarDatosBasicos(nombre, apellidos, curp, telefono, correo);
+
+        string direccionNormalizada = string.IsNullOrWhiteSpace(direccion)
+            ? (string.IsNullOrWhiteSpace(Direccion) ? "Sin dirección registrada" : Direccion)
+            : direccion.Trim();
+
+        Nombre = nombreNorm;
+        Apellidos = apellidosNorm;
+        Curp = curpNorm;
+        Telefono = telefonoNorm;
+        Correo = correoNorm;
+        Direccion = direccionNormalizada;
+    }
+
+    /// <summary>
+    /// Calcula las iniciales del cliente a partir de su nombre y apellidos (ej. "LC", "RM").
+    /// </summary>
+    public string ObtenerIniciales()
+    {
+        char c1 = !string.IsNullOrWhiteSpace(Nombre) ? char.ToUpperInvariant(Nombre.Trim()[0]) : 'C';
+        char c2 = !string.IsNullOrWhiteSpace(Apellidos) ? char.ToUpperInvariant(Apellidos.Trim()[0]) : 'L';
+        return $"{c1}{c2}";
+    }
+
+    private static (string Nombre, string Apellidos, string Curp, string Telefono, string Correo)
+        NormalizarYValidarDatosBasicos(string nombre, string apellidos, string curp, string telefono, string correo)
     {
         if (string.IsNullOrWhiteSpace(nombre))
-        {
             throw new ReglaNegocioException("El nombre del cliente es obligatorio.");
-        }
-        string nombreNormalizado = nombre.Trim();
-        if (nombreNormalizado.Length > 100)
-        {
+        string nombreNorm = nombre.Trim();
+        if (nombreNorm.Length > 100)
             throw new ReglaNegocioException("El nombre del cliente no puede exceder los 100 caracteres.");
-        }
 
         if (string.IsNullOrWhiteSpace(apellidos))
-        {
             throw new ReglaNegocioException("Los apellidos del cliente son obligatorios.");
-        }
-        string apellidosNormalizado = apellidos.Trim();
-        if (apellidosNormalizado.Length > 100)
-        {
+        string apellidosNorm = apellidos.Trim();
+        if (apellidosNorm.Length > 100)
             throw new ReglaNegocioException("Los apellidos del cliente no pueden exceder los 100 caracteres.");
-        }
 
         if (string.IsNullOrWhiteSpace(curp))
-        {
             throw new ReglaNegocioException("El CURP del cliente es obligatorio.");
-        }
-        string curpNormalizado = curp.Trim().ToUpperInvariant();
-        if (!RegexCurp.IsMatch(curpNormalizado))
-        {
+        string curpNorm = curp.Trim().ToUpperInvariant();
+        if (!RegexCurp.IsMatch(curpNorm))
             throw new ReglaNegocioException($"El CURP '{curp}' es inválido. Debe contener exactamente 18 caracteres alfanuméricos.");
-        }
 
         if (string.IsNullOrWhiteSpace(telefono))
-        {
             throw new ReglaNegocioException("El teléfono del cliente es obligatorio.");
-        }
-        string telefonoNormalizado = telefono.Trim();
-        if (!RegexTelefono.IsMatch(telefonoNormalizado))
-        {
+        string telefonoNorm = telefono.Trim();
+        if (!RegexTelefono.IsMatch(telefonoNorm))
             throw new ReglaNegocioException($"El teléfono '{telefono}' es inválido. Debe contener exactamente 10 dígitos numéricos.");
-        }
 
         if (string.IsNullOrWhiteSpace(correo))
-        {
             throw new ReglaNegocioException("El correo electrónico del cliente es obligatorio.");
-        }
-        string correoNormalizado = correo.Trim().ToLowerInvariant();
-        if (correoNormalizado.Length > 255)
-        {
+        string correoNorm = correo.Trim().ToLowerInvariant();
+        if (correoNorm.Length > 255)
             throw new ReglaNegocioException("El correo electrónico no puede exceder los 255 caracteres.");
-        }
-        if (!RegexCorreo.IsMatch(correoNormalizado))
-        {
+        if (!RegexCorreo.IsMatch(correoNorm))
             throw new ReglaNegocioException($"El correo electrónico '{correo}' tiene un formato inválido.");
-        }
 
-        Nombre = nombreNormalizado;
-        Apellidos = apellidosNormalizado;
-        Curp = curpNormalizado;
-        Telefono = telefonoNormalizado;
-        Correo = correoNormalizado;
-        Direccion = string.IsNullOrWhiteSpace(direccion) ? "Sin dirección registrada" : direccion.Trim();
+        return (nombreNorm, apellidosNorm, curpNorm, telefonoNorm, correoNorm);
     }
 }
