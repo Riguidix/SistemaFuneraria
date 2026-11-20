@@ -424,6 +424,9 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_lotes_clave");
 
+                    b.HasIndex("Seccion", "Estado")
+                        .HasDatabaseName("ix_lotes_seccion_estado");
+
                     b.HasIndex("Seccion", "Estado", "Gavetas")
                         .HasDatabaseName("ix_lotes_filtros");
 
@@ -494,6 +497,9 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
 
                     b.HasIndex("FechaVencimiento")
                         .HasDatabaseName("ix_mensualidades_vencimiento");
+
+                    b.HasIndex("Estado", "FechaVencimiento")
+                        .HasDatabaseName("ix_mensualidades_estado_vencimiento");
 
                     b.HasIndex("FinanciamientoId", "NumeroCuota")
                         .IsUnique()
@@ -718,6 +724,9 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
 
                     b.HasIndex("VendedorId")
                         .HasDatabaseName("ix_ventas_vendedor_id");
+
+                    b.HasIndex("ClienteId", "FechaVenta")
+                        .HasDatabaseName("ix_ventas_cliente_fecha");
 
                     b.ToTable("ventas", null, t =>
                         {

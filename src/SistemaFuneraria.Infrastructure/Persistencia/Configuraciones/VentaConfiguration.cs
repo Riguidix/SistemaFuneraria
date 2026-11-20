@@ -44,5 +44,6 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
         builder.HasIndex(v => v.ClienteId).HasDatabaseName("ix_ventas_cliente_id");
         builder.HasIndex(v => v.VendedorId).HasDatabaseName("ix_ventas_vendedor_id");
         builder.HasIndex(v => v.FechaVenta).IsDescending().HasDatabaseName("ix_ventas_fecha");
+        builder.HasIndex(v => new { v.ClienteId, v.FechaVenta }).HasDatabaseName("ix_ventas_cliente_fecha");
     }
 }

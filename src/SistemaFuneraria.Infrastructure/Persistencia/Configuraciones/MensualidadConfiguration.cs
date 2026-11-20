@@ -41,5 +41,6 @@ public class MensualidadConfiguration : IEntityTypeConfiguration<Mensualidad>
 
         builder.HasIndex(m => new { m.FinanciamientoId, m.NumeroCuota }).IsUnique().HasDatabaseName("uq_mensualidades_cuota");
         builder.HasIndex(m => m.FechaVencimiento).HasDatabaseName("ix_mensualidades_vencimiento");
+        builder.HasIndex(m => new { m.Estado, m.FechaVencimiento }).HasDatabaseName("ix_mensualidades_estado_vencimiento");
     }
 }

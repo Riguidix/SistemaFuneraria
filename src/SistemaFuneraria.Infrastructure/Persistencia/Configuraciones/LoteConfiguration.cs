@@ -70,5 +70,8 @@ public class LoteConfiguration : IEntityTypeConfiguration<Lote>
 
         builder.HasIndex(l => new { l.Seccion, l.Estado, l.Gavetas })
             .HasDatabaseName("ix_lotes_filtros");
+
+        builder.HasIndex(l => new { l.Seccion, l.Estado })
+            .HasDatabaseName("ix_lotes_seccion_estado");
     }
 }
