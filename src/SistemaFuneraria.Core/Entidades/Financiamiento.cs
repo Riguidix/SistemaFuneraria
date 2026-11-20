@@ -123,4 +123,15 @@ public class Financiamiento
             Estado = EstadoFinanciamiento.Liquidado;
         }
     }
+
+    /// <summary>
+    /// Marca el financiamiento en estado EnMora cuando incurre en atraso de cuotas exigibles.
+    /// </summary>
+    public void MarcarEnMora()
+    {
+        if (Estado != EstadoFinanciamiento.Activo)
+            throw new ReglaNegocioException("Solo un financiamiento activo puede marcarse en mora.");
+
+        Estado = EstadoFinanciamiento.EnMora;
+    }
 }
