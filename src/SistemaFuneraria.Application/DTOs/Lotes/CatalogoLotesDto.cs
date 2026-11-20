@@ -51,3 +51,10 @@ public record ActualizarLoteCommand(
     decimal PrecioContado,
     EstadoLote Estado
 );
+
+/// <summary>
+/// Petición para la actualización del estado operativo de un lote (SF-042).
+/// </summary>
+public record CambiarEstadoLoteRequest(
+    EstadoLote Estado
+);
