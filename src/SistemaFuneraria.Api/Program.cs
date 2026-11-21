@@ -103,6 +103,8 @@ if (autoMigrate || seedDemoUsers)
         if (seedDemoUsers)
         {
             await IdentitySeed.SeedAsync(app.Services);
+            await LoteSeed.SeedAsync(app.Services);
+            await CarteraDemoSeed.SeedAsync(app.Services);
         }
     }
     catch (Exception ex)
