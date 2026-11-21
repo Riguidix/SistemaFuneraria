@@ -1,0 +1,367 @@
+@page "/Catalogo"
+@model SistemaFuneraria.Web.Pages.Catalogo.IndexModel
+@{
+    ViewData["Title"] = "Catálogo de Lotes - Inventario";
+}
+
+<!-- Encabezado de Página -->
+<div class="funeraria-page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+        <span class="funeraria-kicker text-uppercase fw-bold">INVENTARIO</span>
+        <h1 class="funeraria-page-title mb-1">Catálogo de lotes</h1>
+        <p class="funeraria-page-subtitle text-muted mb-0">Consulta disponibilidad, ubicación y condiciones comerciales.</p>
+    </div>
+    <div>
+        <button type="button" 
+                class="btn btn-funeraria-primary"
+                style="background-color: #2D4224 !important; color: #FFFFFF !important; border: 1px solid #2D4224 !important; border-radius: 8px !important; font-weight: 600 !important; padding: 0.65rem 1.25rem !important; display: inline-flex !important; align-items: center !important; gap: 0.5rem !important;">
+            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>
+            <span>Cotizar lote</span>
+        </button>
+    </div>
+</div>
+
+<!-- Barra de Herramientas: Buscador y Selectores de Sección y Estado -->
+<div class="funeraria-toolbar mb-4">
+    <div class="funeraria-search-box flex-grow-1">
+        <i class="fa-solid fa-magnifying-glass funeraria-search-icon" aria-hidden="true"></i>
+        <input type="text" 
+               id="inputBuscarLotes" 
+               class="form-control funeraria-search-input" 
+               placeholder="Buscar por clave, sección o tipo" 
+               autocomplete="off" 
+               aria-label="Buscar lotes" />
+        <button type="button" id="btnClearSearchLotes" class="btn-clear-search" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <select id="selectSeccion" class="form-select funeraria-select" aria-label="Filtrar por sección">
+            <option value="todas">Todas las secciones</option>
+            <option value="Jardín Norte">Jardín Norte</option>
+            <option value="Jardín Central">Jardín Central</option>
+            <option value="Robles">Robles</option>
+            <option value="Las Magnolias">Las Magnolias</option>
+        </select>
+        <select id="selectEstado" class="form-select funeraria-select" aria-label="Filtrar por estado">
+            <option value="todos">Todos los estados</option>
+            <option value="Disponible">Disponible</option>
+            <option value="Reservado">Reservado</option>
+            <option value="Vendido">Vendido</option>
+        </select>
+    </div>
+</div>
+
+<!-- Fila de Tarjetas KPIs / Métricas de Inventario (Figma) -->
+<div class="row g-3 mb-4">
+    <!-- KPI 1: Disponibles -->
+    <div class="col-md-4">
+        <div class="card funeraria-kpi-card border-0 shadow-sm rounded-4 p-4 h-100">
+            <div class="kpi-label text-muted small fw-medium mb-1">Disponibles</div>
+            <div class="kpi-value fw-bold text-dark fs-1 lh-1 mb-2">64</div>
+            <div class="kpi-subtext text-muted small">de 178 lotes</div>
+        </div>
+    </div>
+    <!-- KPI 2: Precio desde -->
+    <div class="col-md-4">
+        <div class="card funeraria-kpi-card border-0 shadow-sm rounded-4 p-4 h-100">
+            <div class="kpi-label text-muted small fw-medium mb-1">Precio desde</div>
+            <div class="kpi-value fw-bold text-dark fs-2 lh-1 mb-2 formato-moneda">$120,000</div>
+            <div class="kpi-subtext text-muted small">pago de contado</div>
+        </div>
+    </div>
+    <!-- KPI 3: Sección con más espacio -->
+    <div class="col-md-4">
+        <div class="card funeraria-kpi-card border-0 shadow-sm rounded-4 p-4 h-100">
+            <div class="kpi-label text-muted small fw-medium mb-1">Sección con más espacio</div>
+            <div class="kpi-value fw-bold text-dark fs-3 lh-1 mb-2">Jardín Norte</div>
+            <div class="kpi-subtext text-muted small">24 lotes libres</div>
+        </div>
+    </div>
+</div>
+
+<!-- Card Contenedor: Tabla de Lotes (Fiel a Figma) -->
+<div class="funeraria-table-card card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+    <div class="table-responsive">
+        <table class="table funeraria-table align-middle mb-0" id="tablaLotes" aria-label="Catálogo de lotes funerarios">
+            <thead>
+                <tr>
+                    <th scope="col" class="ps-4 th-sortable" data-sort-col="clave" title="Ordenar por Clave">
+                        CLAVE <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
+                    </th>
+                    <th scope="col" class="th-sortable" data-sort-col="ubicacion" title="Ordenar por Ubicación">
+                        UBICACIÓN <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
+                    </th>
+                    <th scope="col" class="th-sortable" data-sort-col="capacidad" title="Ordenar por Capacidad">
+                        CAPACIDAD <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
+                    </th>
+                    <th scope="col" class="th-sortable" data-sort-col="precio" title="Ordenar por Precio de Lista">
+                        PRECIO DE LISTA <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
+                    </th>
+                    <th scope="col">ESTADO</th>
+                    <th scope="col" class="text-end pe-4"><span class="visually-hidden">Acciones</span></th>
+                </tr>
+            </thead>
+            <tbody id="tbodyLotes">
+                <!-- Fila 1: JN-A-042 -->
+                <tr data-clave="JN-A-042" data-ubicacion="Jardín Norte" data-capacidad="2" data-precio="120000" data-estado="Disponible">
+                    <td class="ps-4 fw-medium text-dark">JN-A-042</td>
+                    <td>
+                        <div class="fw-bold text-dark">Jardín Norte</div>
+                        <div class="text-muted small">Andador A · Fila 4</div>
+                    </td>
+                    <td>2 gavetas</td>
+                    <td class="fw-bold formato-moneda text-tabular">$120,000.00</td>
+                    <td>
+                        <span class="badge badge-estado badge-disponible">Disponible</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Cotizar lote JN-A-042">
+                            <span>Cotizar</span>
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Fila 2: JC-C-118 -->
+                <tr data-clave="JC-C-118" data-ubicacion="Jardín Central" data-capacidad="3" data-precio="150000" data-estado="Disponible">
+                    <td class="ps-4 fw-medium text-dark">JC-C-118</td>
+                    <td>
+                        <div class="fw-bold text-dark">Jardín Central</div>
+                        <div class="text-muted small">Andador C · Fila 11</div>
+                    </td>
+                    <td>3 gavetas</td>
+                    <td class="fw-bold formato-moneda text-tabular">$150,000.00</td>
+                    <td>
+                        <span class="badge badge-estado badge-disponible">Disponible</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Cotizar lote JC-C-118">
+                            <span>Cotizar</span>
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Fila 3: RO-B-027 -->
+                <tr data-clave="RO-B-027" data-ubicacion="Robles" data-capacidad="4" data-precio="180000" data-estado="Reservado">
+                    <td class="ps-4 fw-medium text-dark">RO-B-027</td>
+                    <td>
+                        <div class="fw-bold text-dark">Robles</div>
+                        <div class="text-muted small">Andador B · Fila 2</div>
+                    </td>
+                    <td>4 gavetas</td>
+                    <td class="fw-bold formato-moneda text-tabular">$180,000.00</td>
+                    <td>
+                        <span class="badge badge-estado badge-reservado">Reservado</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Ver detalle de lote RO-B-027">
+                            <span>Ver detalle</span>
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Fila 4: JN-D-065 -->
+                <tr data-clave="JN-D-065" data-ubicacion="Jardín Norte" data-capacidad="3" data-precio="150000" data-estado="Disponible">
+                    <td class="ps-4 fw-medium text-dark">JN-D-065</td>
+                    <td>
+                        <div class="fw-bold text-dark">Jardín Norte</div>
+                        <div class="text-muted small">Andador D · Fila 6</div>
+                    </td>
+                    <td>3 gavetas</td>
+                    <td class="fw-bold formato-moneda text-tabular">$150,000.00</td>
+                    <td>
+                        <span class="badge badge-estado badge-disponible">Disponible</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Cotizar lote JN-D-065">
+                            <span>Cotizar</span>
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Fila 5: LM-A-014 -->
+                <tr data-clave="LM-A-014" data-ubicacion="Las Magnolias" data-capacidad="2" data-precio="120000" data-estado="Vendido">
+                    <td class="ps-4 fw-medium text-dark">LM-A-014</td>
+                    <td>
+                        <div class="fw-bold text-dark">Las Magnolias</div>
+                        <div class="text-muted small">Andador A · Fila 1</div>
+                    </td>
+                    <td>2 gavetas</td>
+                    <td class="fw-bold formato-moneda text-tabular">$120,000.00</td>
+                    <td>
+                        <span class="badge badge-estado badge-vendido">Vendido</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Ver contrato de lote LM-A-014">
+                            <span>Ver contrato</span>
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Estado Vacío -->
+                <tr id="filaSinResultadosLotes" style="display: none;">
+                    <td colspan="6" class="text-center py-5">
+                        <div class="py-4 text-muted">
+                            <i class="fa-solid fa-magnifying-glass fa-2x mb-2 opacity-50 d-block" aria-hidden="true"></i>
+                            <div class="fw-semibold fs-6 text-dark mb-1">No se encontraron lotes</div>
+                            <div class="small mb-3">Ningún lote coincide con los filtros aplicados.</div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btnResetLotes">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Restablecer filtros
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="funeraria-table-footer">
+        <div class="table-pagination-info">
+            Mostrando <strong id="lotesDesde">1</strong> a <strong id="lotesHasta">5</strong> de <strong id="lotesTotal">64</strong> lotes
+        </div>
+        <nav aria-label="Paginación de catálogo de lotes">
+            <ul class="funeraria-pagination">
+                <li>
+                    <button type="button" class="page-btn disabled" aria-label="Página anterior">
+                        Anterior
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="page-btn active" aria-current="page">1</button>
+                </li>
+                <li>
+                    <button type="button" class="page-btn disabled" aria-label="Página siguiente">
+                        Siguiente
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Controlador de búsqueda y filtros reactivos para Catálogo de Lotes
+        document.addEventListener('DOMContentLoaded', function () {
+            var inputBuscar = document.getElementById('inputBuscarLotes');
+            var btnClear = document.getElementById('btnClearSearchLotes');
+            var selectSeccion = document.getElementById('selectSeccion');
+            var selectEstado = document.getElementById('selectEstado');
+            var btnReset = document.getElementById('btnResetLotes');
+            var tbody = document.getElementById('tbodyLotes');
+            var filaVacia = document.getElementById('filaSinResultadosLotes');
+            var lotesDesde = document.getElementById('lotesDesde');
+            var lotesHasta = document.getElementById('lotesHasta');
+            var lotesTotal = document.getElementById('lotesTotal');
+            var sortHeaders = document.querySelectorAll('.th-sortable');
+
+            if (!inputBuscar || !tbody) return;
+
+            var ordenActual = { columna: null, ascendente: true };
+
+            function filtrarLotes() {
+                var termino = inputBuscar.value.toLowerCase().trim();
+                var seccion = selectSeccion ? selectSeccion.value.toLowerCase() : 'todas';
+                var estado = selectEstado ? selectEstado.value.toLowerCase() : 'todos';
+
+                if (btnClear) {
+                    btnClear.style.display = termino.length > 0 ? 'block' : 'none';
+                }
+
+                var filas = tbody.querySelectorAll('tr:not(#filaSinResultadosLotes)');
+                var visibles = 0;
+
+                filas.forEach(function (fila) {
+                    var textoFila = fila.textContent.toLowerCase();
+                    var claveFila = (fila.getAttribute('data-clave') || '').toLowerCase();
+                    var ubicacionFila = (fila.getAttribute('data-ubicacion') || '').toLowerCase();
+                    var estadoFila = (fila.getAttribute('data-estado') || '').toLowerCase();
+
+                    var coincideTexto = termino === '' || textoFila.indexOf(termino) > -1 || claveFila.indexOf(termino) > -1;
+                    var coincideSeccion = seccion === 'todas' || ubicacionFila.indexOf(seccion) > -1;
+                    var coincideEstado = estado === 'todos' || estadoFila === estado;
+
+                    if (coincideTexto && coincideSeccion && coincideEstado) {
+                        fila.style.display = '';
+                        visibles++;
+                    } else {
+                        fila.style.display = 'none';
+                    }
+                });
+
+                if (filaVacia) {
+                    filaVacia.style.display = visibles === 0 ? '' : 'none';
+                }
+
+                if (lotesDesde && lotesHasta && lotesTotal) {
+                    lotesDesde.textContent = visibles > 0 ? '1' : '0';
+                    lotesHasta.textContent = visibles;
+                }
+            }
+
+            inputBuscar.addEventListener('input', filtrarLotes);
+            if (selectSeccion) selectSeccion.addEventListener('change', filtrarLotes);
+            if (selectEstado) selectEstado.addEventListener('change', filtrarLotes);
+
+            if (btnClear) {
+                btnClear.addEventListener('click', function () {
+                    inputBuscar.value = '';
+                    inputBuscar.focus();
+                    filtrarLotes();
+                });
+            }
+
+            if (btnReset) {
+                btnReset.addEventListener('click', function () {
+                    inputBuscar.value = '';
+                    if (selectSeccion) selectSeccion.value = 'todas';
+                    if (selectEstado) selectEstado.value = 'todos';
+                    filtrarLotes();
+                });
+            }
+
+            // Ordenamiento por cabeceras
+            sortHeaders.forEach(function (th) {
+                th.addEventListener('click', function () {
+                    var col = this.getAttribute('data-sort-col');
+                    if (ordenActual.columna === col) {
+                        ordenActual.ascendente = !ordenActual.ascendente;
+                    } else {
+                        ordenActual.columna = col;
+                        ordenActual.ascendente = true;
+                    }
+
+                    sortHeaders.forEach(function (header) {
+                        var icon = header.querySelector('.sort-icon');
+                        if (icon) icon.className = 'fa-solid fa-sort sort-icon';
+                    });
+                    var currentIcon = this.querySelector('.sort-icon');
+                    if (currentIcon) {
+                        currentIcon.className = ordenActual.ascendente ? 'fa-solid fa-sort-up sort-icon text-dark' : 'fa-solid fa-sort-down sort-icon text-dark';
+                    }
+
+                    var filasArray = Array.from(tbody.querySelectorAll('tr:not(#filaSinResultadosLotes)'));
+                    filasArray.sort(function (a, b) {
+                        var valorA = a.getAttribute('data-' + col) || '';
+                        var valorB = b.getAttribute('data-' + col) || '';
+
+                        if (col === 'precio' || col === 'capacidad') {
+                            var numA = parseFloat(valorA) || 0;
+                            var numB = parseFloat(valorB) || 0;
+                            return ordenActual.ascendente ? numA - numB : numB - numA;
+                        }
+
+                        return ordenActual.ascendente 
+                            ? valorA.localeCompare(valorB, 'es', { numeric: true }) 
+                            : valorB.localeCompare(valorA, 'es', { numeric: true });
+                    });
+
+                    filasArray.forEach(function (row) {
+                        tbody.insertBefore(row, filaVacia);
+                    });
+                });
+            });
+        });
+    </script>
+}

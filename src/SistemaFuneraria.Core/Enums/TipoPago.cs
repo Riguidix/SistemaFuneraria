@@ -1,7 +1,7 @@
 namespace SistemaFuneraria.Core.Enums;
 
 /// <summary>
-/// Especifica el concepto comercial y contable por el que ingresa un pago en caja (SF-075).
+/// Concepto operativo del ingreso registrado en caja.
 /// </summary>
 public enum TipoPago
 {

@@ -1,7 +1,7 @@
 namespace SistemaFuneraria.Core.Enums;
 
 /// <summary>
-/// Especifica el instrumento o medio monetario con el cual se liquida una operación en caja (SF-075).
+/// Medio de pago recibido en ventanilla o caja.
 /// </summary>
 public enum MetodoPago
 {
