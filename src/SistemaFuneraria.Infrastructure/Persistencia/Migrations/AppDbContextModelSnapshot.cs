@@ -25,6 +25,8 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
             modelBuilder.HasSequence("seq_contratos_folio")
                 .StartsAt(190L);
 
+            modelBuilder.HasSequence("seq_pagos_folio");
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -515,6 +517,134 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SistemaFuneraria.Core.Entidades.Pago", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CajeroId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)")
+                        .HasColumnName("cajero_id");
+
+                    b.Property<string>("ClaveIdempotencia")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("clave_idempotencia");
+
+                    b.Property<DateTimeOffset>("FechaPago")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_pago")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<Guid?>("FinanciamientoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("financiamiento_id");
+
+                    b.Property<string>("Folio")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("folio");
+
+                    b.Property<Guid?>("MensualidadId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("mensualidad_id");
+
+                    b.Property<string>("Metodo")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)")
+                        .HasColumnName("metodo_pago");
+
+                    b.Property<decimal>("MontoCapital")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("monto_capital");
+
+                    b.Property<decimal>("MontoInteres")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("monto_interes");
+
+                    b.Property<decimal>("MontoTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("monto_total");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("referencia");
+
+                    b.Property<decimal>("SaldoAnterior")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("saldo_anterior");
+
+                    b.Property<decimal>("SaldoPosterior")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("saldo_posterior");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("character varying(25)")
+                        .HasColumnName("tipo_pago");
+
+                    b.Property<Guid>("VentaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("venta_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CajeroId")
+                        .HasDatabaseName("ix_pagos_cajero_id");
+
+                    b.HasIndex("ClaveIdempotencia")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pagos_clave_idempotencia");
+
+                    b.HasIndex("FechaPago")
+                        .IsDescending()
+                        .HasDatabaseName("ix_pagos_fecha");
+
+                    b.HasIndex("FinanciamientoId")
+                        .HasDatabaseName("ix_pagos_financiamiento_id");
+
+                    b.HasIndex("Folio")
+                        .IsUnique()
+                        .HasDatabaseName("ix_pagos_folio");
+
+                    b.HasIndex("MensualidadId")
+                        .HasDatabaseName("ix_pagos_mensualidad_id");
+
+                    b.HasIndex("VentaId")
+                        .HasDatabaseName("ix_pagos_venta_id");
+
+                    b.ToTable("pagos", null, t =>
+                        {
+                            t.HasCheckConstraint("pagos_metodo_pago_check", "metodo_pago IN ('Efectivo', 'TransferenciaBancaria', 'Tarjeta')");
+
+                            t.HasCheckConstraint("pagos_monto_capital_check", "monto_capital >= 0");
+
+                            t.HasCheckConstraint("pagos_monto_interes_check", "monto_interes >= 0");
+
+                            t.HasCheckConstraint("pagos_monto_total_check", "monto_total > 0");
+
+                            t.HasCheckConstraint("pagos_saldo_anterior_check", "saldo_anterior >= 0");
+
+                            t.HasCheckConstraint("pagos_saldo_posterior_check", "saldo_posterior >= 0");
+
+                            t.HasCheckConstraint("pagos_tipo_pago_check", "tipo_pago IN ('Enganche', 'Contado', 'Mensualidad', 'AbonoCapital', 'Liquidacion')");
+                        });
+                });
+
             modelBuilder.Entity("SistemaFuneraria.Core.Entidades.Venta", b =>
                 {
                     b.Property<Guid>("Id")
@@ -664,6 +794,31 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
                     b.HasOne("SistemaFuneraria.Core.Entidades.Financiamiento", null)
                         .WithMany("Mensualidades")
                         .HasForeignKey("FinanciamientoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SistemaFuneraria.Core.Entidades.Pago", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CajeroId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SistemaFuneraria.Core.Entidades.Financiamiento", null)
+                        .WithMany()
+                        .HasForeignKey("FinanciamientoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SistemaFuneraria.Core.Entidades.Mensualidad", null)
+                        .WithMany()
+                        .HasForeignKey("MensualidadId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SistemaFuneraria.Core.Entidades.Venta", null)
+                        .WithMany()
+                        .HasForeignKey("VentaId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

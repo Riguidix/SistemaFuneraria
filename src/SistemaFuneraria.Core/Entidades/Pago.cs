@@ -6,7 +6,7 @@ using SistemaFuneraria.Core.ValueObjects;
 namespace SistemaFuneraria.Core.Entidades;
 
 /// <summary>
-/// Entidad de dominio Pago que representa un movimiento inmutable del libro mayor de caja (SF-075).
+/// Entidad de dominio Pago que representa un ingreso monetario registrado en la ventanilla de caja (SF-075).
 /// </summary>
 public class Pago
 {
@@ -30,7 +30,7 @@ public class Pago
     public DateTimeOffset FechaPago { get; private set; }
 
     /// <summary>
-    /// Constructor protegido sin parámetros requerido por EF Core.
+    /// Constructor protegido sin parámetros requerido por EF Core para la materialización de entidades.
     /// </summary>
     protected Pago() { }
 
@@ -71,7 +71,7 @@ public class Pago
     }
 
     /// <summary>
-    /// Crea un movimiento de pago validando folio, idempotencia, cuadre de capital/interés y referencia electrónica.
+    /// Factory Method canónico para crear un registro inmutable de pago con validaciones de invariantes de negocio.
     /// </summary>
     public static Pago Crear(
         string folio,

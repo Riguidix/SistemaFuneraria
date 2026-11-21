@@ -13,5 +13,7 @@ public interface IAppDbContext
     DbSet<Venta> Ventas { get; }
     DbSet<Financiamiento> Financiamientos { get; }
     DbSet<Mensualidad> Mensualidades { get; }
+    DbSet<Pago> Pagos { get; }
+    Task<string> ObtenerSiguienteFolioPagoAsync(int anio, CancellationToken cancellationToken = default);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
