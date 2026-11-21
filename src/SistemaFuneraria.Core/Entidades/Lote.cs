@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using SistemaFuneraria.Core.Enums;
 using SistemaFuneraria.Core.Excepciones;
 using SistemaFuneraria.Core.ValueObjects;
