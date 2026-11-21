@@ -30,7 +30,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 
 ### 3. Salida Real de Terminal (Fase RED)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -42,12 +42,12 @@ A total of 1 test files matched the specified pattern.
   Error Message:
    System.NotImplementedException : SF-042: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.LotesController.Crear(CrearLoteCommand command, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 56
+     at SistemaFuneraria.Api.Controllers.V1.LotesController.Crear(CrearLoteCommand command, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 56
   Failed SF-042: Crear lote válido por Administrador debe retornar 201 Created [5 ms]
   Error Message:
    System.NotImplementedException : SF-042: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.LotesController.Crear(CrearLoteCommand command, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 56
+     at SistemaFuneraria.Api.Controllers.V1.LotesController.Crear(CrearLoteCommand command, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 56
 [xUnit.net 00:00:03.43]     SF-042: CambiarEstado operativo por Administrador debe retornar 200 OK [FAIL]
 [xUnit.net 00:00:03.45]     SF-042: ObtenerCatalogo sin filtros debe retornar 200 OK con KPIs e items [FAIL]
 [xUnit.net 00:00:03.45]     SF-042 (BDD): Actualizar lote existente por Administrador debe retornar 200 OK [FAIL]
@@ -56,27 +56,27 @@ A total of 1 test files matched the specified pattern.
   Error Message:
    System.NotImplementedException : SF-042: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.LotesController.ObtenerPorId(Guid id, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 43
+     at SistemaFuneraria.Api.Controllers.V1.LotesController.ObtenerPorId(Guid id, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 43
   Failed SF-042: CambiarEstado operativo por Administrador debe retornar 200 OK [77 ms]
   Error Message:
    System.NotImplementedException : SF-042: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.LotesController.CambiarEstado(Guid id, CambiarEstadoLoteRequest request, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 84
+     at SistemaFuneraria.Api.Controllers.V1.LotesController.CambiarEstado(Guid id, CambiarEstadoLoteRequest request, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 84
   Failed SF-042: ObtenerCatalogo sin filtros debe retornar 200 OK con KPIs e items [14 ms]
   Error Message:
    System.NotImplementedException : SF-042: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.LotesController.ObtenerCatalogo(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 page, Int32 pageSize, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 32
+     at SistemaFuneraria.Api.Controllers.V1.LotesController.ObtenerCatalogo(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 page, Int32 pageSize, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 32
   Failed SF-042 (BDD): Actualizar lote existente por Administrador debe retornar 200 OK [4 ms]
   Error Message:
    System.NotImplementedException : SF-042: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.LotesController.Actualizar(Guid id, ActualizarLoteCommand command, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 70
+     at SistemaFuneraria.Api.Controllers.V1.LotesController.Actualizar(Guid id, ActualizarLoteCommand command, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 70
   Failed SF-042: ObtenerPorId inexistente debe retornar 404 Not Found [1 ms]
   Error Message:
    System.NotImplementedException : SF-042: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.LotesController.ObtenerPorId(Guid id, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 43
+     at SistemaFuneraria.Api.Controllers.V1.LotesController.ObtenerPorId(Guid id, CancellationToken ct) in src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs:line 43
 
 Failed!  - Failed:     7, Passed:     4, Skipped:     0, Total:    11, Duration: 275 ms - SistemaFuneraria.Tests.dll (net8.0)
 ```
