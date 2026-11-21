@@ -1,0 +1,75 @@
+@model SistemaFuneraria.Web.Pages.Ventas.NuevaModel
+
+<div class="bg-white rounded-4 shadow-sm border p-4 p-md-5 d-none" id="step2Card">
+    <div class="mb-4">
+        <h2 class="h4 fw-bold text-dark mb-1">Selecciona el lote</h2>
+        <p class="small text-muted mb-0">Elige una opción disponible para continuar.</p>
+    </div>
+
+    <!-- Lista vertical de tarjetas interactivas de lote -->
+    <div class="d-flex flex-column gap-3 mb-4" id="contenedorTarjetasLote">
+        <!-- Tarjeta 1: JN-A-042 (Activa por defecto) -->
+        <div class="sf-lote-card p-3 rounded-3 d-flex align-items-center justify-content-between transition-all"
+             role="button"
+             data-lote-clave="JN-A-042"
+             data-lote-tipo="Lote Básico"
+             data-lote-capacidad="2"
+             data-lote-precio="120000"
+             data-slot="42"
+             style="cursor: pointer; border: 2px solid #2D4224; background-color: #FAFBF9; transition: all 0.2s ease;">
+            <span class="fw-bold text-dark me-4 sf-monospace" style="min-width: 90px; font-size: 1.05rem;">JN-A-042</span>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-dark">Jardín Norte</div>
+                <small class="text-muted">2 gavetas · Andador A</small>
+            </div>
+            <span class="h5 fw-bold text-dark mb-0 sf-money">$120,000</span>
+        </div>
+
+        <!-- Tarjeta 2: JC-C-118 -->
+        <div class="sf-lote-card p-3 rounded-3 d-flex align-items-center justify-content-between transition-all"
+             role="button"
+             data-lote-clave="JC-C-118"
+             data-lote-tipo="Lote Familiar"
+             data-lote-capacidad="3"
+             data-lote-precio="150000"
+             data-slot="44"
+             style="cursor: pointer; border: 1px solid #E5E7EB; background-color: #FFFFFF; transition: all 0.2s ease;">
+            <span class="fw-bold text-dark me-4 sf-monospace" style="min-width: 90px; font-size: 1.05rem;">JC-C-118</span>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-dark">Jardín Central</div>
+                <small class="text-muted">3 gavetas · Andador C</small>
+            </div>
+            <span class="h5 fw-bold text-dark mb-0 sf-money">$150,000</span>
+        </div>
+
+        <!-- Tarjeta 3: RO-E-081 -->
+        <div class="sf-lote-card p-3 rounded-3 d-flex align-items-center justify-content-between transition-all"
+             role="button"
+             data-lote-clave="RO-E-081"
+             data-lote-tipo="Lote Memorial"
+             data-lote-capacidad="4"
+             data-lote-precio="180000"
+             data-slot="46"
+             style="cursor: pointer; border: 1px solid #E5E7EB; background-color: #FFFFFF; transition: all 0.2s ease;">
+            <span class="fw-bold text-dark me-4 sf-monospace" style="min-width: 90px; font-size: 1.05rem;">RO-E-081</span>
+            <div class="flex-grow-1">
+                <div class="fw-bold text-dark">Robles</div>
+                <small class="text-muted">4 gavetas · Andador E</small>
+            </div>
+            <span class="h5 fw-bold text-dark mb-0 sf-money">$180,000</span>
+        </div>
+    </div>
+
+    <!-- Botones de Navegación Inferior -->
+    <div class="border-top pt-4 mt-4 d-flex justify-content-between align-items-center">
+        <button type="button" id="btnAnteriorPaso2" class="btn btn-outline-secondary rounded-3 px-4 py-2">
+            Anterior
+        </button>
+        <button type="button"
+                id="btnContinuarPaso2"
+                class="btn text-white rounded-3 px-4 py-2 fw-medium d-inline-flex align-items-center shadow-sm"
+                style="background-color: #2D4224; border-color: #2D4224;">
+            Continuar <i class="fa-solid fa-arrow-right ms-2" aria-hidden="true"></i>
+        </button>
+    </div>
+</div>
