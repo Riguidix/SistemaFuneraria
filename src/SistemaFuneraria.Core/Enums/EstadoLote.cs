@@ -1,4 +1,4 @@
-﻿namespace SistemaFuneraria.Core.Enums;
+namespace SistemaFuneraria.Core.Enums;
 
 /// <summary>
 /// Estados comerciales y administrativos posibles de un lote
