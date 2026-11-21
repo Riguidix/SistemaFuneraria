@@ -90,8 +90,12 @@ public class Pago
         string claveIdempotencia,
         DateTimeOffset fechaPago)
     {
-        if (string.IsNullOrWhiteSpace(folio) || !RegexFolioPago.IsMatch(folio.Trim()))
-            throw new ReglaNegocioException($"El formato del folio '{folio}' es inválido. Debe cumplir con el patrón PAG-YYYY-XXXXXX.");
+        if (string.IsNullOrWhiteSpace(folio))
+            throw new ReglaNegocioException("El folio del pago es obligatorio.");
+
+        string folioNormalizado = folio.Trim().ToUpperInvariant();
+        if (!RegexFolioPago.IsMatch(folioNormalizado))
+            throw new ReglaNegocioException($"El folio '{folio}' no cumple el formato PAG-YYYY-XXXXXX.");
 
         if (ventaId == Guid.Empty)
             throw new ReglaNegocioException("El identificador de la venta es obligatorio.");
@@ -100,10 +104,10 @@ public class Pago
             throw new ReglaNegocioException("El identificador del cajero es obligatorio.");
 
         if (!Enum.IsDefined(tipo))
-            throw new ReglaNegocioException("El tipo de pago especificado no es válido.");
+            throw new ReglaNegocioException("El tipo de pago indicado no es válido.");
 
         if (!Enum.IsDefined(metodo))
-            throw new ReglaNegocioException("El método de pago especificado no es válido.");
+            throw new ReglaNegocioException("El método de pago indicado no es válido.");
 
         if (string.IsNullOrWhiteSpace(claveIdempotencia))
             throw new ReglaNegocioException("La clave de idempotencia es obligatoria.");
@@ -111,25 +115,19 @@ public class Pago
         if (montoTotal.Monto <= 0m)
             throw new ReglaNegocioException("El monto total del pago debe ser mayor a cero.");
 
-        if (montoCapital.Monto < 0m || montoInteres.Monto < 0m)
-            throw new ReglaNegocioException("Los desgloses de capital e interés no pueden ser negativos.");
-
         if (montoCapital.Monto + montoInteres.Monto != montoTotal.Monto)
-            throw new ReglaNegocioException("La suma del capital y el interés debe coincidir exactamente con el monto total del pago.");
+            throw new ReglaNegocioException("La suma de capital e interés debe cuadrar exactamente con el monto total.");
 
-        if (saldoAnterior.Monto < 0m || saldoPosterior.Monto < 0m)
-            throw new ReglaNegocioException("Los saldos anterior y posterior no pueden ser negativos.");
-
-        string? referenciaNormalizada = referencia?.Trim();
-        if (metodo is MetodoPago.TransferenciaBancaria or MetodoPago.Tarjeta)
+        string? referenciaNormalizada = string.IsNullOrWhiteSpace(referencia) ? null : referencia.Trim();
+        if (metodo is MetodoPago.TransferenciaBancaria or MetodoPago.Tarjeta
+            && (referenciaNormalizada is null || referenciaNormalizada.Length < 4))
         {
-            if (string.IsNullOrWhiteSpace(referenciaNormalizada) || referenciaNormalizada.Length < 4)
-                throw new ReglaNegocioException("La referencia (folio o últimos 4 dígitos) es obligatoria para transferencias y tarjetas");
+            throw new ReglaNegocioException("La referencia (folio o últimos 4 dígitos) es obligatoria para transferencias y tarjetas");
         }
 
         return new Pago(
             Guid.NewGuid(),
-            folio.Trim().ToUpperInvariant(),
+            folioNormalizado,
             ventaId,
             financiamientoId,
             mensualidadId,
