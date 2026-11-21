@@ -134,4 +134,21 @@ public class Financiamiento
 
         Estado = EstadoFinanciamiento.EnMora;
     }
+
+    /// <summary>
+    /// Aplica la liquidación anticipada sobre el financiamiento, liquidando todas las mensualidades y saldando a cero.
+    /// </summary>
+    public void AplicarLiquidacion(DateTimeOffset fechaLiquidacion)
+    {
+        if (Estado == EstadoFinanciamiento.Liquidado)
+            throw new ReglaNegocioException("El financiamiento ya se encuentra liquidado.");
+
+        foreach (var mensualidad in _mensualidades.Where(m => m.Estado != EstadoMensualidad.Pagada))
+        {
+            mensualidad.MarcarPagada(fechaLiquidacion);
+        }
+
+        SaldoInsoluto = Dinero.Zero;
+        Estado = EstadoFinanciamiento.Liquidado;
+    }
 }
