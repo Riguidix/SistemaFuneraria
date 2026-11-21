@@ -29,7 +29,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 
 ### 3. Salida Real de Terminal (Fase RED)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -39,52 +39,52 @@ A total of 1 test files matched the specified pattern.
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.CrearLoteAsync(CrearLoteCommand command, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 39
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.CrearLoteAsync(CrearLoteCommand command, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 39
   Failed SF-041: ObtenerPorId con lote existente debe retornar DTO [1 s]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 29
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 29
   Failed SF-041 (BDD): Cálculo de KPIs y filtrado por sección y estado (CP-01) [52 ms]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerCatalogoAsync(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 pagina, Int32 tamanoPagina, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 24
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerCatalogoAsync(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 pagina, Int32 tamanoPagina, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 24
   Failed SF-041: ObtenerPorId inexistente debe retornar [NO_ENCONTRADO] [1 ms]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 29
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 29
   Failed SF-041: Búsqueda reactiva por texto libre en clave o gavetas [25 ms]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerCatalogoAsync(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 pagina, Int32 tamanoPagina, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 24
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerCatalogoAsync(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 pagina, Int32 tamanoPagina, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 24
   Failed SF-041: Cálculo de KPIs de cabecera en catálogo completo [3 ms]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerCatalogoAsync(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 pagina, Int32 tamanoPagina, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 24
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerCatalogoAsync(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 pagina, Int32 tamanoPagina, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 24
   Failed SF-041: CrearLoteAsync con clave duplicada debe retornar [CONFLICTO] [2 ms]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.CrearLoteAsync(CrearLoteCommand command, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 39
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.CrearLoteAsync(CrearLoteCommand command, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 39
   Failed SF-041: Catálogo sin lotes disponibles debe retornar PrecioDesde = 0m [2 ms]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerCatalogoAsync(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 pagina, Int32 tamanoPagina, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 24
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ObtenerCatalogoAsync(String buscar, String seccion, String estado, Nullable`1 gavetas, Int32 pagina, Int32 tamanoPagina, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 24
   Failed SF-041: CambiarEstadoLoteAsync cambia estado operativo del lote [3 ms]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.CambiarEstadoLoteAsync(Guid id, EstadoLote nuevoEstado, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 49
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.CambiarEstadoLoteAsync(Guid id, EstadoLote nuevoEstado, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 49
   Failed SF-041: ActualizarLoteAsync con datos válidos debe persistir cambios [4 ms]
   Error Message:
    System.NotImplementedException : SF-041: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ActualizarLoteAsync(Guid id, ActualizarLoteCommand command, CancellationToken cancellationToken) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 44
+     at SistemaFuneraria.Application.Servicios.Lotes.LoteService.ActualizarLoteAsync(Guid id, ActualizarLoteCommand command, CancellationToken cancellationToken) in src\SistemaFuneraria.Application\Servicios\Lotes\LoteService.cs:line 44
 
 Failed!  - Failed:    10, Passed:     0, Skipped:     0, Total:    10, Duration: 1 s - SistemaFuneraria.Tests.dll (net8.0)
 ```

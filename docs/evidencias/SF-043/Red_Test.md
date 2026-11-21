@@ -31,7 +31,7 @@ dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter 
 
 ### 3. Salida Real de Terminal (Fase RED)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -45,25 +45,25 @@ A total of 1 test files matched the specified pattern.
 [xUnit.net 00:00:00.94]     SF-043: lotesApi.js debe exponer obtenerCatalogo, obtenerLotePorId, crearLote, actualizarLote y cambiarEstadoLote [FAIL]
   Failed SF-043: renderizarBadgeEstadoLote debe mapear Disponible, Reservado y Vendido según Figma Captura 2 [282 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
   Failed SF-043: lotesApi.js debe soportar UMD (window.lotesApi y module.exports) [1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
   Failed SF-043: lotesApi.js debe delegar las operaciones HTTP en apiClient [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
   Failed SF-043: lotesApi.js debe existir físicamente en wwwroot/js/api/ [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
   Failed SF-043 (BDD): formatearMonedaMXN debe formatear en cultura es-MX ($120,000.00) [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
   Failed SF-043: lotesApi.js debe utilizar la ruta base /api/v1/lotes [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
   Failed SF-043: lotesApi.js debe exponer obtenerCatalogo, obtenerLotePorId, crearLote, actualizarLote y cambiarEstadoLote [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo 'src\SistemaFuneraria.Web\wwwroot\js\api\lotesApi.js', but found False.
 
 Failed!  - Failed:     7, Passed:     0, Skipped:     0, Total:     7, Duration: 4 ms - SistemaFuneraria.Tests.dll (net8.0)
 ```
