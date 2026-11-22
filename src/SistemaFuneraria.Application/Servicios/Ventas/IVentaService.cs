@@ -4,7 +4,7 @@ using SistemaFuneraria.Application.DTOs.Ventas;
 namespace SistemaFuneraria.Application.Servicios.Ventas;
 
 /// <summary>
-/// Contrato del servicio de aplicación para la gestión del ciclo de vida de ventas funerarias (SF-060).
+/// Contrato del servicio de aplicación para la gestión del ciclo de vida de ventas funerarias (SF-060, SF-061).
 /// </summary>
 public interface IVentaService
 {
@@ -13,5 +13,12 @@ public interface IVentaService
     /// </summary>
     Task<Resultado<ContratoResumenDto>> RegistrarVentaContadoAsync(
         RegistrarVentaContadoCommand command,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Obtiene el resumen detallado de una venta y su comprobante a partir de su identificador UUID (SF-061).
+    /// </summary>
+    Task<Resultado<ContratoResumenDto>> ObtenerPorIdAsync(
+        Guid id,
         CancellationToken cancellationToken = default);
 }

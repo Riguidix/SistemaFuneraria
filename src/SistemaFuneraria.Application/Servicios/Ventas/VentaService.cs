@@ -9,7 +9,7 @@ using SistemaFuneraria.Core.ValueObjects;
 namespace SistemaFuneraria.Application.Servicios.Ventas;
 
 /// <summary>
-/// Implementación del servicio de aplicación para registro y liquidación de contratos de venta (SF-060).
+/// Implementación del servicio de aplicación para registro y liquidación de contratos de venta (SF-060, SF-061).
 /// </summary>
 public class VentaService(IAppDbContext context, TimeProvider? timeProvider = null) : IVentaService
 {
@@ -108,5 +108,46 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
             await _context.RollbackTransactionAsync(cancellationToken);
             throw;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<Resultado<ContratoResumenDto>> ObtenerPorIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var venta = await _context.Ventas
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+        if (venta is null)
+        {
+            return Resultado<ContratoResumenDto>.Fallo("[NO_ENCONTRADO] La venta especificada no existe.");
+        }
+
+        var cliente = await _context.Clientes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == venta.ClienteId, cancellationToken);
+
+        var lote = await _context.Lotes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Id == venta.LoteId, cancellationToken);
+
+        var pago = await _context.Pagos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.VentaId == venta.Id, cancellationToken);
+
+        var resumen = new ContratoResumenDto(
+            VentaId: venta.Id,
+            FolioContrato: venta.FolioContrato,
+            ClienteId: venta.ClienteId,
+            ClienteNombre: cliente is not null ? $"{cliente.Nombre} {cliente.Apellidos}" : "N/D",
+            LoteId: venta.LoteId,
+            LoteClave: lote is not null ? lote.Clave : "N/D",
+            Modalidad: venta.Modalidad.ToString(),
+            PrecioPactado: venta.PrecioPactado.Monto,
+            Estado: venta.Estado.ToString(),
+            FechaVenta: venta.FechaVenta,
+            FolioPago: pago?.Folio ?? "N/D");
+
+        return Resultado<ContratoResumenDto>.Exito(resumen);
     }
 }
