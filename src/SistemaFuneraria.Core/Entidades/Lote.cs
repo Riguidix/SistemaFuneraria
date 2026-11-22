@@ -73,6 +73,17 @@ public class Lote
     }
 
     /// <summary>
+    /// Restablece el lote a estado Disponible tras la cancelación administrativa de su contrato de venta (SF-063).
+    /// </summary>
+    public void LiberarPorCancelacionVenta()
+    {
+        if (Estado == EstadoLote.Mantenimiento)
+            throw new ReglaNegocioException("No es posible liberar un lote en estado Mantenimiento.");
+
+        Estado = EstadoLote.Disponible;
+    }
+
+    /// <summary>
     /// Marca el lote como Vendido cuando se encuentra Disponible o Reservado.
     /// </summary>
     public void MarcarVendido()

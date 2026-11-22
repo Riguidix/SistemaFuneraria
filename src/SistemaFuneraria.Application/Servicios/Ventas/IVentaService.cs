@@ -1,10 +1,11 @@
 using SistemaFuneraria.Application.Comun;
 using SistemaFuneraria.Application.DTOs.Ventas;
+using SistemaFuneraria.Core.Enums;
 
 namespace SistemaFuneraria.Application.Servicios.Ventas;
 
 /// <summary>
-/// Contrato del servicio de aplicación para la gestión del ciclo de vida de ventas funerarias (SF-060, SF-061).
+/// Contrato del servicio de aplicación para la gestión del ciclo de vida de ventas funerarias (SF-060, SF-061, SF-063).
 /// </summary>
 public interface IVentaService
 {
@@ -20,5 +21,14 @@ public interface IVentaService
     /// </summary>
     Task<Resultado<ContratoResumenDto>> ObtenerPorIdAsync(
         Guid id,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Modifica administrativamente el estado de un contrato comercial; si es cancelación, libera el lote a Disponible y cancela financiamientos (SF-063).
+    /// </summary>
+    Task<Resultado> CambiarEstadoContratoAdminAsync(
+        Guid ventaId,
+        EstadoVenta nuevoEstado,
+        string motivo,
         CancellationToken cancellationToken = default);
 }
