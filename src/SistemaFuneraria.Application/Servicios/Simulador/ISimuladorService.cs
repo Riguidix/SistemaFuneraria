@@ -21,4 +21,9 @@ public interface ISimuladorService
     /// <param name="request">Parámetros de lote/gavetas, modalidad, enganche, plazo y fecha de primer pago.</param>
     /// <returns>Resultado tipado con el desglose de cotización o errores de validación.</returns>
     Resultado<SimulacionCotizacionDto> Cotizar(SimularCotizacionRequest request);
+
+    /// <summary>
+    /// Consulta el catálogo oficial de porcentajes de enganche y opciones de plazos autorizados (SF-049).
+    /// </summary>
+    PlanesFinanciamientoDto ObtenerPlanes();
 }
