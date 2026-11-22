@@ -35,9 +35,24 @@ public class DetalleModel : PageModel
 
     public List<CuotaAmortizacionDto> Amortizacion { get; set; } = new();
 
-    public void OnGet(string? folio)
+    public void OnGet(string? folio, string? loteClave = null)
     {
-        if (!string.IsNullOrWhiteSpace(folio))
+        if (!string.IsNullOrWhiteSpace(loteClave) && loteClave.Trim().Equals("LM-A-014", StringComparison.OrdinalIgnoreCase))
+        {
+            Folio = "CTR-2025-0189";
+            Titular = "Laura Castañeda";
+            Telefono = "55 1284 9021";
+            Email = "laura.c@email.mx";
+            Lote = "LM-A-014 (Las Magnolias, 2 gavetas)";
+            Estado = "Al corriente";
+            EstadoBadgeClass = "bg-success-subtle text-success border border-success-subtle";
+            PrecioPactado = 120000.00m;
+            Enganche = 18000.00m;
+            EnganchePorcentaje = 15.0m;
+            SaldoInsoluto = 102000.00m;
+            ProximoVencimiento = "02 dic. 2025";
+        }
+        else if (!string.IsNullOrWhiteSpace(folio))
         {
             Folio = folio.Trim();
         }

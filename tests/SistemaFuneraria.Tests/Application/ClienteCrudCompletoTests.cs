@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Core.Entidades;
 using SistemaFuneraria.Core.Excepciones;
+using SistemaFuneraria.Core.ValueObjects;
 using SistemaFuneraria.Infrastructure.Persistencia;
 using Xunit;
 
@@ -226,5 +227,29 @@ public class ClienteCrudCompletoTests
         dto.ContratosActivos.Should().Be(0);
         dto.SaldoActual.Should().Be(0m);
         dto.EstadoCartera.Should().Be("Al corriente");
+    }
+
+    [Fact(DisplayName = "SF-031 / PR1: EliminarClienteAsync debe retornar conflicto cuando el cliente tiene contratos asociados")]
+    public async Task EliminarClienteAsync_ConContratosAsociados_DebeRetornarConflicto()
+    {
+        // Arrange
+        using var context = CrearContextoEnMemoria();
+        var cliente = Cliente.Crear("Laura", "Cortés", "COML850202MDFRRN02", "5533334444", "laura@example.com", "Dir 1");
+        var lote = Lote.Crear("JN-A-042", "Jardín Norte", "Andador A · Fila 4", 2, new Dinero(120000m));
+        var venta = Venta.CrearContado("CTR-2026-0001", cliente.Id, lote.Id, Guid.NewGuid().ToString(), new Dinero(120000m), DateTimeOffset.UtcNow);
+
+        await context.Clientes.AddAsync(cliente);
+        await context.Lotes.AddAsync(lote);
+        await context.Ventas.AddAsync(venta);
+        await context.SaveChangesAsync();
+
+        var service = new ClienteService(context);
+
+        // Act
+        var resultado = await service.EliminarClienteAsync(cliente.Id);
+
+        // Assert
+        resultado.EsFallo.Should().BeTrue();
+        resultado.Error.Should().Contain("[CONFLICTO]");
     }
 }
