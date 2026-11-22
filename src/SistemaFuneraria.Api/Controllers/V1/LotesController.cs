@@ -47,6 +47,18 @@ public class LotesController(ILoteService loteService) : ApiControllerBase
     }
 
     /// <summary>
+    /// Consulta los datos detallados de un lote a partir de su clave comercial (ej. RO-B-027).
+    /// </summary>
+    [HttpGet("clave/{clave}")]
+    [ProducesResponseType(typeof(LoteItemDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ObtenerPorClave(string clave, CancellationToken ct = default)
+    {
+        var resultado = await _loteService.ObtenerPorClaveAsync(clave, ct);
+        return FromResult(resultado);
+    }
+
+    /// <summary>
     /// Registra un nuevo lote en el catálogo. Exclusivo para el rol Administrador.
     /// </summary>
     [HttpPost]

@@ -142,7 +142,7 @@
                 </tr>
 
                 <!-- Fila 3: RO-B-027 -->
-                <tr data-clave="RO-B-027" data-ubicacion="Robles" data-capacidad="4" data-precio="180000" data-estado="Reservado">
+                <tr data-clave="RO-B-027" data-ubicacion="Robles" data-andador-fila="Andador B · Fila 2" data-capacidad="4" data-precio="180000" data-estado="Reservado">
                     <td class="ps-4 fw-medium text-dark">RO-B-027</td>
                     <td>
                         <div class="fw-bold text-dark">Robles</div>
@@ -154,7 +154,7 @@
                         <span class="badge badge-estado badge-reservado">Reservado</span>
                     </td>
                     <td class="text-end pe-4">
-                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Ver detalle de lote RO-B-027">
+                        <a href="#" class="funeraria-action-link" onclick="abrirModalDetalleLote('RO-B-027'); return false;" title="Ver detalle de lote RO-B-027">
                             <span>Ver detalle</span>
                         </a>
                     </td>
@@ -192,7 +192,7 @@
                         <span class="badge badge-estado badge-vendido">Vendido</span>
                     </td>
                     <td class="text-end pe-4">
-                        <a href="#" class="funeraria-action-link" onclick="return false;" title="Ver contrato de lote LM-A-014">
+                        <a href="/Contratos/Detalle?loteClave=LM-A-014" class="funeraria-action-link" title="Ver contrato de lote LM-A-014">
                             <span>Ver contrato</span>
                         </a>
                     </td>
@@ -240,8 +240,72 @@
     </div>
 </div>
 
+<!-- Modal Detalle de Lote e Historial de Estado (SF-046) -->
+<partial name="_DetalleLoteModal" />
+
 @section Scripts {
     <script>
+        // Función global para abrir y alimentar el modal con los datos técnicos de un lote (SF-046)
+        window.abrirModalDetalleLote = function (clave) {
+            var elModal = document.getElementById('modalDetalleLote');
+            if (!elModal) return;
+
+            var fila = document.querySelector('tr[data-clave="' + clave + '"]');
+            var ubicacion = "Robles · Andador B · Fila 2";
+            var capacidad = "4 gavetas";
+            var precio = "$180,000.00";
+            var estado = "Reservado";
+
+            if (fila) {
+                var sec = fila.getAttribute('data-ubicacion') || 'Robles';
+                var andador = fila.getAttribute('data-andador-fila') || 'Andador B · Fila 2';
+                ubicacion = sec + ' · ' + andador;
+                var cap = fila.getAttribute('data-capacidad') || '4';
+                capacidad = cap + ' gavetas';
+                var pr = fila.getAttribute('data-precio') || '180000';
+                if (window.lotesApi && window.lotesApi.formatearMonedaMXN) {
+                    precio = window.lotesApi.formatearMonedaMXN(parseFloat(pr) || 0);
+                } else {
+                    precio = '$' + Number(pr).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                estado = fila.getAttribute('data-estado') || 'Reservado';
+            }
+
+            var txtClave = document.getElementById('detalleLoteClave');
+            if (txtClave) txtClave.textContent = clave;
+
+            var txtUbicacion = document.getElementById('detalleLoteUbicacion');
+            if (txtUbicacion) txtUbicacion.textContent = ubicacion;
+
+            var txtCapacidad = document.getElementById('detalleLoteCapacidad');
+            if (txtCapacidad) txtCapacidad.textContent = capacidad;
+
+            var txtPrecio = document.getElementById('detalleLotePrecio');
+            if (txtPrecio) txtPrecio.textContent = precio;
+
+            var contenedorEstado = document.getElementById('detalleLoteEstado');
+            if (contenedorEstado) {
+                var badgeClass = 'badge-reservado';
+                if (estado.toLowerCase() === 'disponible') badgeClass = 'badge-disponible';
+                else if (estado.toLowerCase() === 'vendido') badgeClass = 'badge-vendido';
+                contenedorEstado.innerHTML = '<span class="badge badge-estado ' + badgeClass + '">' + estado + '</span>';
+            }
+
+            var btnCotizar = document.getElementById('btnCotizarDesdeDetalle');
+            if (btnCotizar) {
+                if (estado.toLowerCase() === 'disponible') {
+                    btnCotizar.style.display = 'inline-flex';
+                    btnCotizar.href = '/Ventas/Nueva?lote=' + encodeURIComponent(clave);
+                } else {
+                    btnCotizar.style.display = 'none';
+                }
+            }
+
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var modalInstance = bootstrap.Modal.getOrCreateInstance(elModal);
+                modalInstance.show();
+            }
+        };
         // Controlador de búsqueda y filtros reactivos para Catálogo de Lotes
         document.addEventListener('DOMContentLoaded', function () {
             var inputBuscar = document.getElementById('inputBuscarLotes');
