@@ -165,6 +165,40 @@ public class LotesControllerTests : IDisposable
         problemResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
 
+    [Fact(DisplayName = "SF-046: ObtenerPorClave existente debe retornar 200 OK con DTO técnico")]
+    public async Task ObtenerPorClave_LoteExistente_DebeRetornar200Ok()
+    {
+        // Arrange
+        await CrearLoteSemillaAsync("RO-B-027", "Robles", "Andador B · Fila 2", 4, 180000m);
+        var controller = CrearController();
+
+        // Act
+        var result = await controller.ObtenerPorClave("RO-B-027");
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        var dto = okResult.Value.Should().BeOfType<LoteItemDto>().Subject;
+        dto.Clave.Should().Be("RO-B-027");
+        dto.Seccion.Should().Be("Robles");
+        dto.AndadorFila.Should().Be("Andador B · Fila 2");
+        dto.Gavetas.Should().Be(4);
+        dto.PrecioContado.Should().Be(180000m);
+    }
+
+    [Fact(DisplayName = "SF-046: ObtenerPorClave inexistente debe retornar 404 Not Found")]
+    public async Task ObtenerPorClave_LoteInexistente_DebeRetornar404NotFound()
+    {
+        // Arrange
+        var controller = CrearController();
+
+        // Act
+        var result = await controller.ObtenerPorClave("NO-EXISTE-999");
+
+        // Assert
+        var problemResult = result.Should().BeOfType<ObjectResult>().Subject;
+        problemResult.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+    }
+
     #endregion
 
     #region 3. CRUD Administrativo (POST, PUT, PATCH)
