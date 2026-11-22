@@ -12,3 +12,13 @@ public sealed record RegistrarVentaContadoCommand(
     MetodoPago MetodoPago = MetodoPago.Efectivo,
     string? ReferenciaPago = null
 );
+
+/// <summary>
+/// Solicitud HTTP de cliente para registrar una venta en modalidad Contado (SF-061).
+/// </summary>
+public sealed record RegistrarVentaContadoRequest(
+    Guid ClienteId,
+    Guid LoteId,
+    MetodoPago MetodoPago = MetodoPago.Efectivo,
+    string? ReferenciaPago = null
+);
