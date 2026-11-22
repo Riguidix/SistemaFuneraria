@@ -10,7 +10,7 @@
 ## 1. Comando Ejecutado
 
 ```powershell
-$env:PATH = "C:\Users\Billy\AppData\Local\Microsoft\dotnet;$env:PATH"; $env:DOTNET_ROOT = "C:\Users\Billy\AppData\Local\Microsoft\dotnet"; dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~VentaAdminCrudServiceTests|FullyQualifiedName~VentasAdminControllerTests" -v normal
+$env:PATH = "%DOTNET_HOME%;$env:PATH"; $env:DOTNET_ROOT = "%DOTNET_HOME%"; dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~VentaAdminCrudServiceTests|FullyQualifiedName~VentasAdminControllerTests" -v normal
 ```
 
 ---
