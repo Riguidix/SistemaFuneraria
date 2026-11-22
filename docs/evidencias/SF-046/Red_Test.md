@@ -23,14 +23,14 @@ Demostrar la falla controlada previa a la implementación de los componentes req
 
 ### 2. Comando de Terminal Ejecutado
 ```powershell
-$env:PATH = "C:\Users\Billy\AppData\Local\Microsoft\dotnet;$env:PATH"; $env:DOTNET_ROOT = "C:\Users\Billy\AppData\Local\Microsoft\dotnet"; dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~DetalleLoteModalTests|FullyQualifiedName~ObtenerPorClave" -v normal
+$env:PATH = "%DOTNET_HOME%;$env:PATH"; $env:DOTNET_ROOT = "%DOTNET_HOME%"; dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~DetalleLoteModalTests|FullyQualifiedName~ObtenerPorClave" -v normal
 ```
 
 ---
 
 ### 3. Salida Real de Terminal (Fase RED)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for <repo>/tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -38,8 +38,8 @@ A total of 1 test files matched the specified pattern.
 [xUnit.net 00:00:03.94]     SF-046: ObtenerPorClave existente debe retornar 200 OK con DTO técnico [FAIL]
 [xUnit.net 00:00:03.94]       System.NotImplementedException : SF-046: Fase RED.
 [xUnit.net 00:00:03.94]       Stack Trace:
-[xUnit.net 00:00:03.94]         C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs(57,0): at SistemaFuneraria.Api.Controllers.V1.LotesController.ObtenerPorClave(String clave, CancellationToken ct)
-[xUnit.net 00:00:03.94]         C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\Api\LotesControllerTests.cs(176,0): at SistemaFuneraria.Tests.Unit.Api.LotesControllerTests.ObtenerPorClave_LoteExistente_DebeRetornar200Ok()
+[xUnit.net 00:00:03.94]         <repo>/src\SistemaFuneraria.Api\Controllers\V1\LotesController.cs(57,0): at SistemaFuneraria.Api.Controllers.V1.LotesController.ObtenerPorClave(String clave, CancellationToken ct)
+[xUnit.net 00:00:03.94]         <repo>/tests\SistemaFuneraria.Tests\Unit\Api\LotesControllerTests.cs(176,0): at SistemaFuneraria.Tests.Unit.Api.LotesControllerTests.ObtenerPorClave_LoteExistente_DebeRetornar200Ok()
 [xUnit.net 00:00:03.94]         --- End of stack trace from previous location ---
 [xUnit.net 00:00:03.95]   Finished:    SistemaFuneraria.Tests
   Failed SF-046: ObtenerPorClave existente debe retornar 200 OK con DTO técnico [973 ms]
