@@ -23,14 +23,14 @@ Demostrar la falla controlada previa a la implementación de los endpoints en `S
 
 ### 2. Comando de Terminal Ejecutado
 ```powershell
-$env:PATH = "C:\Users\Billy\AppData\Local\Microsoft\dotnet;$env:PATH"; $env:DOTNET_ROOT = "C:\Users\Billy\AppData\Local\Microsoft\dotnet"; dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~SimuladorControllerTests" -v normal
+$env:PATH = "%DOTNET_HOME%;$env:PATH"; $env:DOTNET_ROOT = "%DOTNET_HOME%"; dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~SimuladorControllerTests" -v normal
 ```
 
 ---
 
 ### 3. Salida Real de Terminal (Fase RED)
 ```text
-Test run for C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
+Test run for <repo>/tests\SistemaFuneraria.Tests\bin\Debug\net8.0\SistemaFuneraria.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.11.1 (x64)
 
 Starting test execution, please wait...
@@ -43,15 +43,15 @@ A total of 1 test files matched the specified pattern.
   Error Message:
    System.NotImplementedException : SF-049: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.SimuladorController.Cotizar(SimularCotizacionRequest request, CancellationToken ct) in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\SimuladorController.cs:line 40
-   at SistemaFuneraria.Tests.Unit.Api.SimuladorControllerTests.Cotizar_ConLoteIdExistente_DebeResolverGavetasYRetornar200Ok() in C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\Api\SimuladorControllerTests.cs:line 200
+     at SistemaFuneraria.Api.Controllers.V1.SimuladorController.Cotizar(SimularCotizacionRequest request, CancellationToken ct) in <repo>/src\SistemaFuneraria.Api\Controllers\V1\SimuladorController.cs:line 40
+   at SistemaFuneraria.Tests.Unit.Api.SimuladorControllerTests.Cotizar_ConLoteIdExistente_DebeResolverGavetasYRetornar200Ok() in <repo>/tests\SistemaFuneraria.Tests\Unit\Api\SimuladorControllerTests.cs:line 200
   Passed SF-049: SimuladorController debe tener Route api/v1/simulador, ApiController y Authorize [12 ms]
   Failed SF-049: ObtenerPlanes debe retornar 200 OK con enganches y plazos autorizados de Figma Captura 7 [2 ms]
   Error Message:
    System.NotImplementedException : SF-049: Fase RED.
   Stack Trace:
-     at SistemaFuneraria.Api.Controllers.V1.SimuladorController.ObtenerPlanes() in C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Api\Controllers\V1\SimuladorController.cs:line 28
-   at SistemaFuneraria.Tests.Unit.Api.SimuladorControllerTests.ObtenerPlanes_DebeRetornar200OkConPlanesAutorizados() in C:\Users\Billy\SistemaFuneraria\tests\SistemaFuneraria.Tests\Unit\Api\SimuladorControllerTests.cs:line 109
+     at SistemaFuneraria.Api.Controllers.V1.SimuladorController.ObtenerPlanes() in <repo>/src\SistemaFuneraria.Api\Controllers\V1\SimuladorController.cs:line 28
+   at SistemaFuneraria.Tests.Unit.Api.SimuladorControllerTests.ObtenerPlanes_DebeRetornar200OkConPlanesAutorizados() in <repo>/tests\SistemaFuneraria.Tests\Unit\Api\SimuladorControllerTests.cs:line 109
   Failed SF-049 (BDD / CP-10): Rechazo de plazo inválido de 15 meses por API debe retornar 400 Bad Request [1 ms]
   Error Message:
    System.NotImplementedException : SF-049: Fase RED.
