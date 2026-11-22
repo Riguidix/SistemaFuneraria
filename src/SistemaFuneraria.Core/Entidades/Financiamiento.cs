@@ -151,4 +151,15 @@ public class Financiamiento
         SaldoInsoluto = Dinero.Zero;
         Estado = EstadoFinanciamiento.Liquidado;
     }
+
+    /// <summary>
+    /// Cancela el financiamiento tras la cancelación administrativa de la venta asociada (SF-063).
+    /// </summary>
+    public void Cancelar()
+    {
+        if (Estado == EstadoFinanciamiento.Cancelado)
+            return;
+
+        Estado = EstadoFinanciamiento.Cancelado;
+    }
 }

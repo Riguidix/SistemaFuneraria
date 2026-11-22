@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaFuneraria.Application.DTOs.Ventas;
 using SistemaFuneraria.Application.Servicios.Ventas;
+using SistemaFuneraria.Core.Enums;
 
 namespace SistemaFuneraria.Api.Controllers.V1;
 
@@ -63,6 +64,53 @@ public class VentasController(IVentaService ventaService) : ApiControllerBase
     public async Task<IActionResult> ObtenerPorId(Guid id, CancellationToken ct = default)
     {
         var resultado = await _ventaService.ObtenerPorIdAsync(id, ct);
+        return FromResult(resultado);
+    }
+
+    /// <summary>
+    /// Cambia administrativamente el estado de un contrato comercial (SF-063). Exclusivo Administrador.
+    /// </summary>
+    [HttpPatch("{id:guid}/estado")]
+    [Authorize(Roles = "Administrador")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CambiarEstado(Guid id, [FromBody] CambiarEstadoVentaRequest request, CancellationToken ct = default)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Motivo) || request.Motivo.Trim().Length < 10)
+        {
+            return Problem(
+                detail: "El motivo administrativo es obligatorio y debe contener al menos 10 caracteres.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Error de validación");
+        }
+
+        var resultado = await _ventaService.CambiarEstadoContratoAdminAsync(id, request.Estado, request.Motivo, ct);
+        return FromResult(resultado);
+    }
+
+    /// <summary>
+    /// Realiza la baja lógica / cancelación administrativa de una venta liberando su lote asociado (SF-063). Exclusivo Administrador.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Administrador")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CancelarVenta(Guid id, [FromQuery] string? motivo = null, [FromBody] CancelarVentaRequest? body = null, CancellationToken ct = default)
+    {
+        var motivoEfectivo = !string.IsNullOrWhiteSpace(body?.Motivo) ? body.Motivo : motivo;
+        if (string.IsNullOrWhiteSpace(motivoEfectivo) || motivoEfectivo.Trim().Length < 10)
+        {
+            return Problem(
+                detail: "El motivo administrativo es obligatorio y debe contener al menos 10 caracteres.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Error de validación");
+        }
+
+        var resultado = await _ventaService.CambiarEstadoContratoAdminAsync(id, EstadoVenta.Cancelado, motivoEfectivo, ct);
         return FromResult(resultado);
     }
 }

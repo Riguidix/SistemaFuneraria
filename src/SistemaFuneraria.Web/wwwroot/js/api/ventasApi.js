@@ -53,7 +53,26 @@ const ventasApi = {
      * @param {VentasApiOptions} [opts]
      */
     obtenerVentaPorId: (id, opts = {}) =>
-        resolveClient(opts).get(`${VENTAS_ENDPOINT}/${encodeURIComponent(id)}`, opts)
+        resolveClient(opts).get(`${VENTAS_ENDPOINT}/${encodeURIComponent(id)}`, opts),
+
+    /**
+     * Cambia administrativamente el estado de un contrato comercial (SF-063).
+     * @param {string} id UUID de la venta.
+     * @param {string|number} estado Nuevo estado (Activo, EnRevision, Cancelado).
+     * @param {string} motivo Motivo obligatorio (mínimo 10 caracteres).
+     * @param {VentasApiOptions} [opts]
+     */
+    cambiarEstadoVenta: (id, estado, motivo, opts = {}) =>
+        resolveClient(opts).patch(`${VENTAS_ENDPOINT}/${encodeURIComponent(id)}/estado`, { estado, motivo }, opts),
+
+    /**
+     * Realiza la baja lógica o cancelación administrativa liberando el lote (SF-063).
+     * @param {string} id UUID de la venta.
+     * @param {string} motivo Motivo obligatorio de cancelación (mínimo 10 caracteres).
+     * @param {VentasApiOptions} [opts]
+     */
+    cancelarVenta: (id, motivo, opts = {}) =>
+        resolveClient(opts).delete(`${VENTAS_ENDPOINT}/${encodeURIComponent(id)}`, { ...opts, params: { ...(opts.params || {}), motivo } })
 };
 
 if (typeof window !== "undefined") {

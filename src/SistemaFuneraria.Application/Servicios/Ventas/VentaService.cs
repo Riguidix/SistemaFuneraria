@@ -150,4 +150,61 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
 
         return Resultado<ContratoResumenDto>.Exito(resumen);
     }
+
+    /// <inheritdoc />
+    public async Task<Resultado> CambiarEstadoContratoAdminAsync(
+        Guid ventaId,
+        EstadoVenta nuevoEstado,
+        string motivo,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length < 10)
+        {
+            return Resultado.Fallo("El motivo administrativo es obligatorio y debe contener al menos 10 caracteres.");
+        }
+
+        if (!Enum.IsDefined(nuevoEstado))
+        {
+            return Resultado.Fallo("El estado de venta indicado no es válido.");
+        }
+
+        var venta = await _context.Ventas
+            .FirstOrDefaultAsync(v => v.Id == ventaId, cancellationToken);
+        if (venta is null)
+        {
+            return Resultado.Fallo("[NO_ENCONTRADO] La venta especificada no existe.");
+        }
+
+        await _context.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            venta.CambiarEstadoAdmin(nuevoEstado, motivo);
+
+            if (nuevoEstado == EstadoVenta.Cancelado)
+            {
+                var lote = await _context.Lotes
+                    .FirstOrDefaultAsync(l => l.Id == venta.LoteId, cancellationToken);
+                if (lote is not null)
+                {
+                    lote.LiberarPorCancelacionVenta();
+                }
+
+                var financiamiento = await _context.Financiamientos
+                    .FirstOrDefaultAsync(f => f.VentaId == venta.Id, cancellationToken);
+                if (financiamiento is not null)
+                {
+                    financiamiento.Cancelar();
+                }
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await _context.CommitTransactionAsync(cancellationToken);
+            return Resultado.Exito();
+        }
+        catch
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            throw;
+        }
+    }
 }
