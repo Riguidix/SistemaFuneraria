@@ -169,4 +169,20 @@ public class SimuladorService(TimeProvider? timeProvider = null) : ISimuladorSer
             TotalAPagar: totalAPagar,
             TablaAmortizacion: tabla));
     }
+
+    /// <inheritdoc />
+    public PlanesFinanciamientoDto ObtenerPlanes()
+    {
+        var plazos = ParametrosNegocio.TasasAnualesPorPlazo
+            .OrderBy(kv => kv.Key)
+            .Select(kv => new OpcionPlazoDto(
+                kv.Key,
+                kv.Value * 100m,
+                $"{kv.Key} meses · {kv.Value * 100m:0}% anual"))
+            .ToList();
+
+        return new PlanesFinanciamientoDto(
+            ParametrosNegocio.EnganchesAutorizados,
+            plazos);
+    }
 }

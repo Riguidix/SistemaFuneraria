@@ -119,6 +119,12 @@ const lotesApi = {
         resolveClient(opts).get(`${LOTES_ENDPOINT}/${encodeURIComponent(id)}`, opts),
 
     /**
+     * Obtiene los detalles técnicos de un lote funerario por su clave (SF-046).
+     */
+    obtenerLotePorClave: (clave, opts = {}) =>
+        resolveClient(opts).get(`${LOTES_ENDPOINT}/clave/${encodeURIComponent(clave)}`, opts),
+
+    /**
      * Crea un nuevo lote (exclusivo Administrador).
      */
     crearLote: (payload, opts = {}) =>
