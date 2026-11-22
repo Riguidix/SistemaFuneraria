@@ -10,7 +10,7 @@
 ## 1. Comando Ejecutado
 
 ```powershell
-$env:PATH = "C:\Users\Billy\AppData\Local\Microsoft\dotnet;$env:PATH"; $env:DOTNET_ROOT = "C:\Users\Billy\AppData\Local\Microsoft\dotnet"; dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~VentasControllerTests|FullyQualifiedName~VentasApiWrapperTests" -v normal
+$env:PATH = "%DOTNET_HOME%;$env:PATH"; $env:DOTNET_ROOT = "%DOTNET_HOME%"; dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~VentasControllerTests|FullyQualifiedName~VentasApiWrapperTests" -v normal
 ```
 
 ---
@@ -26,16 +26,16 @@ A total of 1 test files matched the specified pattern.
 [xUnit.net 00:00:01.19]   Starting:    SistemaFuneraria.Tests
   Failed SF-061: ventasApi.js debe utilizar la ruta base /api/v1/ventas [18 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\ventasApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo '<repo>/src\SistemaFuneraria.Web\wwwroot\js\api\ventasApi.js', but found False.
   Failed SF-061: ventasApi.js debe soportar UMD (window.ventasApi y module.exports) [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\ventasApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo '<repo>/src\SistemaFuneraria.Web\wwwroot\js\api\ventasApi.js', but found False.
   Failed SF-061: ventasApi.js debe existir físicamente en wwwroot/js/api/ [< 1 ms]
   Error Message:
    Expected File.Exists(path) to be true because el archivo ventasApi.js debe existir en el directorio wwwroot/js/api, but found False.
   Failed SF-061: ventasApi.js debe exponer registrarVentaContado, registrarVentaFinanciada y obtenerVentaPorId [< 1 ms]
   Error Message:
-   Expected File.Exists(path) to be true because debe existir el archivo 'C:\Users\Billy\SistemaFuneraria\src\SistemaFuneraria.Web\wwwroot\js\api\ventasApi.js', but found False.
+   Expected File.Exists(path) to be true because debe existir el archivo '<repo>/src\SistemaFuneraria.Web\wwwroot\js\api\ventasApi.js', but found False.
   Failed SF-061: Registrar contado con ClienteId o LoteId vacío responde 400 BadRequest [883 ms]
   Error Message:
    System.NotImplementedException : SF-061: Fase RED.
