@@ -7,6 +7,7 @@ using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Application.Servicios.Lotes;
 using SistemaFuneraria.Application.Servicios.Simulador;
+using SistemaFuneraria.Application.Servicios.Ventas;
 using SistemaFuneraria.Infrastructure.Persistencia;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,6 +55,7 @@ builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbConte
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ILoteService, LoteService>();
 builder.Services.AddScoped<ISimuladorService, SimuladorService>();
+builder.Services.AddScoped<IVentaService, VentaService>();
 
 var allowedOriginsRaw = builder.Configuration["Cors:AllowedOrigins"];
 var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsRaw)
