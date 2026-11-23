@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SistemaFuneraria.Application.DTOs.Ventas;
 using SistemaFuneraria.Application.Servicios.Ventas;
 using SistemaFuneraria.Core.Enums;
@@ -99,7 +100,7 @@ public class VentasController(IVentaService ventaService) : ApiControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> CancelarVenta(Guid id, [FromQuery] string? motivo = null, [FromBody] CancelarVentaRequest? body = null, CancellationToken ct = default)
+    public async Task<IActionResult> CancelarVenta(Guid id, [FromQuery] string? motivo = null, [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CancelarVentaRequest? body = null, CancellationToken ct = default)
     {
         var motivoEfectivo = !string.IsNullOrWhiteSpace(body?.Motivo) ? body.Motivo : motivo;
         if (string.IsNullOrWhiteSpace(motivoEfectivo) || motivoEfectivo.Trim().Length < 10)

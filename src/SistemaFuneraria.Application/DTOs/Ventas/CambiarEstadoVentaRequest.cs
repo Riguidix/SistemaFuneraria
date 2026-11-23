@@ -14,5 +14,5 @@ public sealed record CambiarEstadoVentaRequest(
 /// Solicitud administrativa para la baja lógica o cancelación de un contrato (SF-063).
 /// </summary>
 public sealed record CancelarVentaRequest(
-    string Motivo
+    string? Motivo = null
 );
