@@ -241,15 +241,19 @@
             });
         }
 
+        if (inputImporte) {
+            inputImporte.addEventListener("input", function () {
+                if (tipoActual === "abono" && textoBtn) {
+                    const num = Number(String(inputImporte.value || "0").replace(/[^0-9.]/g, ""));
+                    textoBtn.textContent = `Aplicar abono por ${formatearMonedaMXN(num)}`;
+                }
+            });
+        }
+
         if (formPago) {
             formPago.addEventListener("submit", async function (e) {
                 e.preventDefault();
                 limpiarAlertas();
-
-                if (tipoActual !== "mensualidad") {
-                    mostrarError("Los abonos a capital y liquidaciones anticipadas estarán habilitados en el Milestone v0.9.0 (SF-087 / SF-088). Selecciona Mensualidad.");
-                    return;
-                }
 
                 const folio = contratoActual?.folioContrato || inputBuscador?.value?.trim() || "";
                 if (!folio) {
@@ -260,6 +264,11 @@
                 if (!cobranzaApi || !verificarSesion()) return;
 
                 const importeNum = Number(String(inputImporte?.value || "0").replace(/[^0-9.]/g, ""));
+                if (!Number.isFinite(importeNum) || importeNum <= 0) {
+                    mostrarError("El importe debe ser estrictamente mayor a cero.");
+                    return;
+                }
+
                 const metodo = mapearMetodoPago(selectMetodo ? selectMetodo.value : "TransferenciaBancaria");
                 const referencia = inputReferencia ? inputReferencia.value.trim() : "";
 
@@ -278,14 +287,33 @@
                 }
 
                 try {
-                    const recibo = await cobranzaApi.aplicarPagoMensualidad({
-                        folioContrato: folio,
-                        importeRecibido: importeNum,
-                        metodoPago: metodo,
-                        referencia: referencia || null,
-                        numeroCuota: contratoActual?.proximaCuotaNumero ?? null,
-                        claveIdempotencia: clave
-                    });
+                    let recibo;
+                    if (tipoActual === "abono") {
+                        recibo = await cobranzaApi.aplicarAbonoCapital({
+                            folioContrato: folio,
+                            montoAbono: importeNum,
+                            metodoPago: metodo,
+                            referencia: referencia || null,
+                            claveIdempotencia: clave
+                        });
+                    } else if (tipoActual === "liquidacion") {
+                        recibo = await cobranzaApi.aplicarLiquidacion({
+                            folioContrato: folio,
+                            importeRecibido: importeNum,
+                            metodoPago: metodo,
+                            referencia: referencia || null,
+                            claveIdempotencia: clave
+                        });
+                    } else {
+                        recibo = await cobranzaApi.aplicarPagoMensualidad({
+                            folioContrato: folio,
+                            importeRecibido: importeNum,
+                            metodoPago: metodo,
+                            referencia: referencia || null,
+                            numeroCuota: contratoActual?.proximaCuotaNumero ?? null,
+                            claveIdempotencia: clave
+                        });
+                    }
 
                     clavePendiente = cobranzaApi.generarClaveIdempotencia();
 

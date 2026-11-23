@@ -91,6 +91,100 @@ public class CobranzaController(ICobranzaService cobranzaService) : ApiControlle
         return FromResult(resultado);
     }
 
+    [HttpPost("abono-capital")]
+    [ProducesResponseType(typeof(ReciboPagoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AplicarAbonoCapital(
+        [FromBody] AplicarAbonoCapitalRequest request,
+        CancellationToken ct = default)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.FolioContrato) || request.MontoAbono <= 0m)
+        {
+            return Problem(
+                detail: "El folio del contrato y un monto de abono mayor a cero son obligatorios.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Datos de entrada inválidos");
+        }
+
+        var headerKey = Request.Headers["X-Idempotency-Key"].FirstOrDefault();
+        var claveIdempotencia = !string.IsNullOrWhiteSpace(headerKey)
+            ? headerKey.Trim()
+            : request.ClaveIdempotencia?.Trim();
+
+        if (string.IsNullOrWhiteSpace(claveIdempotencia))
+        {
+            return Problem(
+                detail: "La clave de idempotencia (X-Idempotency-Key o ClaveIdempotencia) es obligatoria.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Clave de idempotencia faltante");
+        }
+
+        var cajeroId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.Identity?.Name
+            ?? "cajero";
+
+        var command = new AplicarAbonoCapitalCommand(
+            FolioContrato: request.FolioContrato,
+            MontoAbono: request.MontoAbono,
+            MetodoPago: request.MetodoPago,
+            Referencia: request.Referencia,
+            ClaveIdempotencia: claveIdempotencia,
+            CajeroId: cajeroId);
+
+        var resultado = await _cobranzaService.AplicarAbonoCapitalAsync(command, ct);
+        return FromResult(resultado);
+    }
+
+    [HttpPost("liquidacion")]
+    [ProducesResponseType(typeof(ReciboPagoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AplicarLiquidacion(
+        [FromBody] AplicarLiquidacionRequest request,
+        CancellationToken ct = default)
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.FolioContrato) || request.ImporteRecibido <= 0m)
+        {
+            return Problem(
+                detail: "El folio del contrato y un importe recibido mayor a cero son obligatorios.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Datos de entrada inválidos");
+        }
+
+        var headerKey = Request.Headers["X-Idempotency-Key"].FirstOrDefault();
+        var claveIdempotencia = !string.IsNullOrWhiteSpace(headerKey)
+            ? headerKey.Trim()
+            : request.ClaveIdempotencia?.Trim();
+
+        if (string.IsNullOrWhiteSpace(claveIdempotencia))
+        {
+            return Problem(
+                detail: "La clave de idempotencia (X-Idempotency-Key o ClaveIdempotencia) es obligatoria.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Clave de idempotencia faltante");
+        }
+
+        var cajeroId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.Identity?.Name
+            ?? "cajero";
+
+        var command = new AplicarLiquidacionCommand(
+            FolioContrato: request.FolioContrato,
+            ImporteRecibido: request.ImporteRecibido,
+            MetodoPago: request.MetodoPago,
+            Referencia: request.Referencia,
+            ClaveIdempotencia: claveIdempotencia,
+            CajeroId: cajeroId);
+
+        var resultado = await _cobranzaService.AplicarLiquidacionAsync(command, ct);
+        return FromResult(resultado);
+    }
+
     /// <summary>
     /// Consulta el recibo oficial PAG-YYYY-XXXXXX por su folio (SF-078 / SF-082).
     /// </summary>

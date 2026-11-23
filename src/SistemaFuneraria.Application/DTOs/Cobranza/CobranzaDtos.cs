@@ -59,6 +59,40 @@ public sealed record AplicarPagoMensualidadCommand(
     int? NumeroCuota = null
 );
 
+public sealed record AplicarAbonoCapitalRequest(
+    string FolioContrato,
+    decimal MontoAbono,
+    MetodoPago MetodoPago,
+    string? Referencia = null,
+    string? ClaveIdempotencia = null
+);
+
+public sealed record AplicarAbonoCapitalCommand(
+    string FolioContrato,
+    decimal MontoAbono,
+    MetodoPago MetodoPago,
+    string? Referencia,
+    string ClaveIdempotencia,
+    string CajeroId
+);
+
+public sealed record AplicarLiquidacionRequest(
+    string FolioContrato,
+    decimal ImporteRecibido,
+    MetodoPago MetodoPago,
+    string? Referencia = null,
+    string? ClaveIdempotencia = null
+);
+
+public sealed record AplicarLiquidacionCommand(
+    string FolioContrato,
+    decimal ImporteRecibido,
+    MetodoPago MetodoPago,
+    string? Referencia,
+    string ClaveIdempotencia,
+    string CajeroId
+);
+
 /// <summary>
 /// Recibo oficial foliado PAG-YYYY-XXXXXX con desglose de capital, interés y nuevo saldo (SF-077 / SF-082).
 /// </summary>
