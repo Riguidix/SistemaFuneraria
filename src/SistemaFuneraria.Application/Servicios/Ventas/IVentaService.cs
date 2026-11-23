@@ -17,6 +17,20 @@ public interface IVentaService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Registra atómicamente una venta financiada a crédito, generando el financiamiento y N mensualidades (SF-066).
+    /// </summary>
+    Task<Resultado<ContratoFinanciadoResumenDto>> RegistrarVentaFinanciadaAsync(
+        RegistrarVentaFinanciadaCommand command,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Obtiene la tabla de amortización persistida de un contrato financiado por el ID de la venta (SF-067).
+    /// </summary>
+    Task<Resultado<IReadOnlyList<CuotaAmortizacionContratoDto>>> ObtenerAmortizacionPorVentaIdAsync(
+        Guid ventaId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Obtiene el resumen detallado de una venta y su comprobante a partir de su identificador UUID (SF-061).
     /// </summary>
     Task<Resultado<ContratoResumenDto>> ObtenerPorIdAsync(
