@@ -36,17 +36,23 @@ public class CobranzaService(IAppDbContext context, TimeProvider? timeProvider =
             .Select(p => p.MontoTotal.Monto)
             .ToListAsync(cancellationToken);
 
-        var financiamientosActivosIds = await _context.Financiamientos
-            .AsNoTracking()
+        var financiamientosActivos = await _context.Financiamientos
+            .Include(f => f.Mensualidades)
             .Where(f => f.Estado == EstadoFinanciamiento.Activo || f.Estado == EstadoFinanciamiento.EnMora)
-            .Select(f => f.Id)
             .ToListAsync(cancellationToken);
 
-        var pagosVencidosCount = financiamientosActivosIds.Count == 0
-            ? 0
-            : await _context.Mensualidades
-                .AsNoTracking()
-                .CountAsync(m => financiamientosActivosIds.Contains(m.FinanciamientoId) && m.Estado == EstadoMensualidad.Vencida, cancellationToken);
+        int transicionadasResumen = 0;
+        foreach (var fin in financiamientosActivos)
+        {
+            transicionadasResumen += EvaluadorVencimientos.Evaluar(fin, _timeProvider);
+        }
+
+        if (transicionadasResumen > 0)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        var pagosVencidosCount = financiamientosActivos.Sum(f => f.Mensualidades.Count(m => m.Estado == EstadoMensualidad.Vencida));
 
         decimal ingresosDia = pagosHoy.Sum();
         return Resultado<CorteDelDiaDto>.Exito(new CorteDelDiaDto(
@@ -79,13 +85,21 @@ public class CobranzaService(IAppDbContext context, TimeProvider? timeProvider =
         }
 
         var financiamiento = await _context.Financiamientos
-            .AsNoTracking()
             .Include(f => f.Mensualidades)
             .FirstOrDefaultAsync(f => f.VentaId == venta.Id, cancellationToken);
 
         if (financiamiento is null)
         {
             return Resultado<ContratoCajaDto>.Fallo($"[CONFLICTO] El contrato '{venta.FolioContrato}' corresponde a una venta de contado y no admite cobros en caja.");
+        }
+
+        if (financiamiento.Estado is EstadoFinanciamiento.Activo or EstadoFinanciamiento.EnMora)
+        {
+            int transicionadas = EvaluadorVencimientos.Evaluar(financiamiento, _timeProvider);
+            if (transicionadas > 0)
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
         }
 
         var cliente = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == venta.ClienteId, cancellationToken);
