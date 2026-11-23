@@ -1,0 +1,99 @@
+@* Componente Reutilizable: Modal Ver detalle de Lote e Historial de Estado (SF-046) *@
+<div class="modal fade" id="modalDetalleLote" tabindex="-1" aria-labelledby="modalDetalleLoteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content funeraria-modal-card p-2 p-md-3 rounded-4 shadow-sm border-0 bg-white">
+            <div class="modal-header border-0 pb-1 align-items-start">
+                <div>
+                    <span class="funeraria-kicker text-uppercase fw-bold text-muted small">FICHA TÉCNICA</span>
+                    <h2 class="modal-title fs-4 fw-bold text-dark mb-1 d-flex align-items-center" id="modalDetalleLoteLabel">
+                        <i class="fa-solid fa-monument me-2" style="color: #2D4224;"></i>
+                        <span>Lote <span id="detalleLoteClave">RO-B-027</span></span>
+                    </h2>
+                    <p class="text-muted small mb-0">Información técnica, ubicación física, especificaciones y trazabilidad de estado.</p>
+                </div>
+                <button type="button" class="btn-close ms-auto mt-1" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body py-3">
+                <!-- Ficha de Datos Técnicos en Tarjetas -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <span class="text-muted small d-block mb-1">Ubicación física</span>
+                            <span class="fw-bold text-dark fs-6" id="detalleLoteUbicacion">Robles · Andador B · Fila 2</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <span class="text-muted small d-block mb-1">Capacidad</span>
+                            <span class="fw-bold text-dark fs-6" id="detalleLoteCapacidad">4 gavetas</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <span class="text-muted small d-block mb-1">Precio de lista (Contado)</span>
+                            <span class="fw-bold text-dark fs-5 formato-moneda" id="detalleLotePrecio">$180,000.00</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 h-100">
+                            <span class="text-muted small d-block mb-1">Estado actual</span>
+                            <div id="detalleLoteEstado">
+                                <span class="badge badge-estado badge-reservado">Reservado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial y Trazabilidad de Estado -->
+                <div class="card border rounded-3 p-3 mb-3 bg-white">
+                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center">
+                        <i class="fa-solid fa-clock-rotate-left me-2 text-muted"></i>
+                        <span>Historial y Bitácora de Estado</span>
+                    </h6>
+                    <ul class="list-unstyled mb-0 small" id="historialEstadoLote">
+                        <li class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-semibold text-dark">Lote Reservado</span>
+                                <span class="text-muted d-block small">Cotización preliminar para prospección comercial</span>
+                            </div>
+                            <span class="text-muted">Hoy, 10:30 hrs</span>
+                        </li>
+                        <li class="py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-semibold text-dark">Alta de Inventario</span>
+                                <span class="text-muted d-block small">Registro inicial en catálogo físico</span>
+                            </div>
+                            <span class="text-muted">Registro sistema</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Controles Administrativos de Cambio Rápido de Estado -->
+                <div class="p-3 rounded-3 border bg-light-subtle d-none" id="seccionAdminCambioEstado" data-roles="Administrador">
+                    <label for="selectCambioEstadoLote" class="form-label fw-bold small text-dark mb-1">
+                        <i class="fa-solid fa-shield-halved me-1 text-primary"></i> Cambiar estado (Administrador)
+                    </label>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" id="selectCambioEstadoLote">
+                            <option value="Disponible">Disponible</option>
+                            <option value="Reservado">Reservado</option>
+                            <option value="Vendido">Vendido</option>
+                        </select>
+                        <button type="button" class="btn btn-sm btn-outline-dark" id="btnGuardarCambioEstadoLote">
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal">Cerrar</button>
+                <a href="/Ventas/Nueva" class="btn btn-funeraria-primary rounded-3 px-3" id="btnCotizarDesdeDetalle"
+                   style="background-color: #2D4224; color: #fff; text-decoration: none;">
+                    <i class="fa-solid fa-file-invoice-dollar me-1"></i> Cotizar lote
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

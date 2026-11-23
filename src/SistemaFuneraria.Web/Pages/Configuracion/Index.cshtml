@@ -1,0 +1,597 @@
+@page
+@model SistemaFuneraria.Web.Pages.Configuracion.IndexModel
+@{
+    ViewData["Title"] = "Configuración";
+}
+
+<!-- ========================================================
+     ENCABEZADO DE PÁGINA (FIGMA CAPTURA 12 · SF-092)
+     ======================================================== -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="text-uppercase fw-semibold small text-muted mb-1" style="letter-spacing: 0.08em; font-size: 0.75rem;">
+            ADMINISTRACIÓN
+        </div>
+        <h1 class="h2 fw-bold text-dark mb-1">
+            Configuración
+        </h1>
+        <p class="text-muted mb-0 small">
+            Preferencias generales y parámetros de la sucursal.
+        </p>
+    </div>
+    <div>
+        <button type="button" class="btn text-white px-4 py-2 rounded-3 fw-medium shadow-sm d-inline-flex align-items-center"
+                id="btnGuardarCambios" style="background-color: var(--sf-primary-olive, #2D4224); border: none;">
+            <i class="fa-solid fa-floppy-disk me-2" aria-hidden="true"></i> Guardar cambios
+        </button>
+    </div>
+</div>
+
+<!-- ========================================================
+     LAYOUT PRINCIPAL DE 2 COLUMNAS (ROW G-4 MB-4)
+     ======================================================== -->
+<div class="row g-4 mb-4">
+    <!-- Columna Izquierda (col-lg-3 col-md-4): Submenú Vertical de Secciones -->
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="bg-white rounded-4 shadow-sm border p-2">
+            <nav class="nav flex-column gap-1" id="configNav" aria-label="Secciones de configuración">
+                <!-- 1. Datos de la sucursal (ACTIVO INICIAL) -->
+                <button type="button" class="nav-link w-100 text-start d-flex align-items-center sf-config-nav-item active border-0"
+                        data-target="panel-datos-sucursal">
+                    <i class="fa-solid fa-building me-2 sf-nav-icon text-success" aria-hidden="true"></i>
+                    <span class="sf-nav-label">Datos de la sucursal</span>
+                </button>
+
+                <!-- 2. Usuarios y roles -->
+                <button type="button" class="nav-link w-100 text-start d-flex align-items-center sf-config-nav-item border-0"
+                        data-target="panel-usuarios-roles">
+                    <i class="fa-solid fa-user-gear me-2 sf-nav-icon text-muted" aria-hidden="true"></i>
+                    <span class="sf-nav-label">Usuarios y roles</span>
+                </button>
+
+                <!-- 3. Planes y tasas -->
+                <button type="button" class="nav-link w-100 text-start d-flex align-items-center sf-config-nav-item border-0"
+                        data-target="panel-planes-tasas">
+                    <i class="fa-solid fa-percent me-2 sf-nav-icon text-muted" aria-hidden="true"></i>
+                    <span class="sf-nav-label">Planes y tasas</span>
+                </button>
+
+                <!-- 4. Notificaciones -->
+                <button type="button" class="nav-link w-100 text-start d-flex align-items-center sf-config-nav-item border-0"
+                        data-target="panel-notificaciones">
+                    <i class="fa-solid fa-bell me-2 sf-nav-icon text-muted" aria-hidden="true"></i>
+                    <span class="sf-nav-label">Notificaciones</span>
+                </button>
+
+                <!-- 5. Integraciones -->
+                <button type="button" class="nav-link w-100 text-start d-flex align-items-center sf-config-nav-item border-0"
+                        data-target="panel-integraciones">
+                    <i class="fa-solid fa-plug me-2 sf-nav-icon text-muted" aria-hidden="true"></i>
+                    <span class="sf-nav-label">Integraciones</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Columna Derecha (col-lg-9 col-md-8): Contenido Dinámico de las 5 Secciones -->
+    <div class="col-12 col-md-8 col-lg-9">
+        <!-- ==========================================
+             PANEL 1: DATOS DE LA SUCURSAL
+             ========================================== -->
+        <div class="sf-config-panel bg-white rounded-4 shadow-sm border p-4 p-md-5" id="panel-datos-sucursal">
+            <div class="mb-4">
+                <h2 class="h5 fw-bold text-dark mb-1">Datos de la sucursal</h2>
+                <p class="text-muted small mb-0">Información que aparecerá en contratos y comprobantes.</p>
+            </div>
+
+            <form id="formDatosSucursal" method="post" onsubmit="return false;">
+                <!-- Campo 1: Nombre comercial -->
+                <div class="mb-3">
+                    <label for="inputNombreComercial" class="form-label fw-medium small text-dark">Nombre comercial</label>
+                    <input type="text" id="inputNombreComercial" class="form-control form-control-lg fs-6 rounded-3 border-secondary-subtle"
+                           value="@Model.NombreComercial" placeholder="Nombre comercial de la funeraria">
+                </div>
+
+                <!-- Fila de 2 Columnas (Teléfono y Correo) -->
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label for="inputTelefono" class="form-label fw-medium small text-dark">Teléfono</label>
+                        <input type="tel" id="inputTelefono" class="form-control form-control-lg fs-6 rounded-3 border-secondary-subtle"
+                               value="@Model.Telefono" placeholder="55 0000 0000">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="inputCorreo" class="form-label fw-medium small text-dark">Correo</label>
+                        <input type="email" id="inputCorreo" class="form-control form-control-lg fs-6 rounded-3 border-secondary-subtle"
+                               value="@Model.Correo" placeholder="contacto@empresa.mx">
+                    </div>
+                </div>
+
+                <!-- Campo 3: Domicilio -->
+                <div class="mb-3">
+                    <label for="inputDomicilio" class="form-label fw-medium small text-dark">Domicilio</label>
+                    <input type="text" id="inputDomicilio" class="form-control form-control-lg fs-6 rounded-3 border-secondary-subtle"
+                           value="@Model.Domicilio" placeholder="Calle, número y colonia">
+                </div>
+
+                <!-- Fila de 2 Columnas (Ciudad y Código postal) -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-md-6">
+                        <label for="inputCiudad" class="form-label fw-medium small text-dark">Ciudad</label>
+                        <input type="text" id="inputCiudad" class="form-control form-control-lg fs-6 rounded-3 border-secondary-subtle"
+                               value="@Model.Ciudad" placeholder="Ciudad de operación">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="inputCodigoPostal" class="form-label fw-medium small text-dark">Código postal</label>
+                        <input type="text" id="inputCodigoPostal" class="form-control form-control-lg fs-6 rounded-3 border-secondary-subtle"
+                               value="@Model.CodigoPostal" placeholder="00000">
+                    </div>
+                </div>
+
+                <!-- Línea Divisoria -->
+                <hr class="my-4 text-muted-subtle">
+
+                <!-- Sección: Switches Operativos de Automatización -->
+                <div class="d-flex flex-column gap-3">
+                    <!-- Switch 1: Recordatorios de pago -->
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background-color: #FAF8F5;">
+                        <div class="pe-3">
+                            <h6 class="fw-bold text-dark mb-1">Recordatorios de pago</h6>
+                            <p class="text-muted small mb-0">Enviar aviso 3 días antes de cada vencimiento.</p>
+                        </div>
+                        <div class="form-check form-switch fs-4 mb-0">
+                            <input class="form-check-input sf-switch-olive" type="checkbox" role="switch" id="switchRecordatorios" checked>
+                        </div>
+                    </div>
+
+                    <!-- Switch 2: Resumen diario de caja -->
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background-color: #FAF8F5;">
+                        <div class="pe-3">
+                            <h6 class="fw-bold text-dark mb-1">Resumen diario de caja</h6>
+                            <p class="text-muted small mb-0">Enviar el corte al correo de administración.</p>
+                        </div>
+                        <div class="form-check form-switch fs-4 mb-0">
+                            <input class="form-check-input sf-switch-olive" type="checkbox" role="switch" id="switchResumenCaja" checked>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ==========================================
+             PANEL 2: USUARIOS Y ROLES
+             ========================================== -->
+        <div class="sf-config-panel bg-white rounded-4 shadow-sm border p-4 p-md-5 d-none" id="panel-usuarios-roles">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h2 class="h5 fw-bold text-dark mb-1">Usuarios y roles</h2>
+                    <p class="text-muted small mb-0">Administra el acceso y los permisos de los colaboradores del sistema.</p>
+                </div>
+                <button type="button" class="btn text-white px-3 py-2 rounded-3 fw-medium small d-inline-flex align-items-center shadow-sm"
+                        style="background-color: var(--sf-primary-olive, #2D4224);">
+                    <i class="fa-solid fa-plus me-1" aria-hidden="true"></i> + Nuevo usuario
+                </button>
+            </div>
+
+            <!-- Tabla de Usuarios -->
+            <div class="table-responsive mb-4">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light text-muted small">
+                        <tr>
+                            <th scope="col" class="border-0 fw-semibold text-uppercase">Colaborador</th>
+                            <th scope="col" class="border-0 fw-semibold text-uppercase">Rol</th>
+                            <th scope="col" class="border-0 fw-semibold text-uppercase">Estado</th>
+                            <th scope="col" class="border-0 fw-semibold text-uppercase">Último acceso</th>
+                            <th scope="col" class="border-0 fw-semibold text-uppercase text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Usuarios)
+                        {
+                            <tr>
+                                <td class="py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                                             style="width: 36px; height: 36px; min-width: 36px; background-color: #485635; font-size: 0.8rem;">
+                                            @user.Iniciales
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">@user.Nombre</div>
+                                            <div class="text-muted small">@user.Correo</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <span class="badge bg-light text-dark border px-3 py-1 rounded-pill fw-medium">
+                                        @user.Rol
+                                    </span>
+                                </td>
+                                <td class="py-3">
+                                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-medium">
+                                        <i class="fa-solid fa-circle me-1" style="font-size: 0.45rem;"></i> @user.Estado
+                                    </span>
+                                </td>
+                                <td class="py-3 text-muted small">
+                                    @user.UltimoAcceso
+                                </td>
+                                <td class="py-3 text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-2 py-1 me-1" title="Editar usuario">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-3 px-2 py-1" title="Desactivar">
+                                        <i class="fa-solid fa-user-slash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Card de Roles Informativa -->
+            <div class="p-3 rounded-3 border" style="background-color: #FAF8F5;">
+                <h6 class="fw-bold text-dark mb-2 small text-uppercase" style="letter-spacing: 0.04em;">
+                    <i class="fa-solid fa-shield-halved text-success me-1"></i> Resumen de Permisos RBAC
+                </h6>
+                <div class="row g-2 small text-muted">
+                    <div class="col-md-4">
+                        <strong class="text-dark">Administrador:</strong> Acceso total, auditoría, configuración y gestión de usuarios.
+                    </div>
+                    <div class="col-md-4">
+                        <strong class="text-dark">Vendedor:</strong> Catálogo de lotes, clientes, cotizaciones y registro de ventas.
+                    </div>
+                    <div class="col-md-4">
+                        <strong class="text-dark">Cajero:</strong> Caja y cobranza, pagos de cuotas y corte del día.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             PANEL 3: PLANES Y TASAS
+             ========================================== -->
+        <div class="sf-config-panel bg-white rounded-4 shadow-sm border p-4 p-md-5 d-none" id="panel-planes-tasas">
+            <div class="mb-4">
+                <h2 class="h5 fw-bold text-dark mb-1">Planes y tasas de financiamiento</h2>
+                <p class="text-muted small mb-0">Parámetros de lista de precios, plazos y cálculo de amortización francesa.</p>
+            </div>
+
+            <!-- Grid de Tarjetas de Planes -->
+            <h6 class="fw-bold text-dark small text-uppercase mb-3" style="letter-spacing: 0.04em;">Precios de Lista de Lotes</h6>
+            <div class="row g-3 mb-4">
+                @foreach (var plan in Model.PlanesLotes)
+                {
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-3 border h-100 d-flex flex-column justify-content-between" style="background-color: #FAF8F5;">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-dark">@plan.Nombre</span>
+                                    <span class="badge bg-white text-dark border small">@plan.Gavetas gavetas</span>
+                                </div>
+                                <div class="display-6 fs-4 fw-bold sf-money text-success my-2">
+                                    $@plan.PrecioLista.ToString("#,##0.00")
+                                </div>
+                            </div>
+                            <div class="small text-muted pt-2 border-top">
+                                Enganche: <span class="fw-semibold text-dark">@plan.EngancheSugerido</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Tabla de Plazos y Tasas -->
+            <h6 class="fw-bold text-dark small text-uppercase mb-3" style="letter-spacing: 0.04em;">Plazos y Tasas Vigentes</h6>
+            <div class="table-responsive mb-4">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light text-muted small">
+                        <tr>
+                            <th scope="col" class="border-0 fw-semibold">Plazo</th>
+                            <th scope="col" class="border-0 fw-semibold">Tasa Anual</th>
+                            <th scope="col" class="border-0 fw-semibold">Esquema</th>
+                            <th scope="col" class="border-0 fw-semibold text-end">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tasa in Model.TasasPlazos)
+                        {
+                            <tr>
+                                <td class="py-2 fw-semibold text-dark">@tasa.Plazo</td>
+                                <td class="py-2 sf-money fw-bold text-success">@tasa.TasaAnual.ToString("0.0")%</td>
+                                <td class="py-2 text-muted small">@tasa.Tipo</td>
+                                <td class="py-2 text-end">
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1">Vigente</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Switch de Regla Comercial -->
+            <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background-color: #FAF8F5;">
+                <div class="pe-3">
+                    <h6 class="fw-bold text-dark mb-1">Descuento por liquidación anticipada (10%)</h6>
+                    <p class="text-muted small mb-0">Aplica 10% de bono sobre el saldo insoluto en cierres anticipados de contrato.</p>
+                </div>
+                <div class="form-check form-switch fs-4 mb-0">
+                    <input class="form-check-input sf-switch-olive" type="checkbox" role="switch" checked>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             PANEL 4: NOTIFICACIONES
+             ========================================== -->
+        <div class="sf-config-panel bg-white rounded-4 shadow-sm border p-4 p-md-5 d-none" id="panel-notificaciones">
+            <div class="mb-4">
+                <h2 class="h5 fw-bold text-dark mb-1">Preferencias de notificación</h2>
+                <p class="text-muted small mb-0">Configura los avisos automáticos enviados a clientes y colaboradores.</p>
+            </div>
+
+            <!-- Canales de Envío -->
+            <h6 class="fw-bold text-dark small text-uppercase mb-3" style="letter-spacing: 0.04em;">Canales Habilitados</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 border" style="background-color: #FAF8F5;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-envelope text-primary fs-5"></i>
+                            <div>
+                                <div class="fw-bold text-dark small">Correo electrónico</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">contacto@jardinesdelvalle.mx</div>
+                            </div>
+                        </div>
+                        <div class="form-check form-switch fs-5 mb-0">
+                            <input class="form-check-input sf-switch-olive" type="checkbox" role="switch" checked>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-between align-items-center p-3 rounded-3 border" style="background-color: #FAF8F5;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-success fs-5"></i>
+                            <div>
+                                <div class="fw-bold text-dark small">WhatsApp / SMS</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Canal directo al titular</div>
+                            </div>
+                        </div>
+                        <div class="form-check form-switch fs-5 mb-0">
+                            <input class="form-check-input sf-switch-olive" type="checkbox" role="switch" checked>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disparadores Automáticos -->
+            <h6 class="fw-bold text-dark small text-uppercase mb-3" style="letter-spacing: 0.04em;">Disparadores Automáticos de Eventos</h6>
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background-color: #FAF8F5;">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1">Confirmación de pago de cuota</h6>
+                        <p class="text-muted small mb-0">Enviar recibo digital en PDF de inmediato al aplicar un pago en Caja.</p>
+                    </div>
+                    <div class="form-check form-switch fs-4 mb-0">
+                        <input class="form-check-input sf-switch-olive" type="checkbox" role="switch" checked>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background-color: #FAF8F5;">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1">Alerta preventiva de vencimiento</h6>
+                        <p class="text-muted small mb-0">Enviar recordatorio cordial 3 días antes de la fecha límite de pago.</p>
+                    </div>
+                    <div class="form-check form-switch fs-4 mb-0">
+                        <input class="form-check-input sf-switch-olive" type="checkbox" role="switch" checked>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background-color: #FAF8F5;">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1">Notificación de mora a cobranza</h6>
+                        <p class="text-muted small mb-0">Alertar al módulo de Caja cuando un contrato alcanza 1 mensualidad vencida.</p>
+                    </div>
+                    <div class="form-check form-switch fs-4 mb-0">
+                        <input class="form-check-input sf-switch-olive" type="checkbox" role="switch" checked>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             PANEL 5: INTEGRACIONES
+             ========================================== -->
+        <div class="sf-config-panel bg-white rounded-4 shadow-sm border p-4 p-md-5 d-none" id="panel-integraciones">
+            <div class="mb-4">
+                <h2 class="h5 fw-bold text-dark mb-1">Integraciones y servicios externos</h2>
+                <p class="text-muted small mb-0">Conexiones activas con pasarelas de pago, facturación electrónica y servicios en la nube.</p>
+            </div>
+
+            <div class="row g-3">
+                <!-- Integración 1: CFDI -->
+                <div class="col-12 col-md-6">
+                    <div class="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between" style="background-color: #FAF8F5;">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-file-invoice text-success fs-4"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">Facturación CFDI 4.0</h6>
+                                        <span class="small text-muted">Timbrado oficial SAT</span>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">Conectado</span>
+                            </div>
+                            <p class="small text-muted mb-0">Emisión automática de recibos y facturas fiscales por mensualidad.</p>
+                        </div>
+                        <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">RFC: <strong>JVA850412XYZ</strong></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3">Configurar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integración 2: Terminal Bancaria -->
+                <div class="col-12 col-md-6">
+                    <div class="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between" style="background-color: #FAF8F5;">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-credit-card text-primary fs-4"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">Terminal / Tarjetas</h6>
+                                        <span class="small text-muted">Procesador bancario</span>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">Activo</span>
+                            </div>
+                            <p class="small text-muted mb-0">Aceptación de tarjetas de débito y crédito en ventanilla de caja.</p>
+                        </div>
+                        <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">Modo: <strong>Producción</strong></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3">Configurar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integración 3: Correo Transaccional -->
+                <div class="col-12 col-md-6">
+                    <div class="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between" style="background-color: #FAF8F5;">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-server text-warning-emphasis fs-4"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">SMTP Transaccional</h6>
+                                        <span class="small text-muted">Servidor de mensajería</span>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1">Operativo</span>
+                            </div>
+                            <p class="small text-muted mb-0">Entrega garantizada de estados de cuenta y notificaciones.</p>
+                        </div>
+                        <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">Host: <strong>smtp.funeraria.mx</strong></span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3">Ver estado</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Integración 4: Webhook de Cobranza -->
+                <div class="col-12 col-md-6">
+                    <div class="p-4 rounded-3 border h-100 d-flex flex-column justify-content-between" style="background-color: #FAF8F5;">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-code text-secondary fs-4"></i>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">Webhooks y APIs</h6>
+                                        <span class="small text-muted">Sincronización externa</span>
+                                    </div>
+                                </div>
+                                <span class="badge bg-light text-muted border rounded-pill px-2 py-1">Habilitado</span>
+                            </div>
+                            <p class="small text-muted mb-0">Endpoints seguros para reconciliación de transferencias bancarias STP.</p>
+                        </div>
+                        <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
+                            <span class="small text-muted font-monospace" style="font-size: 0.7rem;">/api/v1/webhook</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3">Claves API</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos para el switch verde olivo Serenia */
+    .sf-switch-olive:checked {
+        background-color: #2D4224 !important;
+        border-color: #2D4224 !important;
+    }
+    .sf-switch-olive:focus {
+        border-color: #2D4224;
+        box-shadow: 0 0 0 0.25rem rgba(45, 66, 36, 0.25);
+    }
+
+    /* Submenú de configuración */
+    .sf-config-nav-item {
+        color: #4B5563;
+        background-color: transparent;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    .sf-config-nav-item:hover:not(.active) {
+        background-color: #F8F6F2;
+        color: #17211F;
+    }
+    .sf-config-nav-item.active {
+        background-color: #FAF8F5 !important;
+        color: #2D4224 !important;
+        font-weight: 600 !important;
+    }
+    .sf-config-nav-item.active .sf-nav-icon {
+        color: #2D4224 !important;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Manejador del submenú lateral de configuración
+            var navButtons = document.querySelectorAll('.sf-config-nav-item[data-target]');
+            var panels = document.querySelectorAll('.sf-config-panel');
+
+            function activarSeccion(targetId) {
+                // Actualiza botones de navegación
+                navButtons.forEach(function (btn) {
+                    var isTarget = btn.getAttribute('data-target') === targetId;
+                    var icon = btn.querySelector('.sf-nav-icon');
+                    if (isTarget) {
+                        btn.classList.add('active');
+                        if (icon) {
+                            icon.classList.remove('text-muted');
+                            icon.classList.add('text-success');
+                        }
+                    } else {
+                        btn.classList.remove('active');
+                        if (icon) {
+                            icon.classList.remove('text-success');
+                            icon.classList.add('text-muted');
+                        }
+                    }
+                });
+
+                // Muestra el panel correspondiente
+                panels.forEach(function (panel) {
+                    if (panel.id === targetId) {
+                        panel.classList.remove('d-none');
+                    } else {
+                        panel.classList.add('d-none');
+                    }
+                });
+            }
+
+            navButtons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var targetId = this.getAttribute('data-target');
+                    activarSeccion(targetId);
+                });
+            });
+
+            // Botón Guardar cambios
+            var btnGuardar = document.getElementById('btnGuardarCambios');
+            if (btnGuardar) {
+                btnGuardar.addEventListener('click', function () {
+                    if (window.SfUi && typeof window.SfUi.showToast === 'function') {
+                        window.SfUi.showToast('success', 'Cambios guardados con éxito.');
+                    } else {
+                        alert('✓ Cambios guardados con éxito.');
+                    }
+                });
+            }
+        });
+    </script>
+}

@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using SistemaFuneraria.Core.Enums;
 using SistemaFuneraria.Core.Excepciones;
 using SistemaFuneraria.Core.ValueObjects;
@@ -68,6 +68,17 @@ public class Lote
     {
         if (Estado != EstadoLote.Reservado)
             throw new ReglaNegocioException("Solo es posible liberar un lote en estado Reservado.");
+
+        Estado = EstadoLote.Disponible;
+    }
+
+    /// <summary>
+    /// Restablece el lote a estado Disponible tras la cancelación administrativa de su contrato de venta (SF-063).
+    /// </summary>
+    public void LiberarPorCancelacionVenta()
+    {
+        if (Estado == EstadoLote.Mantenimiento)
+            throw new ReglaNegocioException("No es posible liberar un lote en estado Mantenimiento.");
 
         Estado = EstadoLote.Disponible;
     }
