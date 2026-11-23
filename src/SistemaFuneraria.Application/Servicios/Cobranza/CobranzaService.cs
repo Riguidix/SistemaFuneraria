@@ -288,6 +288,295 @@ public class CobranzaService(IAppDbContext context, TimeProvider? timeProvider =
         }
     }
 
+    public async Task<Resultado<ReciboPagoDto>> AplicarAbonoCapitalAsync(
+        AplicarAbonoCapitalCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(command.ClaveIdempotencia))
+        {
+            return Resultado<ReciboPagoDto>.Fallo("La clave de idempotencia (X-Idempotency-Key) es obligatoria.");
+        }
+
+        var claveNormalizada = command.ClaveIdempotencia.Trim();
+
+        var pagoExistente = await _context.Pagos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.ClaveIdempotencia == claveNormalizada, cancellationToken);
+        if (pagoExistente is not null)
+        {
+            return Resultado<ReciboPagoDto>.Exito(await ConstruirReciboDtoAsync(pagoExistente, null, cancellationToken));
+        }
+
+        if (string.IsNullOrWhiteSpace(command.FolioContrato))
+        {
+            return Resultado<ReciboPagoDto>.Fallo("El folio o identificador del contrato es obligatorio.");
+        }
+
+        if (command.MontoAbono <= 0m)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("El monto del abono a capital debe ser mayor a cero.");
+        }
+
+        var texto = command.FolioContrato.Trim();
+        var venta = Guid.TryParse(texto, out var ventaId)
+            ? await _context.Ventas.FirstOrDefaultAsync(v => v.Id == ventaId, cancellationToken)
+            : await _context.Ventas.FirstOrDefaultAsync(v => v.FolioContrato == texto.ToUpperInvariant(), cancellationToken);
+
+        if (venta is null)
+        {
+            return Resultado<ReciboPagoDto>.Fallo($"[NO_ENCONTRADO] No se encontró el contrato '{texto}'.");
+        }
+
+        if (venta.Estado == EstadoVenta.Cancelado)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El contrato se encuentra cancelado y no admite pagos.");
+        }
+
+        if (venta.Estado == EstadoVenta.Liquidado)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El contrato ya se encuentra liquidado.");
+        }
+
+        var financiamiento = await _context.Financiamientos
+            .Include(f => f.Mensualidades)
+            .FirstOrDefaultAsync(f => f.VentaId == venta.Id, cancellationToken);
+
+        if (financiamiento is null)
+        {
+            return Resultado<ReciboPagoDto>.Fallo($"[NO_ENCONTRADO] El contrato '{venta.FolioContrato}' no tiene financiamiento asociado.");
+        }
+
+        if (financiamiento.Estado == EstadoFinanciamiento.Liquidado)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El financiamiento ya se encuentra liquidado.");
+        }
+
+        if (financiamiento.Mensualidades.Any(m => m.Estado == EstadoMensualidad.Vencida))
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] No se permite realizar un abono a capital si existen mensualidades vencidas (RF-ABO-01).");
+        }
+
+        if (command.MontoAbono >= financiamiento.SaldoInsoluto.Monto)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El monto de abono a capital no puede ser mayor o igual al saldo insoluto. Si desea liquidar la deuda, debe realizarse una liquidación anticipada.");
+        }
+
+        if (!PagosEnCurso.TryAdd(financiamiento.Id, 0))
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El contrato fue modificado simultáneamente por otro cajero.");
+        }
+
+        try
+        {
+            var pagoReciente = await _context.Pagos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ClaveIdempotencia == claveNormalizada, cancellationToken);
+            if (pagoReciente is not null)
+            {
+                return Resultado<ReciboPagoDto>.Exito(await ConstruirReciboDtoAsync(pagoReciente, null, cancellationToken));
+            }
+
+            var resultadoAbono = CalculadorAbonoCapital.Recalcular(financiamiento, new Dinero(command.MontoAbono));
+
+            await _context.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var fechaPago = _timeProvider.GetLocalNow();
+                var saldoAnterior = financiamiento.SaldoInsoluto;
+
+                financiamiento.AplicarAbonoCapital(new Dinero(command.MontoAbono), resultadoAbono);
+
+                var folioPago = await _context.ObtenerSiguienteFolioPagoAsync(fechaPago.Year, cancellationToken);
+
+                var pago = Pago.Crear(
+                    folio: folioPago,
+                    ventaId: venta.Id,
+                    financiamientoId: financiamiento.Id,
+                    mensualidadId: null,
+                    cajeroId: command.CajeroId,
+                    tipo: TipoPago.AbonoCapital,
+                    metodo: command.MetodoPago,
+                    referencia: command.Referencia,
+                    montoTotal: new Dinero(command.MontoAbono),
+                    montoCapital: new Dinero(command.MontoAbono),
+                    montoInteres: Dinero.Zero,
+                    saldoAnterior: saldoAnterior,
+                    saldoPosterior: financiamiento.SaldoInsoluto,
+                    claveIdempotencia: claveNormalizada,
+                    fechaPago: fechaPago);
+
+                await _context.Pagos.AddAsync(pago, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+                await _context.CommitTransactionAsync(cancellationToken);
+
+                var recibo = await ConstruirReciboDtoAsync(pago, null, cancellationToken);
+                return Resultado<ReciboPagoDto>.Exito(recibo);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await _context.RollbackTransactionAsync(cancellationToken);
+                return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El contrato fue modificado simultáneamente por otro cajero.");
+            }
+            catch (ReglaNegocioException ex)
+            {
+                await _context.RollbackTransactionAsync(cancellationToken);
+                return Resultado<ReciboPagoDto>.Fallo(ex.Message);
+            }
+            catch
+            {
+                await _context.RollbackTransactionAsync(cancellationToken);
+                throw;
+            }
+        }
+        finally
+        {
+            PagosEnCurso.TryRemove(financiamiento.Id, out _);
+        }
+    }
+
+    public async Task<Resultado<ReciboPagoDto>> AplicarLiquidacionAsync(
+        AplicarLiquidacionCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(command.ClaveIdempotencia))
+        {
+            return Resultado<ReciboPagoDto>.Fallo("La clave de idempotencia (X-Idempotency-Key) es obligatoria.");
+        }
+
+        var claveNormalizada = command.ClaveIdempotencia.Trim();
+
+        var pagoExistente = await _context.Pagos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.ClaveIdempotencia == claveNormalizada, cancellationToken);
+        if (pagoExistente is not null)
+        {
+            return Resultado<ReciboPagoDto>.Exito(await ConstruirReciboDtoAsync(pagoExistente, null, cancellationToken));
+        }
+
+        if (string.IsNullOrWhiteSpace(command.FolioContrato))
+        {
+            return Resultado<ReciboPagoDto>.Fallo("El folio o identificador del contrato es obligatorio.");
+        }
+
+        if (command.ImporteRecibido <= 0m)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("El importe recibido debe ser mayor a cero.");
+        }
+
+        var texto = command.FolioContrato.Trim();
+        var venta = Guid.TryParse(texto, out var ventaId)
+            ? await _context.Ventas.FirstOrDefaultAsync(v => v.Id == ventaId, cancellationToken)
+            : await _context.Ventas.FirstOrDefaultAsync(v => v.FolioContrato == texto.ToUpperInvariant(), cancellationToken);
+
+        if (venta is null)
+        {
+            return Resultado<ReciboPagoDto>.Fallo($"[NO_ENCONTRADO] No se encontró el contrato '{texto}'.");
+        }
+
+        if (venta.Estado == EstadoVenta.Cancelado)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El contrato se encuentra cancelado y no admite pagos.");
+        }
+
+        if (venta.Estado == EstadoVenta.Liquidado)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El contrato ya se encuentra liquidado.");
+        }
+
+        var financiamiento = await _context.Financiamientos
+            .Include(f => f.Mensualidades)
+            .FirstOrDefaultAsync(f => f.VentaId == venta.Id, cancellationToken);
+
+        if (financiamiento is null)
+        {
+            return Resultado<ReciboPagoDto>.Fallo($"[NO_ENCONTRADO] El contrato '{venta.FolioContrato}' no tiene financiamiento asociado.");
+        }
+
+        if (financiamiento.Estado == EstadoFinanciamiento.Liquidado)
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El financiamiento ya se encuentra liquidado.");
+        }
+
+        var resultadoLiq = CalculadorLiquidacion.Calcular(financiamiento);
+
+        if (Math.Abs(command.ImporteRecibido - resultadoLiq.MontoTotalLiquidacion.Monto) > 0.05m)
+        {
+            return Resultado<ReciboPagoDto>.Fallo(
+                $"El importe recibido ({command.ImporteRecibido:C2}) debe coincidir con el monto de liquidación ({resultadoLiq.MontoTotalLiquidacion.Monto:C2}).");
+        }
+
+        if (!PagosEnCurso.TryAdd(financiamiento.Id, 0))
+        {
+            return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El contrato fue modificado simultáneamente por otro cajero.");
+        }
+
+        try
+        {
+            var pagoReciente = await _context.Pagos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ClaveIdempotencia == claveNormalizada, cancellationToken);
+            if (pagoReciente is not null)
+            {
+                return Resultado<ReciboPagoDto>.Exito(await ConstruirReciboDtoAsync(pagoReciente, null, cancellationToken));
+            }
+
+            await _context.BeginTransactionAsync(cancellationToken);
+            try
+            {
+                var fechaPago = _timeProvider.GetLocalNow();
+                var saldoAnterior = financiamiento.SaldoInsoluto;
+
+                CalculadorLiquidacion.AplicarLiquidacion(financiamiento, fechaPago);
+                venta.MarcarLiquidado();
+
+                var folioPago = await _context.ObtenerSiguienteFolioPagoAsync(fechaPago.Year, cancellationToken);
+
+                var pago = Pago.Crear(
+                    folio: folioPago,
+                    ventaId: venta.Id,
+                    financiamientoId: financiamiento.Id,
+                    mensualidadId: null,
+                    cajeroId: command.CajeroId,
+                    tipo: TipoPago.Liquidacion,
+                    metodo: command.MetodoPago,
+                    referencia: command.Referencia,
+                    montoTotal: new Dinero(command.ImporteRecibido),
+                    montoCapital: resultadoLiq.CapitalPendiente,
+                    montoInteres: resultadoLiq.InteresesNetosAPagar,
+                    saldoAnterior: saldoAnterior,
+                    saldoPosterior: Dinero.Zero,
+                    claveIdempotencia: claveNormalizada,
+                    fechaPago: fechaPago);
+
+                await _context.Pagos.AddAsync(pago, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
+                await _context.CommitTransactionAsync(cancellationToken);
+
+                var recibo = await ConstruirReciboDtoAsync(pago, null, cancellationToken);
+                return Resultado<ReciboPagoDto>.Exito(recibo);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                await _context.RollbackTransactionAsync(cancellationToken);
+                return Resultado<ReciboPagoDto>.Fallo("[CONFLICTO] El contrato fue modificado simultáneamente por otro cajero.");
+            }
+            catch (ReglaNegocioException ex)
+            {
+                await _context.RollbackTransactionAsync(cancellationToken);
+                return Resultado<ReciboPagoDto>.Fallo(ex.Message);
+            }
+            catch
+            {
+                await _context.RollbackTransactionAsync(cancellationToken);
+                throw;
+            }
+        }
+        finally
+        {
+            PagosEnCurso.TryRemove(financiamiento.Id, out _);
+        }
+    }
+
     /// <inheritdoc />
     public async Task<Resultado<ReciboPagoDto>> ObtenerReciboPorFolioAsync(
         string folioPago,
@@ -343,6 +632,13 @@ public class CobranzaService(IAppDbContext context, TimeProvider? timeProvider =
             _ => "Venta de contado"
         };
 
+        string tipoPagoTexto = pago.Tipo switch
+        {
+            TipoPago.AbonoCapital => "Abono a capital",
+            TipoPago.Liquidacion => "Liquidación",
+            _ => pago.Tipo.ToString()
+        };
+
         return new ReciboPagoDto(
             PagoId: pago.Id,
             FolioPago: pago.Folio,
@@ -351,7 +647,7 @@ public class CobranzaService(IAppDbContext context, TimeProvider? timeProvider =
             ClienteNombre: cliente is not null ? $"{cliente.Nombre} {cliente.Apellidos}".Trim() : "N/D",
             LoteClave: lote?.Clave ?? "N/D",
             Concepto: concepto,
-            TipoPago: pago.Tipo.ToString(),
+            TipoPago: tipoPagoTexto,
             MetodoPago: pago.Metodo.ToString(),
             Referencia: pago.Referencia,
             SaldoAnterior: pago.SaldoAnterior.Monto,

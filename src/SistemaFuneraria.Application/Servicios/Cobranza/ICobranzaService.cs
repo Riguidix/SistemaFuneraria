@@ -28,6 +28,14 @@ public interface ICobranzaService
         AplicarPagoMensualidadCommand command,
         CancellationToken cancellationToken = default);
 
+    Task<Resultado<ReciboPagoDto>> AplicarAbonoCapitalAsync(
+        AplicarAbonoCapitalCommand command,
+        CancellationToken cancellationToken = default);
+
+    Task<Resultado<ReciboPagoDto>> AplicarLiquidacionAsync(
+        AplicarLiquidacionCommand command,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Consulta el detalle completo de un recibo oficial PAG-YYYY-XXXXXX por su folio.
     /// </summary>
