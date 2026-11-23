@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using FluentAssertions;
 using SistemaFuneraria.Application.DTOs.Auth;
 using SistemaFuneraria.Application.DTOs.Simulador;
@@ -73,7 +74,7 @@ public class SimuladorControllerTests : IClassFixture<AuthHttpPipelineTests.ApiF
         dto.TablaAmortizacion.Last().SaldoFinal.Should().Be(0.00m);
     }
 
-    [Fact(DisplayName = "SF-055 / CP-04: Cotizar crédito 24 meses 2 gavetas debe coincidir con Captura 7 Figma ($4,887.54)")]
+    [Fact(DisplayName = "SF-055 / CP-04: Cotizar crédito 24 meses 2 gavetas debe calcular mensualidad exacta ($4,886.00)")]
     public async Task CP04_CotizarCredito_24Meses2Gavetas_DebeCoincidirConCaptura7Figma()
     {
         var token = await AutenticarComoAsync("vendedor@sistemafunerario.mx", "Sistema Funerario2026!");
@@ -154,6 +155,8 @@ public class SimuladorControllerTests : IClassFixture<AuthHttpPipelineTests.ApiF
     [Theory(DisplayName = "SF-055 / CP-10: Rechazo de parámetros no autorizados con 400 Bad Request")]
     [InlineData(2, "Credito", 15, 12)]
     [InlineData(2, "Credito", 25, 24)]
+    [InlineData(2, "Credito", 100, 24)]
+    [InlineData(2, "Credito", 20, 0)]
     [InlineData(2, "Credito", 20, 15)]
     [InlineData(2, "Credito", 20, 60)]
     [InlineData(1, "Credito", 20, 12)]
@@ -208,5 +211,41 @@ public class SimuladorControllerTests : IClassFixture<AuthHttpPipelineTests.ApiF
         var body = new SimularCotizacionRequest(null, 2, "Credito", 20, 12, new DateOnly(2026, 12, 1));
         var responseCotizar = await _client.PostAsJsonAsync("/api/v1/simulador/cotizar", body);
         responseCotizar.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact(DisplayName = "SF-055: Cotizar con LoteId existente debe resolver gavetas desde inventario y retornar 200 OK")]
+    public async Task Cotizar_ConLoteIdExistente_DebeResolverGavetasYRetornar200Ok()
+    {
+        var token = await AutenticarComoAsync("vendedor@sistemafunerario.mx", "Sistema Funerario2026!");
+
+        var resLotes = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/lotes?buscar=JN-A-042", token));
+        resLotes.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        using var lotesDoc = JsonDocument.Parse(await resLotes.Content.ReadAsStringAsync());
+        var items = lotesDoc.RootElement.GetProperty("items");
+        items.GetArrayLength().Should().BeGreaterThan(0);
+
+        var loteId = items[0].GetProperty("id").GetGuid();
+        var body = new SimularCotizacionRequest(loteId, null, "Credito", 20, 24, new DateOnly(2026, 12, 1));
+
+        var response = await _client.SendAsync(CrearRequest(HttpMethod.Post, "/api/v1/simulador/cotizar", token, body));
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dto = await response.Content.ReadFromJsonAsync<SimulacionCotizacionDto>();
+        dto.Should().NotBeNull();
+        dto!.PrecioLista.Should().Be(120_000.00m);
+        dto.MensualidadEstimada.Should().Be(4_886.00m);
+        dto.TablaAmortizacion.Sum(f => f.Capital).Should().Be(96_000.00m);
+    }
+
+    [Fact(DisplayName = "SF-055: Cotizar con LoteId inexistente debe retornar 404 Not Found")]
+    public async Task Cotizar_ConLoteIdInexistente_DebeRetornar404NotFound()
+    {
+        var token = await AutenticarComoAsync("vendedor@sistemafunerario.mx", "Sistema Funerario2026!");
+        var body = new SimularCotizacionRequest(Guid.NewGuid(), null, "Credito", 20, 24, new DateOnly(2026, 12, 1));
+
+        var response = await _client.SendAsync(CrearRequest(HttpMethod.Post, "/api/v1/simulador/cotizar", token, body));
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }
