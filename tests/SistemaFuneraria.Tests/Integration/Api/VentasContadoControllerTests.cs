@@ -147,11 +147,12 @@ public class VentasContadoControllerTests : IClassFixture<AuthHttpPipelineTests.
             adminToken));
         resMotivoCorto.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        // 3. Admin cancela correctamente -> 200 OK y lote vuelve a Disponible
+        // 3. Admin cancela correctamente enviando Content-Type application/json con cuerpo vacío -> 200 OK y lote vuelve a Disponible
         var resCancel = await _client.SendAsync(CrearRequest(
             HttpMethod.Delete,
             $"/api/v1/ventas/{contrato.VentaId}?motivo=Error de captura en titular",
-            adminToken));
+            adminToken,
+            ""));
         resCancel.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var resContratoFinal = await _client.SendAsync(CrearRequest(HttpMethod.Get, $"/api/v1/ventas/{contrato.VentaId}", adminToken));
@@ -163,6 +164,63 @@ public class VentasContadoControllerTests : IClassFixture<AuthHttpPipelineTests.
         resLoteFinal.StatusCode.Should().Be(HttpStatusCode.OK);
         using var loteDoc = JsonDocument.Parse(await resLoteFinal.Content.ReadAsStringAsync());
         loteDoc.RootElement.GetProperty("estado").GetString().Should().Be("Disponible");
+    }
+
+    [Fact(DisplayName = "SF-063: PATCH estado con enum string libera lote, bloquea Vendedor 403 y devuelve 400 en transiciones inválidas")]
+    public async Task CambiarEstadoAdminPatch_DebeValidarRolTransicionesYDevolver400EnReglaNegocio()
+    {
+        var vendedorToken = await AutenticarComoAsync("vendedor@sistemafunerario.mx", "Sistema Funerario2026!");
+        var adminToken = await AutenticarComoAsync("andrea.morales@sistemafunerario.mx", "Sistema Funerario2026!");
+        var (clienteId, loteId) = await PrepararClienteYLoteDisponibleAsync(vendedorToken, 0);
+
+        var jsonVenta = JsonSerializer.Serialize(new { clienteId, loteId, metodoPago = "Efectivo", referenciaPago = "EFEC-PATCH" });
+        var resVenta = await _client.SendAsync(CrearRequest(HttpMethod.Post, "/api/v1/ventas/contado", vendedorToken, jsonVenta));
+        resVenta.StatusCode.Should().Be(HttpStatusCode.Created);
+        var contrato = await resVenta.Content.ReadFromJsonAsync<ContratoResumenDto>();
+
+        // 1. Vendedor intenta PATCH estado -> 403 Forbidden
+        var patchCancelar = JsonSerializer.Serialize(new { estado = "Cancelado", motivo = "Intento no autorizado suficiente" });
+        var resVendedor = await _client.SendAsync(CrearRequest(
+            HttpMethod.Patch,
+            $"/api/v1/ventas/{contrato!.VentaId}/estado",
+            vendedorToken,
+            patchCancelar));
+        resVendedor.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        // 2. Administrador intenta pasar venta Liquidado a EnRevision -> 400 Bad Request (no 500)
+        var patchInvalido = JsonSerializer.Serialize(new { estado = "EnRevision", motivo = "Intento de revisión sobre liquidado" });
+        var resTransicionInvalida = await _client.SendAsync(CrearRequest(
+            HttpMethod.Patch,
+            $"/api/v1/ventas/{contrato.VentaId}/estado",
+            adminToken,
+            patchInvalido));
+        resTransicionInvalida.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        // 3. Administrador cancela venta mediante PATCH con enum string -> 200 OK y lote vuelve a Disponible
+        var patchValido = JsonSerializer.Serialize(new { estado = "Cancelado", motivo = "Error de captura en titular" });
+        var resPatchValido = await _client.SendAsync(CrearRequest(
+            HttpMethod.Patch,
+            $"/api/v1/ventas/{contrato.VentaId}/estado",
+            adminToken,
+            patchValido));
+        resPatchValido.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var resContratoFinal = await _client.SendAsync(CrearRequest(HttpMethod.Get, $"/api/v1/ventas/{contrato.VentaId}", adminToken));
+        resContratoFinal.StatusCode.Should().Be(HttpStatusCode.OK);
+        var contratoFinal = await resContratoFinal.Content.ReadFromJsonAsync<ContratoResumenDto>();
+        contratoFinal!.Estado.Should().Be("Cancelado");
+
+        var resLoteFinal = await _client.SendAsync(CrearRequest(HttpMethod.Get, $"/api/v1/lotes/{loteId}", adminToken));
+        resLoteFinal.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var loteDoc = JsonDocument.Parse(await resLoteFinal.Content.ReadAsStringAsync());
+        loteDoc.RootElement.GetProperty("estado").GetString().Should().Be("Disponible");
+
+        // 4. Administrador intenta DELETE sobre venta ya Cancelado -> 400 Bad Request (no 500)
+        var resRecancelar = await _client.SendAsync(CrearRequest(
+            HttpMethod.Delete,
+            $"/api/v1/ventas/{contrato.VentaId}?motivo=Segundo intento de cancelacion",
+            adminToken));
+        resRecancelar.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact(DisplayName = "SF-065: Consulta de venta inexistente retorna 404 y sin token retorna 401")]
