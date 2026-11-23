@@ -355,7 +355,7 @@
                 </div>
 
                 <!-- Formulario -->
-                <form id="loginForm" method="post" novalidate>
+                <form id="loginForm" method="post" novalidate aria-label="Formulario de inicio de sesión">
                     <!-- Correo Electrónico -->
                     <div class="mb-3">
                         <label asp-for="Input.Email" class="sign-in-label">Correo electrónico</label>
@@ -368,8 +368,8 @@
                         <label asp-for="Input.Password" class="sign-in-label">Contraseña</label>
                         <div class="password-input-wrapper">
                             <input asp-for="Input.Password" id="Input_Password" class="sign-in-input" placeholder="••••••••" autocomplete="current-password" required />
-                            <button type="button" class="btn-eye-toggle" id="btnTogglePassword" title="Mostrar u ocultar contraseña">
-                                <i class="fa-solid fa-eye-slash"></i>
+                            <button type="button" class="btn-eye-toggle" id="btnTogglePassword" title="Mostrar u ocultar contraseña" aria-label="Mostrar u ocultar contraseña">
+                                <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
                             </button>
                         </div>
                         <span asp-validation-for="Input.Password" class="text-danger small mt-1 d-block"></span>
