@@ -1,14 +1,19 @@
 @model SistemaFuneraria.Web.Pages.Ventas.NuevaModel
 
 <div class="bg-white rounded-4 shadow-sm border p-4 p-md-5" id="step1Card">
-    <div class="mb-4">
-        <h2 class="h4 fw-bold text-dark mb-1">Datos del cliente</h2>
-        <p class="small text-muted mb-0">Busca un cliente existente o registra uno nuevo.</p>
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-4">
+        <div>
+            <h2 class="h4 fw-bold text-dark mb-1">Datos del cliente</h2>
+            <p class="small text-muted mb-0">Busca un cliente existente o registra uno nuevo.</p>
+        </div>
+        <span id="badgeClienteSeleccionado" class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 d-none">
+            <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Cliente existente
+        </span>
     </div>
 
     <!-- 2. Buscador de Cliente Existente -->
     <div class="mb-3 position-relative">
-        <label class="form-label small fw-medium text-dark">Buscar cliente</label>
+        <label for="inputBuscarCliente" class="form-label small fw-medium text-dark">Buscar cliente</label>
         <div class="input-group">
             <span class="input-group-text bg-white border-end-0 text-muted rounded-start-3">
                 <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
@@ -29,7 +34,7 @@
         <!-- Dropdown flotante de sugerencias cuando haya resultados -->
         <div id="resultadosBusquedaCliente"
              class="list-group position-absolute shadow-sm d-none mt-1 z-3 w-100"
-             style="max-height: 200px; overflow-y: auto;">
+             style="max-height: 220px; overflow-y: auto;">
         </div>
     </div>
 
@@ -41,54 +46,68 @@
     </div>
 
     <!-- 4. Formulario de Captura de Datos del Titular -->
-    <form id="formPaso1Cliente" novalidate onsubmit="event.preventDefault();">
+    <form id="formPaso1Cliente" novalidate>
+        <input type="hidden" id="hdnClienteId" value="" />
         <div class="row g-3">
             <!-- Fila 1 (2 Columnas - col-md-6) -->
             <div class="col-12 col-md-6">
-                <label class="form-label small fw-medium text-dark">Nombre(s) <span class="text-danger">*</span></label>
+                <label for="txtClienteNombre" class="form-label small fw-medium text-dark">Nombre(s) <span class="text-danger">*</span></label>
                 <input type="text"
                        id="txtClienteNombre"
                        class="form-control rounded-3 py-2"
-                       value="Mariana"
-                       placeholder="Ingresa el nombre"
+                       placeholder="Ej. Mariana"
+                       autocomplete="given-name"
                        required />
             </div>
             <div class="col-12 col-md-6">
-                <label class="form-label small fw-medium text-dark">Apellidos <span class="text-danger">*</span></label>
+                <label for="txtClienteApellidos" class="form-label small fw-medium text-dark">Apellidos <span class="text-danger">*</span></label>
                 <input type="text"
                        id="txtClienteApellidos"
                        class="form-control rounded-3 py-2"
-                       value="Torres Aguirre"
-                       placeholder="Ingresa los apellidos"
+                       placeholder="Ej. Torres Aguirre"
+                       autocomplete="family-name"
                        required />
             </div>
 
             <!-- Fila 2 (2 Columnas - col-md-6) -->
             <div class="col-12 col-md-6">
-                <label class="form-label small fw-medium text-dark">CURP</label>
+                <label for="txtClienteCurp" class="form-label small fw-medium text-dark">CURP <span class="text-danger">*</span></label>
                 <input type="text"
                        id="txtClienteCurp"
                        class="form-control rounded-3 py-2 text-uppercase sf-monospace"
                        placeholder="18 caracteres"
-                       maxlength="18" />
+                       maxlength="18"
+                       required />
             </div>
             <div class="col-12 col-md-6">
-                <label class="form-label small fw-medium text-dark">Teléfono</label>
+                <label for="txtClienteTelefono" class="form-label small fw-medium text-dark">Teléfono <span class="text-danger">*</span></label>
                 <input type="tel"
                        id="txtClienteTelefono"
                        class="form-control rounded-3 py-2"
                        placeholder="55 0000 0000"
-                       maxlength="10" />
+                       maxlength="15"
+                       autocomplete="tel"
+                       required />
             </div>
 
-            <!-- Fila 3 (Ancho completo - col-12) -->
-            <div class="col-12">
-                <label class="form-label small fw-medium text-dark">Correo electrónico</label>
+            <!-- Fila 3 (2 Columnas - Correo y Dirección) -->
+            <div class="col-12 col-md-6">
+                <label for="txtClienteEmail" class="form-label small fw-medium text-dark">Correo electrónico <span class="text-danger">*</span></label>
                 <input type="email"
                        id="txtClienteEmail"
                        class="form-control rounded-3 py-2"
-                       value="mariana.torres@email.mx"
-                       placeholder="ejemplo@correo.com" />
+                       placeholder="ejemplo@correo.com"
+                       autocomplete="email"
+                       required />
+            </div>
+            <div class="col-12 col-md-6">
+                <label for="txtClienteDireccion" class="form-label small fw-medium text-dark">Dirección <span class="text-danger">*</span></label>
+                <input type="text"
+                       id="txtClienteDireccion"
+                       class="form-control rounded-3 py-2"
+                       placeholder="Ej. Av. Juárez 120, Col. Centro"
+                       autocomplete="street-address"
+                       required />
             </div>
         </div>
 
@@ -100,7 +119,7 @@
             <button type="button" class="btn btn-light border text-muted rounded-3 px-4 py-2" disabled>
                 Anterior
             </button>
-            <button type="button"
+            <button type="submit"
                     id="btnContinuarPaso1"
                     class="btn text-white rounded-3 px-4 py-2 fw-medium d-inline-flex align-items-center shadow-sm"
                     style="background-color: #2D4224; border-color: #2D4224;">

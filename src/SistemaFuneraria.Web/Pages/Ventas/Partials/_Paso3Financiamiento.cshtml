@@ -3,7 +3,13 @@
 <div class="bg-white rounded-4 shadow-sm border p-4 p-md-5 d-none" id="step3Card">
     <div class="mb-4">
         <h2 class="h4 fw-bold text-dark mb-1">Plan de financiamiento</h2>
-        <p class="small text-muted mb-0">Configura el enganche y el plazo de pago.</p>
+        <p class="small text-muted mb-0">Configura el enganche y el plazo de pago calculado en tiempo real.</p>
+    </div>
+
+    <!-- Alerta de error de cotización -->
+    <div id="paso3AlertaError" class="alert alert-danger py-2 px-3 small d-none mb-3 rounded-3 d-flex justify-content-between align-items-center" role="alert">
+        <span id="paso3MensajeError">No fue posible calcular la cotización.</span>
+        <button type="button" id="btnReintentarCotizacion" class="btn btn-sm btn-outline-danger rounded-3 ms-2">Reintentar</button>
     </div>
 
     <!-- 2. Selector de Modalidad (Toggle Crédito / Contado) -->
@@ -54,10 +60,10 @@
          style="background-color: #2D4224;">
         <div>
             <div class="fw-bold fs-6 mb-1" id="lblBannerTitulo">Mensualidad estimada</div>
-            <small class="opacity-75" id="lblBannerSubtitulo">Primer pago: 18 dic. 2025</small>
+            <small class="opacity-75" id="lblBannerSubtitulo">Calculando fecha de primer pago...</small>
         </div>
         <div class="text-end">
-            <span class="display-6 fw-bold sf-money" id="lblBannerMonto">$4,887.54</span>
+            <span class="display-6 fw-bold sf-money" id="lblBannerMonto">$0.00</span>
         </div>
     </div>
 
