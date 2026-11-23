@@ -42,7 +42,7 @@
                 </div>
             </div>
             <div>
-                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                <div class="display-6 fw-bold text-dark sf-money mb-1" id="kpiVentasMes">
                     $@Model.VentasMes.ToString("#,##0")
                 </div>
                 <div class="text-success small fw-semibold d-flex align-items-center">
@@ -64,7 +64,7 @@
                 </div>
             </div>
             <div>
-                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                <div class="display-6 fw-bold text-dark sf-money mb-1" id="kpiCobranzaMensual">
                     $@Model.CobranzaMensual.ToString("#,##0")
                 </div>
                 <div class="text-success small fw-semibold d-flex align-items-center">
@@ -86,10 +86,10 @@
                 </div>
             </div>
             <div>
-                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                <div class="display-6 fw-bold text-dark sf-money mb-1" id="kpiContratosActivos">
                     @Model.ContratosActivos
                 </div>
-                <div class="text-muted small fw-medium">
+                <div class="text-muted small fw-medium" id="kpiContratosNuevos">
                     @Model.ContratosNuevos
                 </div>
             </div>
@@ -107,10 +107,10 @@
                 </div>
             </div>
             <div>
-                <div class="display-6 fw-bold text-danger sf-money mb-1">
+                <div class="display-6 fw-bold text-danger sf-money mb-1" id="kpiPagosVencidos">
                     @Model.PagosVencidos
                 </div>
-                <div class="text-danger small fw-semibold">
+                <div class="text-danger small fw-semibold" id="kpiMontoPorRecuperar">
                     $@Model.MontoPorRecuperar.ToString("#,##0") por recuperar
                 </div>
             </div>
@@ -182,7 +182,7 @@
                 </div>
 
                 <!-- Barras por mes alineadas con flexbox -->
-                <div class="sf-bars-wrapper position-relative h-100 d-flex justify-content-around align-items-end ps-5 pe-2" style="z-index: 2;">
+                <div id="barsVentasCobranza" class="sf-bars-wrapper position-relative h-100 d-flex justify-content-around align-items-end ps-5 pe-2" style="z-index: 2;">
                     @foreach (var punto in Model.DatosGrafica)
                     {
                         <div class="d-flex flex-column align-items-center h-100 justify-content-end" style="width: 14%;">
@@ -223,12 +223,12 @@
 
             <!-- Gráfica de Dona Central (CSS Conic-Gradient con anillo) -->
             <div class="d-flex justify-content-center my-3">
-                <div class="sf-donut-chart position-relative rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                <div id="donutDisponibilidad" class="sf-donut-chart position-relative rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                      style="width: 140px; height: 140px; background: conic-gradient(#2D4224 0% 43.75%, #C59D52 43.75% 76.56%, #7D9B76 76.56% 100%);">
                     <!-- Agujero interior blanco de la dona -->
                     <div class="bg-white rounded-circle d-flex flex-column align-items-center justify-content-center shadow-sm"
                          style="width: 96px; height: 96px;">
-                        <span class="display-6 fw-bold text-dark sf-money lh-1">@Model.LotesDisponibles</span>
+                        <span class="display-6 fw-bold text-dark sf-money lh-1" id="kpiLotesDisponibles">@Model.LotesDisponibles</span>
                         <span class="small text-muted" style="font-size: 0.75rem;">disponibles</span>
                     </div>
                 </div>
@@ -241,7 +241,7 @@
                         <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background-color: #2D4224;"></span>
                         <span class="small text-muted" style="font-size: 0.75rem;">2 gavetas</span>
                     </div>
-                    <div class="fw-bold sf-money text-dark fs-5">@Model.Lotes2Gavetas</div>
+                    <div class="fw-bold sf-money text-dark fs-5" id="kpiLotes2">@Model.Lotes2Gavetas</div>
                 </div>
                 <div class="border-start border-light-subtle"></div>
                 <div>
@@ -249,7 +249,7 @@
                         <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background-color: #C59D52;"></span>
                         <span class="small text-muted" style="font-size: 0.75rem;">3 gavetas</span>
                     </div>
-                    <div class="fw-bold sf-money text-dark fs-5">@Model.Lotes3Gavetas</div>
+                    <div class="fw-bold sf-money text-dark fs-5" id="kpiLotes3">@Model.Lotes3Gavetas</div>
                 </div>
                 <div class="border-start border-light-subtle"></div>
                 <div>
@@ -257,21 +257,21 @@
                         <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background-color: #7D9B76;"></span>
                         <span class="small text-muted" style="font-size: 0.75rem;">4 gavetas</span>
                     </div>
-                    <div class="fw-bold sf-money text-dark fs-5">@Model.Lotes4Gavetas</div>
+                    <div class="fw-bold sf-money text-dark fs-5" id="kpiLotes4">@Model.Lotes4Gavetas</div>
                 </div>
             </div>
 
             <!-- Barra de Ocupación -->
             <div>
                 <div class="progress rounded-pill mb-1" style="height: 8px; background-color: #EFECE6;">
-                    <div class="progress-bar rounded-pill" role="progressbar"
+                    <div id="barraOcupacion" class="progress-bar rounded-pill" role="progressbar"
                          style="width: @(Model.OcupacionPorcentaje)%; background-color: #2D4224;"
                          aria-valuenow="@Model.OcupacionPorcentaje" aria-valuemin="0" aria-valuemax="100">
                     </div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center small text-muted">
                     <span>Ocupación total</span>
-                    <span class="fw-bold text-dark">@Model.OcupacionPorcentaje%</span>
+                    <span class="fw-bold text-dark" id="pctOcupacion">@Model.OcupacionPorcentaje%</span>
                 </div>
             </div>
         </div>
@@ -306,7 +306,7 @@
                     <th scope="col" class="border-0 fw-semibold text-uppercase text-end" style="letter-spacing: 0.04em;">Fecha</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tbodyActividadReciente">
                 @foreach (var mov in Model.ActividadReciente)
                 {
                     <tr>
@@ -375,3 +375,8 @@
         cursor: pointer;
     }
 </style>
+
+@section Scripts {
+    <script src="~/js/api/reportesApi.js" asp-append-version="true"></script>
+    <script src="~/js/pages/resumenPage.js" asp-append-version="true"></script>
+}

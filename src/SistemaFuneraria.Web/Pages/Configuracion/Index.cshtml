@@ -184,7 +184,7 @@
                             <th scope="col" class="border-0 fw-semibold text-uppercase text-end">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tbodyUsuariosConfig">
                         @foreach (var user in Model.Usuarios)
                         {
                             <tr>
@@ -538,60 +538,6 @@
 </style>
 
 @section Scripts {
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Manejador del submenú lateral de configuración
-            var navButtons = document.querySelectorAll('.sf-config-nav-item[data-target]');
-            var panels = document.querySelectorAll('.sf-config-panel');
-
-            function activarSeccion(targetId) {
-                // Actualiza botones de navegación
-                navButtons.forEach(function (btn) {
-                    var isTarget = btn.getAttribute('data-target') === targetId;
-                    var icon = btn.querySelector('.sf-nav-icon');
-                    if (isTarget) {
-                        btn.classList.add('active');
-                        if (icon) {
-                            icon.classList.remove('text-muted');
-                            icon.classList.add('text-success');
-                        }
-                    } else {
-                        btn.classList.remove('active');
-                        if (icon) {
-                            icon.classList.remove('text-success');
-                            icon.classList.add('text-muted');
-                        }
-                    }
-                });
-
-                // Muestra el panel correspondiente
-                panels.forEach(function (panel) {
-                    if (panel.id === targetId) {
-                        panel.classList.remove('d-none');
-                    } else {
-                        panel.classList.add('d-none');
-                    }
-                });
-            }
-
-            navButtons.forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var targetId = this.getAttribute('data-target');
-                    activarSeccion(targetId);
-                });
-            });
-
-            // Botón Guardar cambios
-            var btnGuardar = document.getElementById('btnGuardarCambios');
-            if (btnGuardar) {
-                btnGuardar.addEventListener('click', function () {
-                    if (window.SfUi && typeof window.SfUi.showToast === 'function') {
-                        window.SfUi.showToast('success', 'Cambios guardados con éxito.');
-                    } else {
-                        alert('✓ Cambios guardados con éxito.');
-                    }
-                });
-            }
-        });
-    </script>
+    <script src="~/js/api/configuracionApi.js" asp-append-version="true"></script>
+    <script src="~/js/pages/configuracionPage.js" asp-append-version="true"></script>
 }

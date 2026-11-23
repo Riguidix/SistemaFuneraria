@@ -82,4 +82,14 @@ public class Mensualidad
 
         Estado = EstadoMensualidad.Vencida;
     }
+
+    public void ActualizarValoresAmortizacion(RenglonAmortizacion renglon)
+    {
+        ArgumentNullException.ThrowIfNull(renglon);
+        SaldoInicialPeriodo = new Dinero(renglon.SaldoInicial);
+        CapitalProgramado = new Dinero(renglon.CapitalAmortizado);
+        InteresProgramado = new Dinero(renglon.Interes);
+        MontoTotalCuota = new Dinero(renglon.PagoMensual);
+        SaldoFinalPeriodo = new Dinero(renglon.SaldoFinal);
+    }
 }

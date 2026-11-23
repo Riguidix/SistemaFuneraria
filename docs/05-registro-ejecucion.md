@@ -39,9 +39,9 @@ Cada registro refleja una corrida formal. Cuando una prueba resulta `Fallida`, g
 | **CP-04** | 07/11/2026 | RF-05, RF-06 | Plazo 48 meses asigna tasa anual fija del 24% (2.0% mensual). | Tasas indexadas al plazo con precisión decimal estricta aprobadas. | `Aprobado` | Juan Romero | PR #59 (SF-009) |
 | **CP-05** | 08/11/2026 | RF-07, RN-07 | Capital $96k, 12 meses, 16% $\rightarrow$ Mensualidad $8,710.16 e intereses $8,521.95. | Cuota francesa ordinaria $8,710.16 calculada en 128-bit decimal aprobada. | `Aprobado` | Gustavo Lucio | PR #66 (SF-010) |
 | **CP-06** | 09/11/2026 | RF-08, RNF-02 | Tabla de 12 meses; periodo 12 ajusta a $8,710.19 y saldo final cierra en $0.00. | Absorción al centavo en cuota final con saldo $0.00 aprobada. | `Aprobado` | Lead Fullstack | PR #70 (SF-011) |
-| **CP-07** | *Pendiente* | RF-10, RF-11 | Abono $10k en periodo 3 reduce capital a $63,410.99 y recalcula cuota a $7,523.51. | *[Pendiente de ejecución Sprint 3]* | `Pendiente` | Reydescel Herrera | PR #___ (SF-038) |
-| **CP-08** | *Pendiente* | RF-12, RN-09 | Liquidación tras periodo 3 descuenta 10% en intereses futuros $\rightarrow$ Pago $77,893.39. | *[Pendiente de ejecución Sprint 3]* | `Pendiente` | Guillermo Sandoval | PR #___ (SF-039) |
-| **CP-09** | *Pendiente* | RF-14, RN-10 | Mensualidad atrasada identificada como `Vencida` con moratorio en $0.00. | *[Pendiente de ejecución Sprint 3]* | `Pendiente` | Edgar Acevedo | PR #___ (SF-041) |
+| **CP-07** | 23/11/2026 | RF-10, RF-11 | Abono $10k en periodo 3 reduce capital a $63,410.99 y recalcula cuota a $7,523.51. | Abono aplicado íntegro a capital con recibo oficial y cuotas restantes recalculadas aprobadas. | `Aprobado` | Edgar Acevedo | PR #___ (SF-093) |
+| **CP-08** | 23/11/2026 | RF-12, RN-09 | Liquidación tras periodo 3 descuenta 10% en intereses futuros $\rightarrow$ Pago $77,893.39. | Liquidación anticipada con 10% bonificación comercial y saldo en $0.00 aprobada. | `Aprobado` | Edgar Acevedo | PR #___ (SF-093) |
+| **CP-09** | 23/11/2026 | RF-14, RN-10 | Mensualidad atrasada identificada como `Vencida` con moratorio en $0.00. | Cuota atrasada con FakeTimeProvider identificada como Vencida y cobro sin recargos ($0.00 mora) aprobado. | `Aprobado` | Edgar Acevedo | PR #___ (SF-094) |
 | **CP-10** | 08/11/2026 | RN-04, RN-05 | Rechazo de enganche 15% o plazo 36m con mensaje de error descriptivo. | Excepciones `ArgumentOutOfRangeException` y `Resultado.Fallo` aprobadas. | `Aprobado` | Guillermo Sandoval / Gustavo Lucio | PR #64 (SF-005) y PR #69 (SF-013) |
 
 ---

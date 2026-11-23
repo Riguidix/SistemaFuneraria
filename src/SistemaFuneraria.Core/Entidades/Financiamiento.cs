@@ -152,6 +152,30 @@ public class Financiamiento
         Estado = EstadoFinanciamiento.Liquidado;
     }
 
+    public void AplicarAbonoCapital(Dinero montoAbono, ResultadoAbonoCapital resultado)
+    {
+        ArgumentNullException.ThrowIfNull(montoAbono);
+        ArgumentNullException.ThrowIfNull(resultado);
+
+        if (Estado is not (EstadoFinanciamiento.Activo or EstadoFinanciamiento.EnMora))
+            throw new ReglaNegocioException("Solo es posible aplicar un abono a capital a un financiamiento Activo o EnMora.");
+
+        if (_mensualidades.Any(m => m.Estado == EstadoMensualidad.Vencida))
+            throw new ReglaNegocioException("No se permite realizar un abono a capital si existen mensualidades vencidas (RF-ABO-01).");
+
+        SaldoInsoluto = new Dinero(resultado.NuevoSaldoInsoluto);
+        CuotaMensualActual = new Dinero(resultado.NuevaCuota);
+
+        foreach (var renglon in resultado.TablaRecalculada)
+        {
+            var mensualidad = _mensualidades.FirstOrDefault(m => m.NumeroCuota == renglon.Periodo);
+            if (mensualidad is not null && mensualidad.Estado == EstadoMensualidad.Pendiente)
+            {
+                mensualidad.ActualizarValoresAmortizacion(renglon);
+            }
+        }
+    }
+
     /// <summary>
     /// Cancela el financiamiento tras la cancelación administrativa de la venta asociada (SF-063).
     /// </summary>
