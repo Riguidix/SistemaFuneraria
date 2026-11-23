@@ -1,179 +1,400 @@
 /**
- * paso2Lote.js - Lógica interactiva del Paso 2 del Wizard (SF-053)
- * Selección de lote y sincronización reactiva en vivo con el panel derecho RESUMEN DE COTIZACIÓN.
+ * paso2Lote.js - Lógica interactiva del Paso 2 del Wizard (SF-053).
+ * Carga lotes disponibles reales desde lotesApi.js y sincroniza con wizardState.js y el panel derecho.
  */
-(function () {
-    'use strict';
+(function (root, factory) {
+    if (typeof module === "object" && module.exports) {
+        module.exports = factory();
+    } else {
+        const api = factory();
+        root.paso2Lote = api;
+        if (typeof document !== "undefined") {
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", function () {
+                    api.init();
+                });
+            } else {
+                api.init();
+            }
+        }
+    }
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+    "use strict";
 
-    const DRAFT_KEY = 'sf_nueva_venta_draft';
+    function obtenerTipoLotePorGavetas(gavetas) {
+        const g = Number(gavetas);
+        if (g === 4) return "Lote Memorial";
+        if (g === 3) return "Lote Familiar";
+        return "Lote Básico";
+    }
 
-    function initPaso2() {
-        const step1Card = document.getElementById('step1Card');
-        const step2Card = document.getElementById('step2Card');
-        const btnAnterior = document.getElementById('btnAnteriorPaso2');
-        const btnContinuar2 = document.getElementById('btnContinuarPaso2');
-        const tarjetas = document.querySelectorAll('.sf-lote-card');
+    function extraerSlotDeClave(clave) {
+        if (!clave || typeof clave !== "string") return "";
+        const match = /(\d+)$/.exec(clave.trim());
+        if (!match) return "";
+        const num = parseInt(match[1], 10);
+        return Number.isFinite(num) ? String(num) : "";
+    }
 
-        // Elementos del Stepper
-        const step1Indicator = document.getElementById('stepIndicator1');
-        const step2Indicator = document.getElementById('stepIndicator2');
+    function mapearLoteParaBorrador(lote) {
+        if (!lote) return null;
+        const gavetas = Number(lote.gavetas ?? lote.capacidad ?? 2);
+        const precio = Number(lote.precioContado ?? lote.precio ?? 0);
+        return {
+            id: lote.id || "",
+            clave: lote.clave || "",
+            seccion: lote.seccion || "",
+            andadorFila: lote.andadorFila || "",
+            gavetas,
+            capacidad: gavetas,
+            precio,
+            tipo: obtenerTipoLotePorGavetas(gavetas),
+            slot: extraerSlotDeClave(lote.clave)
+        };
+    }
 
-        // Elementos del Panel Lateral "RESUMEN DE COTIZACIÓN"
-        const resumenTitulo = document.getElementById('resumenLoteTitulo');
-        const resumenClave = document.getElementById('resumenLoteClave');
-        const resumenCapacidad = document.getElementById('resumenLoteCapacidad');
-        const resumenPrecio = document.getElementById('resumenLotePrecio');
-        const resumenTotal = document.getElementById('resumenTotalEstimado');
-        const slotCells = document.querySelectorAll('.sf-slot-cell');
+    function formatearMonedaSinDecimales(monto) {
+        const n = Number(monto) || 0;
+        return "$" + n.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
 
-        if (!step2Card) return;
+    function formatearMonedaMXN(monto) {
+        const n = Number(monto) || 0;
+        return "$" + n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 
-        // 1. Escuchar transición desde Paso 1 hacia Paso 2
-        window.addEventListener('sf:paso1-completado', function () {
-            mostrarPaso2();
-        });
+    function init(deps = {}) {
+        const doc = deps.document ?? (typeof document !== "undefined" ? document : null);
+        const win = deps.window ?? (typeof window !== "undefined" ? window : null);
+        const lotesApi = deps.lotesApi ?? win?.lotesApi;
+        const wizardState = deps.wizardState ?? win?.wizardState;
 
-        // 2. Navegación hacia atrás (Regresar al Paso 1)
-        if (btnAnterior) {
-            btnAnterior.addEventListener('click', function () {
-                mostrarPaso1();
-            });
+        if (!doc) return null;
+
+        const step1Card = doc.getElementById("step1Card");
+        const step2Card = doc.getElementById("step2Card");
+        const contenedor = doc.getElementById("contenedorTarjetasLote");
+        const alertaError = doc.getElementById("paso2AlertaError");
+        const mensajeError = doc.getElementById("paso2MensajeError");
+        const btnReintentar = doc.getElementById("btnReintentarLotesPaso2");
+        const btnAnterior = doc.getElementById("btnAnteriorPaso2");
+        const btnContinuar2 = doc.getElementById("btnContinuarPaso2");
+
+        const step1Indicator = doc.getElementById("stepIndicator1");
+        const step2Indicator = doc.getElementById("stepIndicator2");
+
+        const resumenTitulo = doc.getElementById("resumenLoteTitulo");
+        const resumenClave = doc.getElementById("resumenLoteClave");
+        const resumenCapacidad = doc.getElementById("resumenLoteCapacidad");
+        const resumenPrecio = doc.getElementById("resumenLotePrecio");
+        const resumenTotal = doc.getElementById("resumenTotalEstimado");
+        const slotCells = doc.querySelectorAll(".sf-slot-cell");
+
+        if (!step2Card || !contenedor) return null;
+
+        let lotesDisponibles = [];
+        let loteSeleccionado = null;
+        let cargaIniciada = false;
+
+        function sincronizarBotonContinuar() {
+            if (btnContinuar2) {
+                btnContinuar2.disabled = !loteSeleccionado;
+            }
         }
 
-        // 3. Selección reactiva de tarjetas de lote
-        tarjetas.forEach(function (card) {
-            card.addEventListener('click', function () {
-                seleccionarTarjeta(card);
-            });
-        });
-
-        // 4. Continuar hacia Paso 3
-        if (btnContinuar2) {
-            btnContinuar2.addEventListener('click', function () {
-                const tarjetaActiva = document.querySelector('.sf-lote-card[data-activa="true"]') || tarjetas[0];
-                if (tarjetaActiva) {
-                    guardarLoteEnBorrador(tarjetaActiva, 3);
-                }
-                window.dispatchEvent(new CustomEvent('sf:paso2-completado'));
-            });
+        function ocultarError() {
+            if (alertaError) alertaError.classList.add("d-none");
         }
 
-        function seleccionarTarjeta(card) {
-            tarjetas.forEach(function (c) {
-                c.removeAttribute('data-activa');
-                c.style.border = '1px solid #E5E7EB';
-                c.style.backgroundColor = '#FFFFFF';
-            });
+        function mostrarError(msg) {
+            if (mensajeError) mensajeError.textContent = msg;
+            if (alertaError) alertaError.classList.remove("d-none");
+        }
 
-            card.setAttribute('data-activa', 'true');
-            card.style.border = '2px solid #2D4224';
-            card.style.backgroundColor = '#FAFBF9';
+        function sincronizarPanelDerecho(loteDraft) {
+            if (!loteDraft) return;
+            const precioStr = formatearMonedaMXN(loteDraft.precio);
+            if (resumenTitulo) resumenTitulo.textContent = loteDraft.tipo;
+            if (resumenClave) resumenClave.textContent = loteDraft.clave;
+            if (resumenCapacidad) resumenCapacidad.textContent = `${loteDraft.gavetas} gavetas`;
+            if (resumenPrecio) resumenPrecio.textContent = precioStr;
+            if (resumenTotal) resumenTotal.textContent = precioStr;
 
-            const clave = card.getAttribute('data-lote-clave') || 'JN-A-042';
-            const tipo = card.getAttribute('data-lote-tipo') || 'Lote Básico';
-            const capacidad = card.getAttribute('data-lote-capacidad') || '2';
-            const precioNum = parseFloat(card.getAttribute('data-lote-precio') || '120000');
-            const slot = card.getAttribute('data-slot') || '42';
-
-            const precioFormateado = '$' + precioNum.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            // Sincronizar Panel Lateral Derecho
-            if (resumenTitulo) resumenTitulo.textContent = tipo;
-            if (resumenClave) resumenClave.textContent = clave;
-            if (resumenCapacidad) resumenCapacidad.textContent = capacidad + ' gavetas';
-            if (resumenPrecio) resumenPrecio.textContent = precioFormateado;
-            if (resumenTotal) resumenTotal.textContent = precioFormateado;
-
-            // Sincronizar Casilla en Cuadrícula 2x4
             slotCells.forEach(function (cell) {
-                const cellSlot = cell.getAttribute('data-slot');
-                if (cellSlot === slot) {
-                    cell.style.backgroundColor = '#2D4224';
-                    cell.style.color = '#FFFFFF';
-                    cell.style.fontWeight = 'bold';
-                    cell.classList.add('shadow-sm');
-                    cell.classList.remove('text-secondary', 'bg-white', 'border');
+                const cellSlot = cell.getAttribute("data-slot");
+                if (cellSlot && cellSlot === loteDraft.slot) {
+                    cell.style.backgroundColor = "#2D4224";
+                    cell.style.color = "#FFFFFF";
+                    cell.style.fontWeight = "bold";
+                    cell.classList.add("shadow-sm");
+                    cell.classList.remove("text-secondary", "bg-white", "border");
                 } else {
-                    cell.style.backgroundColor = '#FFFFFF';
-                    cell.style.color = '#4B5563';
-                    cell.style.fontWeight = '500';
-                    cell.classList.remove('shadow-sm');
-                    cell.classList.add('text-secondary', 'bg-white', 'border');
+                    cell.style.backgroundColor = "#FFFFFF";
+                    cell.style.color = "#4B5563";
+                    cell.style.fontWeight = "500";
+                    cell.classList.remove("shadow-sm");
+                    cell.classList.add("text-secondary", "bg-white", "border");
                 }
             });
+        }
 
-            guardarLoteEnBorrador(card, 2);
+        function marcarTarjetaActiva(clave) {
+            const tarjetas = contenedor.querySelectorAll(".sf-lote-card");
+            tarjetas.forEach(function (card) {
+                const esActiva = card.getAttribute("data-lote-clave") === clave;
+                if (esActiva) {
+                    card.setAttribute("data-activa", "true");
+                    card.style.border = "2px solid #2D4224";
+                    card.style.backgroundColor = "#FAFBF9";
+                } else {
+                    card.removeAttribute("data-activa");
+                    card.style.border = "1px solid #E5E7EB";
+                    card.style.backgroundColor = "#FFFFFF";
+                }
+            });
+        }
+
+        function previsualizarLote(loteObj) {
+            const loteDraft = mapearLoteParaBorrador(loteObj);
+            if (!loteDraft) return;
+
+            loteSeleccionado = loteDraft;
+            marcarTarjetaActiva(loteDraft.clave);
+            sincronizarPanelDerecho(loteDraft);
+            sincronizarBotonContinuar();
+            return loteDraft;
+        }
+
+        function seleccionarLote(loteObj, pasoActual = 2) {
+            const loteDraft = previsualizarLote(loteObj);
+            if (!loteDraft) return;
+
+            if (wizardState) {
+                wizardState.updateDraft({ lote: loteDraft, paso: pasoActual });
+            }
+        }
+
+        function renderizarTarjetas(items) {
+            contenedor.innerHTML = "";
+
+            if (!Array.isArray(items) || items.length === 0) {
+                const vacio = doc.createElement("div");
+                vacio.className = "p-4 rounded-3 border bg-light text-center text-muted small";
+                vacio.textContent = "No hay lotes disponibles en este momento.";
+                contenedor.appendChild(vacio);
+                loteSeleccionado = null;
+                sincronizarBotonContinuar();
+                return;
+            }
+
+            for (const item of items) {
+                const mapped = mapearLoteParaBorrador(item);
+                const card = doc.createElement("div");
+                card.className = "sf-lote-card p-3 rounded-3 d-flex align-items-center justify-content-between transition-all";
+                card.setAttribute("role", "button");
+                card.setAttribute("tabindex", "0");
+                card.setAttribute("data-lote-id", mapped.id);
+                card.setAttribute("data-lote-clave", mapped.clave);
+                card.setAttribute("data-lote-tipo", mapped.tipo);
+                card.setAttribute("data-lote-capacidad", String(mapped.gavetas));
+                card.setAttribute("data-lote-precio", String(mapped.precio));
+                card.setAttribute("data-slot", mapped.slot);
+                card.style.cursor = "pointer";
+                card.style.border = "1px solid #E5E7EB";
+                card.style.backgroundColor = "#FFFFFF";
+                card.style.transition = "all 0.2s ease";
+
+                const spanClave = doc.createElement("span");
+                spanClave.className = "fw-bold text-dark me-4 sf-monospace";
+                spanClave.style.minWidth = "90px";
+                spanClave.style.fontSize = "1.05rem";
+                spanClave.textContent = mapped.clave;
+
+                const divInfo = doc.createElement("div");
+                divInfo.className = "flex-grow-1";
+                const divSeccion = doc.createElement("div");
+                divSeccion.className = "fw-bold text-dark";
+                divSeccion.textContent = mapped.seccion;
+                const smallMeta = doc.createElement("small");
+                smallMeta.className = "text-muted";
+                smallMeta.textContent = `${mapped.gavetas} gavetas · ${mapped.andadorFila}`;
+                divInfo.append(divSeccion, smallMeta);
+
+                const spanPrecio = doc.createElement("span");
+                spanPrecio.className = "h5 fw-bold text-dark mb-0 sf-money";
+                spanPrecio.textContent = formatearMonedaSinDecimales(mapped.precio);
+
+                card.append(spanClave, divInfo, spanPrecio);
+
+                card.addEventListener("click", function () {
+                    seleccionarLote(item, 2);
+                });
+                card.addEventListener("keydown", function (e) {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        seleccionarLote(item, 2);
+                    }
+                });
+
+                contenedor.appendChild(card);
+            }
+        }
+
+        function obtenerLoteClaveQuery() {
+            if (!win?.location?.search) return "";
+            const params = new URLSearchParams(win.location.search);
+            return (params.get("loteClave") || "").trim().toUpperCase();
+        }
+
+        async function cargarLotesDisponibles() {
+            if (!lotesApi) return;
+            cargaIniciada = true;
+            ocultarError();
+
+            try {
+                const resumen = await lotesApi.obtenerCatalogo({ estado: "Disponible", pageSize: 50 });
+                const items = Array.isArray(resumen?.items) ? resumen.items : [];
+                lotesDisponibles = items;
+                renderizarTarjetas(items);
+
+                const claveQuery = obtenerLoteClaveQuery();
+                const draft = wizardState ? wizardState.getDraft() : {};
+                const claveDraft = draft?.lote?.clave || "";
+
+                let elegido = null;
+                if (claveQuery) {
+                    elegido = items.find((l) => (l.clave || "").toUpperCase() === claveQuery);
+                }
+                if (!elegido && claveDraft) {
+                    elegido = items.find((l) => l.clave === claveDraft);
+                }
+                if (!elegido && items.length > 0) {
+                    elegido = items[0];
+                }
+
+                if (elegido) {
+                    if (claveQuery || claveDraft) {
+                        seleccionarLote(elegido, draft?.paso || 2);
+                    } else {
+                        previsualizarLote(elegido);
+                    }
+                } else {
+                    loteSeleccionado = null;
+                    sincronizarBotonContinuar();
+                }
+            } catch (err) {
+                loteSeleccionado = null;
+                sincronizarBotonContinuar();
+                contenedor.innerHTML = "";
+                mostrarError(err?.message || "No fue posible cargar el inventario de lotes disponibles.");
+            }
+        }
+
+        // Permitir selección desde la cuadrícula derecha 2x4 para los lotes numéricos cargados
+        slotCells.forEach(function (cell) {
+            cell.addEventListener("click", function () {
+                const slot = cell.getAttribute("data-slot");
+                if (!slot || !/^\d+$/.test(slot)) return;
+                const match = lotesDisponibles.find((l) => extraerSlotDeClave(l.clave) === slot);
+                if (match) {
+                    seleccionarLote(match, 2);
+                }
+            });
+        });
+
+        if (win) {
+            win.addEventListener("sf:paso1-completado", function () {
+                mostrarPaso2();
+                if (!cargaIniciada || lotesDisponibles.length === 0) {
+                    cargarLotesDisponibles();
+                }
+            });
+        }
+
+        if (btnReintentar) {
+            btnReintentar.addEventListener("click", cargarLotesDisponibles);
+        }
+
+        if (btnAnterior) {
+            btnAnterior.addEventListener("click", mostrarPaso1);
+        }
+
+        if (btnContinuar2) {
+            btnContinuar2.addEventListener("click", function () {
+                if (!loteSeleccionado) return;
+                if (wizardState) {
+                    wizardState.updateDraft({ lote: loteSeleccionado, paso: 3 });
+                }
+                if (win) {
+                    win.dispatchEvent(new CustomEvent("sf:paso2-completado", {
+                        detail: { lote: loteSeleccionado }
+                    }));
+                }
+            });
         }
 
         function mostrarPaso1() {
-            if (step1Card) step1Card.classList.remove('d-none');
-            if (step2Card) step2Card.classList.add('d-none');
+            if (step1Card) step1Card.classList.remove("d-none");
+            if (step2Card) step2Card.classList.add("d-none");
 
-            // Actualizar Stepper: Paso 1 Activo, Paso 2 Inactivo
             if (step1Indicator && step2Indicator) {
-                const circle1 = step1Indicator.querySelector('div');
-                const circle2 = step2Indicator.querySelector('div');
+                const circle1 = step1Indicator.querySelector("div");
+                const circle2 = step2Indicator.querySelector("div");
                 if (circle1) {
-                    circle1.style.backgroundColor = '#2D4224';
-                    circle1.style.borderColor = '#2D4224';
-                    circle1.classList.remove('text-muted', 'bg-white', 'border');
-                    circle1.classList.add('text-white', 'fw-bold');
+                    circle1.style.backgroundColor = "#2D4224";
+                    circle1.style.borderColor = "#2D4224";
+                    circle1.classList.remove("text-muted", "bg-white", "border", "text-success");
+                    circle1.classList.add("text-white", "fw-bold");
+                    circle1.textContent = "1";
                 }
                 if (circle2) {
-                    circle2.style.backgroundColor = '#FFFFFF';
-                    circle2.style.borderColor = '#D1D5DB';
-                    circle2.classList.remove('text-white', 'fw-bold');
-                    circle2.classList.add('text-muted', 'fw-semibold', 'bg-white', 'border');
+                    circle2.style.backgroundColor = "#FFFFFF";
+                    circle2.style.borderColor = "#D1D5DB";
+                    circle2.classList.remove("text-white", "fw-bold");
+                    circle2.classList.add("text-muted", "fw-semibold", "bg-white", "border");
                 }
             }
         }
 
         function mostrarPaso2() {
-            if (step1Card) step1Card.classList.add('d-none');
-            if (step2Card) step2Card.classList.remove('d-none');
+            if (step1Card) step1Card.classList.add("d-none");
+            if (step2Card) step2Card.classList.remove("d-none");
 
-            // Actualizar Stepper: Paso 2 Activo
             if (step1Indicator && step2Indicator) {
-                const circle1 = step1Indicator.querySelector('div');
-                const circle2 = step2Indicator.querySelector('div');
+                const circle1 = step1Indicator.querySelector("div");
+                const circle2 = step2Indicator.querySelector("div");
                 if (circle1) {
-                    circle1.style.backgroundColor = '#FFFFFF';
-                    circle1.style.borderColor = '#2D4224';
-                    circle1.classList.remove('text-white');
-                    circle1.classList.add('text-success', 'border', 'border-2');
+                    circle1.style.backgroundColor = "#FFFFFF";
+                    circle1.style.borderColor = "#2D4224";
+                    circle1.classList.remove("text-white");
+                    circle1.classList.add("text-success", "border", "border-2");
                     circle1.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
                 }
                 if (circle2) {
-                    circle2.style.backgroundColor = '#2D4224';
-                    circle2.style.borderColor = '#2D4224';
-                    circle2.classList.remove('text-muted', 'bg-white', 'border');
-                    circle2.classList.add('text-white', 'fw-bold', 'shadow-sm');
+                    circle2.style.backgroundColor = "#2D4224";
+                    circle2.style.borderColor = "#2D4224";
+                    circle2.classList.remove("text-muted", "bg-white", "border");
+                    circle2.classList.add("text-white", "fw-bold", "shadow-sm");
                 }
             }
         }
 
-        function guardarLoteEnBorrador(card, pasoNum) {
-            try {
-                const borrador = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || '{}');
-                borrador.lote = {
-                    clave: card.getAttribute('data-lote-clave'),
-                    tipo: card.getAttribute('data-lote-tipo'),
-                    capacidad: parseInt(card.getAttribute('data-lote-capacidad'), 10),
-                    precio: parseFloat(card.getAttribute('data-lote-precio')),
-                    slot: card.getAttribute('data-slot')
-                };
-                borrador.paso = pasoNum;
-                sessionStorage.setItem(DRAFT_KEY, JSON.stringify(borrador));
-                window.dispatchEvent(new CustomEvent('sf:draft-updated', { detail: borrador }));
-            } catch (err) {
-                console.warn('Error al persistir lote en sessionStorage:', err);
-            }
+        // Precargar lotes si el usuario ya está autenticado (el acceso se valida en paso1Cliente)
+        const token = deps.storage?.getItem?.("sf_token")
+            ?? (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("sf_token") : null);
+        if (token && lotesApi) {
+            cargarLotesDisponibles();
         }
+
+        return {
+            recargar: cargarLotesDisponibles
+        };
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPaso2);
-    } else {
-        initPaso2();
-    }
-})();
+    return {
+        obtenerTipoLotePorGavetas,
+        extraerSlotDeClave,
+        mapearLoteParaBorrador,
+        init
+    };
+});
