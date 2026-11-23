@@ -291,6 +291,65 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
                         });
                 });
 
+            modelBuilder.Entity("SistemaFuneraria.Core.Entidades.ConfiguracionSucursal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Ciudad")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("ciudad");
+
+                    b.Property<string>("CodigoPostal")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("character varying(15)")
+                        .HasColumnName("codigo_postal");
+
+                    b.Property<string>("CorreoOperativo")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("correo_operativo");
+
+                    b.Property<string>("Direccion")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("direccion");
+
+                    b.Property<DateTimeOffset>("FechaActualizacion")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_actualizacion");
+
+                    b.Property<string>("NombreComercial")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nombre_comercial");
+
+                    b.Property<bool>("RecordatoriosPago")
+                        .HasColumnType("boolean")
+                        .HasColumnName("recordatorios_pago");
+
+                    b.Property<bool>("ResumenDiarioCaja")
+                        .HasColumnType("boolean")
+                        .HasColumnName("resumen_diario_caja");
+
+                    b.Property<string>("TelefonoAtencion")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("telefono_atencion");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("configuracion_sucursal", (string)null);
+                });
+
             modelBuilder.Entity("SistemaFuneraria.Core.Entidades.Financiamiento", b =>
                 {
                     b.Property<Guid>("Id")

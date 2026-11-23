@@ -6,7 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.Servicios.Clientes;
+using SistemaFuneraria.Application.Servicios.Cobranza;
+using SistemaFuneraria.Application.Servicios.Configuracion;
 using SistemaFuneraria.Application.Servicios.Contratos;
+using SistemaFuneraria.Application.Servicios.Dashboard;
 using SistemaFuneraria.Application.Servicios.Lotes;
 using SistemaFuneraria.Application.Servicios.Simulador;
 using SistemaFuneraria.Application.Servicios.Ventas;
@@ -53,12 +56,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ILoteService, LoteService>();
 builder.Services.AddScoped<ISimuladorService, SimuladorService>();
 builder.Services.AddScoped<IVentaService, VentaService>();
 builder.Services.AddScoped<ICarteraContratosService, CarteraContratosService>();
+builder.Services.AddScoped<ICobranzaService, CobranzaService>();
+builder.Services.AddScoped<IDashboardReportesService, DashboardReportesService>();
+builder.Services.AddScoped<IConfiguracionSucursalService, ConfiguracionSucursalService>();
 
 var allowedOriginsRaw = builder.Configuration["Cors:AllowedOrigins"];
 var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsRaw)
@@ -70,7 +77,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(corsPolicy, policy =>
     {
         policy.WithOrigins(allowedOrigins)
-              .WithHeaders("Authorization", "Content-Type")
+              .WithHeaders("Authorization", "Content-Type", "X-Idempotency-Key")
               .AllowAnyMethod();
     });
 });

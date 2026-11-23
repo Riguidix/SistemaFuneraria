@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Financiamiento> Financiamientos => Set<Financiamiento>();
     public DbSet<Mensualidad> Mensualidades => Set<Mensualidad>();
     public DbSet<Pago> Pagos => Set<Pago>();
+    public DbSet<ConfiguracionSucursal> ConfiguracionesSucursal => Set<ConfiguracionSucursal>();
 
     /// <summary>
     /// Inicia una transacción de base de datos explícita (omitida en proveedor InMemory).

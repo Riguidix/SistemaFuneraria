@@ -70,7 +70,7 @@
                 </div>
             </div>
             <div>
-                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                <div class="display-6 fw-bold text-dark sf-money mb-1" id="kpiConversion">
                     @Model.ConversionCotizacion.ToString("0.0")%
                 </div>
                 <div class="text-success small fw-semibold d-flex align-items-center">
@@ -92,7 +92,7 @@
                 </div>
             </div>
             <div>
-                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                <div class="display-6 fw-bold text-dark sf-money mb-1" id="kpiTicketPromedio">
                     $@Model.TicketPromedio.ToString("#,##0")
                 </div>
                 <div class="text-muted small fw-medium">
@@ -113,7 +113,7 @@
                 </div>
             </div>
             <div>
-                <div class="display-6 fw-bold text-dark sf-money mb-1">
+                <div class="display-6 fw-bold text-dark sf-money mb-1" id="kpiIndiceMorosidad">
                     @Model.IndiceMorosidad.ToString("0.0")%
                 </div>
                 <div class="text-success small fw-semibold d-flex align-items-center">
@@ -139,7 +139,7 @@
             </div>
 
             <!-- Lista de Barras de Progreso Horizontales -->
-            <div class="d-flex flex-column justify-content-around flex-grow-1">
+            <div class="d-flex flex-column justify-content-around flex-grow-1" id="contenedorVentasTipoLote">
                 @foreach (var item in Model.VentasPorTipoLote)
                 {
                     <div class="mb-3">
@@ -163,7 +163,7 @@
             <!-- Nota al pie informativa -->
             <div class="border-top border-light-subtle pt-3 mt-3 d-flex justify-content-between align-items-center small text-muted">
                 <span>Total ingresos registrados</span>
-                <span class="fw-bold text-dark sf-money">$@Model.VentasPorTipoLote.Sum(x => x.Monto).ToString("#,##0")</span>
+                <span class="fw-bold text-dark sf-money" id="totalIngresosReportes">$@Model.VentasPorTipoLote.Sum(x => x.Monto).ToString("#,##0")</span>
             </div>
         </div>
     </div>
@@ -180,11 +180,12 @@
             <!-- Gráfica de Dona Circular (81%) -->
             <div class="d-flex justify-content-center my-3">
                 <div class="sf-donut-meta position-relative rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                     id="donutMetaMensual"
                      style="width: 154px; height: 154px; background: conic-gradient(#2D4224 0% @(Model.PorcentajeCumplimientoMeta)%, #E5E0D8 @(Model.PorcentajeCumplimientoMeta)% 100%);">
                     <!-- Agujero interior blanco de la dona -->
                     <div class="bg-white rounded-circle d-flex flex-column align-items-center justify-content-center shadow-sm"
                          style="width: 106px; height: 106px;">
-                        <span class="display-5 fw-bold text-dark sf-money lh-1">@Model.PorcentajeCumplimientoMeta%</span>
+                        <span class="display-5 fw-bold text-dark sf-money lh-1" id="kpiMetaPorcentaje">@Model.PorcentajeCumplimientoMeta%</span>
                         <span class="small text-muted fw-semibold mt-1" style="font-size: 0.75rem;">de la meta</span>
                     </div>
                 </div>
@@ -194,11 +195,11 @@
             <div class="border-top border-light-subtle pt-3 mt-3">
                 <div class="d-flex justify-content-between align-items-center py-1">
                     <span class="text-muted small">Acumulado</span>
-                    <span class="fw-bold text-success sf-money fs-6">$@Model.AcumuladoMes.ToString("#,##0")</span>
+                    <span class="fw-bold text-success sf-money fs-6" id="kpiMetaAcumulado">$@Model.AcumuladoMes.ToString("#,##0")</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center py-1">
                     <span class="text-muted small">Objetivo mensual</span>
-                    <span class="fw-bold text-dark sf-money fs-6">$@Model.ObjetivoMensual.ToString("#,##0")</span>
+                    <span class="fw-bold text-dark sf-money fs-6" id="kpiMetaObjetivo">$@Model.ObjetivoMensual.ToString("#,##0")</span>
                 </div>
             </div>
         </div>
@@ -215,3 +216,8 @@
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
     }
 </style>
+
+@section Scripts {
+    <script src="~/js/api/reportesApi.js" asp-append-version="true"></script>
+    <script src="~/js/pages/reportesPage.js" asp-append-version="true"></script>
+}
