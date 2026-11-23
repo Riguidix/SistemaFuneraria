@@ -10,7 +10,8 @@
                 <button type="button" class="btn-close ms-auto mt-1" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body py-3">
-                <form id="formNuevoCliente" onsubmit="event.preventDefault();">
+                <form id="formNuevoCliente" novalidate>
+                    <div id="modalNuevoClienteError" class="alert alert-danger d-none rounded-3 small py-2 px-3 mb-3" role="alert"></div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label for="modalClienteNombre" class="form-label funeraria-form-label">Nombre(s)</label>
@@ -43,7 +44,8 @@
                                    class="form-control funeraria-input" 
                                    placeholder="55 0000 0000" 
                                    autocomplete="tel" 
-                                   maxlength="15" />
+                                   maxlength="15" 
+                                   required />
                         </div>
                         <div class="col-md-6">
                             <label for="modalClienteCurp" class="form-label funeraria-form-label">CURP</label>
@@ -53,7 +55,8 @@
                                    class="form-control funeraria-input text-uppercase" 
                                    placeholder="18 caracteres" 
                                    maxlength="18" 
-                                   style="text-transform: uppercase;" />
+                                   style="text-transform: uppercase;" 
+                                   required />
                         </div>
                     </div>
 
@@ -64,13 +67,25 @@
                                name="Email" 
                                class="form-control funeraria-input" 
                                placeholder="correo@email.mx" 
-                               autocomplete="email" />
+                               autocomplete="email" 
+                               required />
+                    </div>
+
+                    <div class="mb-2">
+                        <label for="modalClienteDireccion" class="form-label funeraria-form-label">Dirección</label>
+                        <input type="text"
+                               id="modalClienteDireccion"
+                               name="Direccion"
+                               class="form-control funeraria-input"
+                               placeholder="Ej. Av. Juárez 120, Col. Centro"
+                               autocomplete="street-address"
+                               required />
                     </div>
                 </form>
             </div>
             <div class="modal-footer border-0 pt-1 pb-2 px-3 d-flex justify-content-end gap-2">
                 <button type="button" class="btn btn-funeraria-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-funeraria-primary" id="btnGuardarClienteModal">Guardar cliente</button>
+                <button type="submit" form="formNuevoCliente" class="btn btn-funeraria-primary" id="btnGuardarClienteModal">Guardar cliente</button>
             </div>
         </div>
     </div>

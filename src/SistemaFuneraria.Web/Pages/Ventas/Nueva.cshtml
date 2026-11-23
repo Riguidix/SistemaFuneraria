@@ -1,0 +1,190 @@
+@page
+@model SistemaFuneraria.Web.Pages.Ventas.NuevaModel
+@{
+    ViewData["Title"] = "Nueva Venta";
+}
+
+<!-- ========================================================
+     ENCABEZADO COMERCIAL (FIGMA CAPTURAS 5–8 · SF-051)
+     ======================================================== -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+        <div class="text-uppercase fw-semibold small text-muted mb-1" style="letter-spacing: 0.08em; font-size: 0.75rem;">
+            @Model.Kicker
+        </div>
+        <h1 class="h2 fw-bold text-dark mb-1">
+            @Model.Titulo
+        </h1>
+        <p class="text-muted mb-0 small">
+            @Model.Subtitulo
+        </p>
+    </div>
+    <div>
+        <span class="badge rounded-pill bg-white text-muted border px-3 py-2 fw-normal shadow-sm" id="draftBadge">
+            <i class="fa-solid fa-check me-1 text-success" aria-hidden="true"></i> Borrador guardado
+        </span>
+    </div>
+</div>
+
+<!-- ========================================================
+     LAYOUT PRINCIPAL DE 2 COLUMNAS (ROW G-4)
+     ======================================================== -->
+<div class="row g-4 mb-4">
+    <!-- COLUMNA IZQUIERDA: STEPPER Y CONTENEDOR MODULAR (COL-LG-8) -->
+    <div class="col-12 col-lg-8">
+        <!-- STEPPER HORIZONTAL DE 4 PASOS -->
+        <nav aria-label="Progreso de venta" class="mb-4">
+            <div class="d-flex align-items-center justify-content-between position-relative px-2">
+                <!-- Paso 1: Cliente (ACTIVO) -->
+                <div class="d-flex align-items-center gap-2 position-relative" style="z-index: 2;" id="stepIndicator1">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                         style="width: 32px; height: 32px; min-width: 32px; background-color: #2D4224; font-size: 0.85rem;">
+                        1
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark small lh-1">Cliente</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Datos del titular</div>
+                    </div>
+                </div>
+
+                <!-- Línea conector 1-2 -->
+                <div class="flex-grow-1 border-bottom border-2 mx-2" style="border-color: #E5E7EB !important;"></div>
+
+                <!-- Paso 2: Lote (INERTE) -->
+                <div class="d-flex align-items-center gap-2 position-relative" style="z-index: 2;" id="stepIndicator2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-muted fw-semibold bg-white border"
+                         style="width: 32px; height: 32px; min-width: 32px; font-size: 0.85rem; border-color: #D1D5DB !important;">
+                        2
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-secondary small lh-1">Lote</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Selección</div>
+                    </div>
+                </div>
+
+                <!-- Línea conector 2-3 -->
+                <div class="flex-grow-1 border-bottom border-2 mx-2" style="border-color: #E5E7EB !important;"></div>
+
+                <!-- Paso 3: Financiamiento (INERTE) -->
+                <div class="d-flex align-items-center gap-2 position-relative" style="z-index: 2;" id="stepIndicator3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-muted fw-semibold bg-white border"
+                         style="width: 32px; height: 32px; min-width: 32px; font-size: 0.85rem; border-color: #D1D5DB !important;">
+                        3
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-secondary small lh-1">Financiamiento</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Plan de pago</div>
+                    </div>
+                </div>
+
+                <!-- Línea conector 3-4 -->
+                <div class="flex-grow-1 border-bottom border-2 mx-2" style="border-color: #E5E7EB !important;"></div>
+
+                <!-- Paso 4: Confirmación (INERTE) -->
+                <div class="d-flex align-items-center gap-2 position-relative" style="z-index: 2;" id="stepIndicator4">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-muted fw-semibold bg-white border"
+                         style="width: 32px; height: 32px; min-width: 32px; font-size: 0.85rem; border-color: #D1D5DB !important;">
+                        4
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-secondary small lh-1">Confirmación</div>
+                        <div class="text-muted small" style="font-size: 0.75rem;">Resumen</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- CONTENEDOR MODULAR DEL PASO -->
+        <div id="wizardStepContainer" class="mb-4">
+            <partial name="Partials/_Paso1Cliente" model="Model" />
+            <partial name="Partials/_Paso2Lote" model="Model" />
+            <partial name="Partials/_Paso3Financiamiento" model="Model" />
+            <partial name="Partials/_Paso4Confirmacion" model="Model" />
+        </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: PANEL FIJO "RESUMEN DE COTIZACIÓN" (COL-LG-4) -->
+    <div class="col-12 col-lg-4">
+        <aside class="bg-white rounded-4 shadow-sm border p-4 sticky-top" style="top: 24px;" aria-label="Resumen de cotización">
+            <div class="mb-3">
+                <div class="small text-muted fw-bold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">
+                    RESUMEN DE COTIZACIÓN
+                </div>
+                <h2 class="h4 fw-bold text-dark mt-1 mb-0" id="resumenLoteTitulo">
+                    @Model.LoteTipo
+                </h2>
+            </div>
+
+            <!-- SELECTOR GRÁFICO DE CUADRÍCULA DE GAVETAS (GRID 2X4) -->
+            <div class="p-3 rounded-3 mb-4 border" style="background-color: #F9FAFB;">
+                <!-- Fila 1 -->
+                <div class="d-grid gap-2 mb-2" style="grid-template-columns: repeat(4, 1fr);">
+                    <button type="button" class="btn btn-sm bg-white border rounded-2 py-2 fw-medium text-secondary sf-slot-cell" data-slot="A">A</button>
+                    <button type="button" class="btn btn-sm bg-white border rounded-2 py-2 fw-medium text-secondary sf-slot-cell" data-slot="B">B</button>
+                    <button type="button" class="btn btn-sm text-white border-0 rounded-2 py-2 fw-bold shadow-sm sf-slot-cell"
+                            data-slot="42"
+                            style="background-color: #2D4224;">
+                        42
+                    </button>
+                    <button type="button" class="btn btn-sm bg-white border rounded-2 py-2 fw-medium text-secondary sf-slot-cell" data-slot="43">43</button>
+                </div>
+                <!-- Fila 2 -->
+                <div class="d-grid gap-2" style="grid-template-columns: repeat(4, 1fr);">
+                    <button type="button" class="btn btn-sm bg-white border rounded-2 py-2 fw-medium text-secondary sf-slot-cell" data-slot="C">C</button>
+                    <button type="button" class="btn btn-sm bg-white border rounded-2 py-2 fw-medium text-secondary sf-slot-cell" data-slot="44">44</button>
+                    <button type="button" class="btn btn-sm bg-white border rounded-2 py-2 fw-medium text-secondary sf-slot-cell" data-slot="45">45</button>
+                    <button type="button" class="btn btn-sm bg-white border rounded-2 py-2 fw-medium text-secondary sf-slot-cell" data-slot="46">46</button>
+                </div>
+            </div>
+
+            <!-- FILAS DE METADATOS DE LA COTIZACIÓN -->
+            <div class="d-flex flex-column gap-2 mb-4">
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light-subtle">
+                    <span class="text-muted small">Clave</span>
+                    <span class="fw-bold sf-monospace text-dark" id="resumenLoteClave">@Model.LoteClave</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light-subtle">
+                    <span class="text-muted small">Capacidad</span>
+                    <span class="text-dark fw-medium small" id="resumenLoteCapacidad">@Model.CapacidadGavetas gavetas</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span class="text-muted small">Precio de lista</span>
+                    <span class="text-dark fw-bold sf-money" id="resumenLotePrecio">$@Model.PrecioLista.ToString("#,##0.00")</span>
+                </div>
+            </div>
+
+            <!-- TARJETA INFERIOR DE TOTAL ESTIMADO -->
+            <div class="rounded-3 p-3 border" style="background-color: #FAF8F5; border-color: #F0EDE6 !important;">
+                <div class="small text-muted fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.04em;">
+                    TOTAL ESTIMADO
+                </div>
+                <div class="display-6 fw-bold text-dark sf-money my-1" id="resumenTotalEstimado">
+                    $@Model.TotalEstimado.ToString("#,##0.00")
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem;">
+                    Importes expresados en MXN
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<style>
+    .sf-slot-cell:hover:not([style*="background-color: rgb(45, 66, 36)"]):not([style*="#2D4224"]) {
+        background-color: #F3F4F6 !important;
+        border-color: #D1D5DB !important;
+    }
+    .sf-checkbox-olive:checked {
+        background-color: #2D4224;
+        border-color: #2D4224;
+    }
+</style>
+
+@section Scripts {
+    <script src="~/js/api/simuladorApi.js" asp-append-version="true"></script>
+    <script src="~/js/ventas/wizardState.js" asp-append-version="true"></script>
+    <script src="~/js/ventas/paso1Cliente.js" asp-append-version="true"></script>
+    <script src="~/js/ventas/paso2Lote.js" asp-append-version="true"></script>
+    <script src="~/js/ventas/paso3Financiamiento.js" asp-append-version="true"></script>
+    <script src="~/js/ventas/paso4Confirmacion.js" asp-append-version="true"></script>
+}

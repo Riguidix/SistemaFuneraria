@@ -1,0 +1,261 @@
+@page
+@model SistemaFuneraria.Web.Pages.Cobranza.IndexModel
+@{
+    ViewData["Title"] = "Caja y Cobranza - Funeraria";
+}
+
+<!-- Encabezado de la Vista de Cobranza -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+    <div>
+        <span class="funeraria-page-kicker">COBRANZA Y CAJA</span>
+        <h1 class="funeraria-page-title">Caja y cobranza</h1>
+        <p class="funeraria-page-subtitle">Recepción de pagos ordinarios, emisión de comprobantes foliados y control de corte diario.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" 
+                class="btn btn-funeraria-primary d-inline-flex align-items-center gap-2 px-3 py-2" 
+                data-bs-toggle="modal" 
+                data-bs-target="#modalRegistrarPago"
+                style="background-color: #2D4224 !important; border-color: #2D4224 !important; color: #FFFFFF !important;">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Registrar pago de cuota</span>
+        </button>
+    </div>
+</div>
+
+<!-- Tarjetas KPI de Cobranza -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+            <span class="text-muted small fw-semibold text-uppercase">Cobranza del día</span>
+            <div class="d-flex align-items-baseline gap-2 mt-2">
+                <span class="fs-2 fw-bold text-dark">$43,550.80</span>
+                <span class="badge bg-success-subtle text-success rounded-pill small">+5 recibos</span>
+            </div>
+            <div class="small text-muted mt-1">Corte de caja abierto hoy 09:00 hrs</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+            <span class="text-muted small fw-semibold text-uppercase">Cuotas pendientes</span>
+            <div class="d-flex align-items-baseline gap-2 mt-2">
+                <span class="fs-2 fw-bold text-dark">8 cuotas</span>
+                <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill small">$69,681.28</span>
+            </div>
+            <div class="small text-muted mt-1">1 cuota en mora / pago vencido</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+            <span class="text-muted small fw-semibold text-uppercase">Próximo folio oficial</span>
+            <div class="d-flex align-items-baseline gap-2 mt-2">
+                <span class="fs-2 fw-bold" style="color: #2D4224;">REC-2026-0043</span>
+            </div>
+            <div class="small text-muted mt-1">Sucursal Jardines del Valle · Ventanilla 1</div>
+        </div>
+    </div>
+</div>
+
+<!-- Alerta de Confirmación de Pago Dinámica -->
+<div id="alertaPagoExitoso" class="alert alert-success d-none align-items-center justify-content-between rounded-4 shadow-sm mb-4 border-0" role="alert" style="background-color: #E8F5E9; color: #1B5E20;">
+    <div class="d-flex align-items-center gap-2">
+        <i class="fa-solid fa-circle-check fs-4 text-success"></i>
+        <div>
+            <strong id="textoPagoExitoso">¡Pago registrado exitosamente!</strong>
+            <div class="small text-muted" id="subtextoPagoExitoso">Se ha emitido el comprobante foliado y actualizado el saldo de la cuota.</div>
+        </div>
+    </div>
+    <button type="button" class="btn-close" onclick="document.getElementById('alertaPagoExitoso').classList.add('d-none');"></button>
+</div>
+
+<!-- Tabla de Cuotas y Cobranza en Ventanilla -->
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+    <div class="p-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 bg-light bg-opacity-50">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-list-check text-muted"></i>
+            <span class="fw-bold text-dark small text-uppercase">Cuotas pendientes por cobrar</span>
+        </div>
+        <div class="text-muted small">Haz clic en <strong>Cobrar</strong> para abrir el formulario con los datos cargados</div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table align-middle mb-0 funeraria-table" id="tablaCobranza">
+            <thead>
+                <tr>
+                    <th class="ps-4">CONTRATO</th>
+                    <th>TITULAR</th>
+                    <th>CUOTA</th>
+                    <th class="text-end">MONTO</th>
+                    <th>VENCIMIENTO</th>
+                    <th>ESTADO</th>
+                    <th class="text-end pe-4">ACCIÓN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 1. Laura Castañeda -->
+                <tr>
+                    <td class="ps-4 fw-bold text-dark">CT-2025-089</td>
+                    <td>
+                        <div class="fw-semibold text-dark">Laura Castañeda</div>
+                        <div class="text-muted small">JN-A-042 · Jardín Norte</div>
+                    </td>
+                    <td>Cuota 1 de 24</td>
+                    <td class="text-end fw-bold formato-moneda">$8,710.16</td>
+                    <td>18 nov. 2025</td>
+                    <td>
+                        <span class="badge badge-estado badge-al-corriente">Al corriente</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 btn-abrir-cobro"
+                                data-folio="CT-2025-089"
+                                data-cliente="Laura Castañeda"
+                                data-cuota="Cuota 1 de 24 ($8,710.16)"
+                                data-monto="$8,710.16">
+                            <i class="fa-solid fa-receipt me-1"></i> Cobrar
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- 2. Roberto Méndez -->
+                <tr>
+                    <td class="ps-4 fw-bold text-dark">CT-2024-112</td>
+                    <td>
+                        <div class="fw-semibold text-dark">Roberto Méndez</div>
+                        <div class="text-muted small">JC-C-118 · Jardín Central</div>
+                    </td>
+                    <td>Cuota 3 de 18</td>
+                    <td class="text-end fw-bold formato-moneda">$7,523.51</td>
+                    <td>18 nov. 2025</td>
+                    <td>
+                        <span class="badge badge-estado badge-al-corriente">Al corriente</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 btn-abrir-cobro"
+                                data-folio="CT-2024-112"
+                                data-cliente="Roberto Méndez"
+                                data-cuota="Cuota 3 de 18 ($7,523.51)"
+                                data-monto="$7,523.51">
+                            <i class="fa-solid fa-receipt me-1"></i> Cobrar
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- 3. Elena Vargas (Pago vencido) -->
+                <tr class="table-danger table-opacity-10">
+                    <td class="ps-4 fw-bold text-dark">CT-2023-045</td>
+                    <td>
+                        <div class="fw-semibold text-dark">Elena Vargas</div>
+                        <div class="text-muted small">RO-B-027 · Robles</div>
+                    </td>
+                    <td>Cuota 6 de 12</td>
+                    <td class="text-end fw-bold formato-moneda text-danger">$11,245.00</td>
+                    <td>02 oct. 2025</td>
+                    <td>
+                        <span class="badge bg-danger-subtle text-danger rounded-pill">Pago vencido</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <button type="button" 
+                                class="btn btn-sm btn-danger rounded-pill px-3 py-1 btn-abrir-cobro"
+                                data-folio="CT-2023-045"
+                                data-cliente="Elena Vargas"
+                                data-cuota="Cuota 6 de 12 ($11,245.00)"
+                                data-monto="$11,245.00">
+                            <i class="fa-solid fa-hand-holding-dollar me-1"></i> Regularizar
+                        </button>
+                    </td>
+                </tr>
+
+                <!-- 4. Jorge Salinas -->
+                <tr>
+                    <td class="ps-4 fw-bold text-dark">CT-2025-014</td>
+                    <td>
+                        <div class="fw-semibold text-dark">Jorge Salinas</div>
+                        <div class="text-muted small">JN-D-065 · Jardín Norte</div>
+                    </td>
+                    <td>Cuota 2 de 48</td>
+                    <td class="text-end fw-bold formato-moneda">$4,890.30</td>
+                    <td>17 nov. 2025</td>
+                    <td>
+                        <span class="badge badge-estado badge-al-corriente">Al corriente</span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 btn-abrir-cobro"
+                                data-folio="CT-2025-014"
+                                data-cliente="Jorge Salinas"
+                                data-cuota="Cuota 2 de 48 ($4,890.30)"
+                                data-monto="$4,890.30">
+                            <i class="fa-solid fa-receipt me-1"></i> Cobrar
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Inclusión Modular del Modal de Cobranza (Ticket 036) -->
+<partial name="_RegistrarPagoModal" />
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Manejador para precargar datos en el modal al dar clic en cualquier botón "Cobrar"
+            document.querySelectorAll('.btn-abrir-cobro').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const folio = this.getAttribute('data-folio');
+                    const cliente = this.getAttribute('data-cliente');
+                    const cuota = this.getAttribute('data-cuota');
+
+                    const inputFolio = document.getElementById('pagoFolioContrato');
+                    const inputCliente = document.getElementById('pagoClienteTitular');
+                    const inputCuota = document.getElementById('pagoCuotaLiquidar');
+
+                    if (inputFolio) inputFolio.value = folio;
+                    if (inputCliente) inputCliente.value = cliente;
+                    if (inputCuota) inputCuota.value = cuota;
+
+                    // Abrir modal mediante Bootstrap 5 API
+                    const modalEl = document.getElementById('modalRegistrarPago');
+                    if (modalEl) {
+                        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modalInstance.show();
+                    }
+                });
+            });
+
+            // Acción del botón "Confirmar pago" en el modal
+            const btnConfirmar = document.getElementById('btnConfirmarPagoModal');
+            if (btnConfirmar) {
+                btnConfirmar.addEventListener('click', function () {
+                    const inputCliente = document.getElementById('pagoClienteTitular');
+                    const clienteNombre = inputCliente ? inputCliente.value : 'Cliente';
+                    const metodo = document.getElementById('pagoMetodoPago')?.value || 'efectivo';
+
+                    // Cerrar el modal
+                    const modalEl = document.getElementById('modalRegistrarPago');
+                    if (modalEl) {
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) modalInstance.hide();
+                    }
+
+                    // Mostrar alerta de éxito
+                    const alerta = document.getElementById('alertaPagoExitoso');
+                    const texto = document.getElementById('textoPagoExitoso');
+                    const subtexto = document.getElementById('subtextoPagoExitoso');
+
+                    if (alerta && texto) {
+                        texto.textContent = `¡Pago de cuota de ${clienteNombre} registrado con éxito!`;
+                        if (subtexto) {
+                            subtexto.textContent = `Folio emitido: REC-2026-0043 · Método: ${metodo.toUpperCase()} · Comprobante listo para imprimir.`;
+                        }
+                        alerta.classList.remove('d-none');
+                        alerta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+        });
+    </script>
+}

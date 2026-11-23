@@ -44,4 +44,46 @@ public class ClientesPageTests
         File.ReadAllText(modalPath).Should().Contain("modalNuevoCliente");
         File.ReadAllText(vistaPath).Should().Contain("<partial name=\"_NuevoClienteModal\" />");
     }
+
+    [Fact(DisplayName = "PR1: Clientes/Index debe consumir clientesApi.js y clientesPage.js sin filas mock")]
+    public void Clientes_VistaRazor_DebeCargarScriptsRealesYDrawerSinMock()
+    {
+        var raiz = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var vistaPath = Path.Combine(raiz, "src", "SistemaFuneraria.Web", "Pages", "Clientes", "Index.cshtml");
+
+        var html = File.ReadAllText(vistaPath);
+        html.Should().Contain("~/js/api/clientesApi.js");
+        html.Should().Contain("~/js/pages/clientesPage.js");
+        html.Should().Contain("drawerExpedienteCliente");
+        html.Should().Contain("clientesAccesoRestringido");
+        html.Should().Contain("filaErrorClientes");
+        html.Should().Contain("data-roles=\"Administrador\"");
+        html.Should().NotContain("Laura Castañeda");
+        html.Should().NotContain("CAL951118MDFRR01");
+    }
+
+    [Fact(DisplayName = "PR1: _NuevoClienteModal debe incluir campo Direccion y alerta de error")]
+    public void NuevoClienteModal_DebeIncluirDireccionYContenedorError()
+    {
+        var raiz = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var modalPath = Path.Combine(raiz, "src", "SistemaFuneraria.Web", "Pages", "Shared", "_NuevoClienteModal.cshtml");
+
+        var html = File.ReadAllText(modalPath);
+        html.Should().Contain("modalClienteDireccion");
+        html.Should().Contain("modalNuevoClienteError");
+    }
+
+    [Fact(DisplayName = "PR1: clientesPage.js debe existir con soporte UMD e integración clientesApi/authApi")]
+    public void ClientesPageJs_DebeExistirConUmdYReferenciasApi()
+    {
+        var raiz = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var jsPath = Path.Combine(raiz, "src", "SistemaFuneraria.Web", "wwwroot", "js", "pages", "clientesPage.js");
+
+        File.Exists(jsPath).Should().BeTrue();
+        var js = File.ReadAllText(jsPath);
+        js.Should().Contain("module.exports");
+        js.Should().Contain("root.clientesPage");
+        js.Should().Contain("clientesApi");
+        js.Should().Contain("authApi");
+    }
 }
