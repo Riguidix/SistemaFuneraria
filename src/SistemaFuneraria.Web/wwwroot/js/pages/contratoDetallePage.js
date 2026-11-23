@@ -80,6 +80,7 @@
         const authApi = deps.authApi ?? win?.authApi;
         const apiClient = deps.apiClient ?? win?.apiClient;
         const ventasApi = deps.ventasApi ?? win?.ventasApi;
+        const contratosApi = deps.contratosApi ?? win?.contratosApi;
         const bootstrapObj = deps.bootstrap ?? win?.bootstrap;
         const sfUi = deps.SfUi ?? win?.SfUi;
 
@@ -106,6 +107,8 @@
         const btnIrACaja = doc.getElementById("btnIrACajaContrato");
 
         const seccionAmortizacion = doc.getElementById("seccionTablaAmortizacion");
+        const badgeConteoAmortizacion = doc.getElementById("badgeConteoAmortizacion");
+        const tbodyAmortizacion = doc.getElementById("tbodyAmortizacion");
         const comprobanteCard = doc.getElementById("comprobanteContadoCard");
         const compFolioContrato = doc.getElementById("comprobanteFolioContrato");
         const compFolioPago = doc.getElementById("comprobanteFolioPago");
@@ -121,6 +124,9 @@
 
         const params = new URLSearchParams(win?.location?.search || "");
         const ventaIdParam = (params.get("id") || "").trim();
+        const folioParam = (params.get("folio") || "").trim();
+        const identificadorParam = ventaIdParam || folioParam;
+        let contratoVentaId = ventaIdParam;
 
         function mostrarAlertaModal(msg) {
             if (!alertaModal) return;
@@ -141,8 +147,23 @@
             badgeEstado.className = badge.clase;
         }
 
+        function badgeCuotaHtml(estado) {
+            const norm = String(estado || "").toLowerCase();
+            if (norm === "pagada") {
+                return '<span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 small">Pagada</span>';
+            }
+            if (norm === "vencida") {
+                return '<span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1 small">Vencida</span>';
+            }
+            return '<span class="badge bg-light text-muted border rounded-pill px-2 py-1 small">Pendiente</span>';
+        }
+
         function poblarDesdeApi(dto) {
             if (!dto) return;
+            if (dto.ventaId) {
+                contratoVentaId = String(dto.ventaId);
+            }
+
             const precioStr = formatearMonedaMXN(dto.precioPactado);
             const esContado = String(dto.modalidad || "").toLowerCase() === "contado";
 
@@ -150,14 +171,12 @@
             if (modalFolio) modalFolio.textContent = dto.folioContrato || "-";
             if (elTitular) elTitular.textContent = dto.clienteNombre || "-";
             if (elLote) elLote.textContent = dto.loteClave || "-";
-            actualizarBadgeEstado(dto.estado);
+            actualizarBadgeEstado(dto.estadoVisual || dto.estado);
 
             if (elPrecio) elPrecio.textContent = precioStr;
-            if (elSubPrecio) {
-                elSubPrecio.textContent = esContado ? "Modalidad Contado (100%)" : "Precio pactado";
-            }
 
             if (esContado) {
+                if (elSubPrecio) elSubPrecio.textContent = "Modalidad Contado (100%)";
                 if (elSaldo) elSaldo.textContent = "$0.00";
                 if (elMensualidad) elMensualidad.textContent = precioStr;
                 if (elSubMensualidad) elSubMensualidad.textContent = "Pago único liquidado";
@@ -170,11 +189,59 @@
                 if (compFolioPago) compFolioPago.textContent = dto.folioPago || "-";
                 if (compFecha) compFecha.textContent = formatearFecha(dto.fechaVenta);
                 if (compPrecio) compPrecio.textContent = precioStr;
+            } else {
+                const fin = dto.financiamiento || {};
+                const cuotas = Array.isArray(dto.amortizacion) ? dto.amortizacion : [];
+                const pctEng = Number(fin.porcentajeEnganche ?? 0);
+                const tasaPct = Number(fin.tasaInteresAnual ?? 0) * 100;
+                const proxima = cuotas.find(function (c) {
+                    const st = String(c.estado || "").toLowerCase();
+                    return st === "vencida" || st === "pendiente";
+                });
+
+                if (elSubPrecio) {
+                    elSubPrecio.textContent = `Enganche: ${formatearMonedaMXN(fin.montoEnganche)} (${pctEng.toFixed(0)}%)`;
+                }
+                if (elSaldo) elSaldo.textContent = formatearMonedaMXN(fin.saldoInsoluto ?? 0);
+                if (elMensualidad) elMensualidad.textContent = formatearMonedaMXN(fin.cuotaMensualActual ?? 0);
+                if (elSubMensualidad) {
+                    elSubMensualidad.textContent = proxima
+                        ? `Próximo vencimiento: ${formatearFecha(proxima.fechaVencimiento)}`
+                        : "Calendario liquidado";
+                }
+                if (elPlazo) elPlazo.textContent = `${fin.plazoMeses || cuotas.length || "-"} meses`;
+                if (elSubTasa) elSubTasa.textContent = `Tasa anual fija: ${tasaPct.toFixed(0)}%`;
+
+                const esCerrado = ["liquidado", "cancelado"].includes(String(dto.estado || "").toLowerCase());
+                if (btnIrACaja) {
+                    btnIrACaja.setAttribute("href", `/Caja?contrato=${encodeURIComponent(dto.folioContrato || "")}`);
+                    btnIrACaja.classList.toggle("d-none", esCerrado);
+                }
+                if (comprobanteCard) comprobanteCard.classList.add("d-none");
+                if (seccionAmortizacion) seccionAmortizacion.classList.remove("d-none");
+                if (badgeConteoAmortizacion) {
+                    badgeConteoAmortizacion.innerHTML = `<i class="fa-solid fa-file-invoice-dollar me-1 text-success" aria-hidden="true"></i> ${cuotas.length} Cuotas calculadas`;
+                }
+                if (tbodyAmortizacion && cuotas.length > 0) {
+                    tbodyAmortizacion.innerHTML = cuotas.map(function (c) {
+                        const saldoClass = Number(c.saldoFinal) === 0 ? "text-success" : "text-dark";
+                        return `<tr>` +
+                            `<td class="ps-3 fw-bold text-muted">${c.numeroCuota}</td>` +
+                            `<td class="text-dark">${formatearFecha(c.fechaVencimiento)}</td>` +
+                            `<td class="text-end text-muted">${formatearMonedaMXN(c.saldoInicial)}</td>` +
+                            `<td class="text-end text-dark">${formatearMonedaMXN(c.capital)}</td>` +
+                            `<td class="text-end text-muted">${formatearMonedaMXN(c.interes)}</td>` +
+                            `<td class="text-end fw-bold text-dark">${formatearMonedaMXN(c.cuotaTotal)}</td>` +
+                            `<td class="text-end fw-medium ${saldoClass}">${formatearMonedaMXN(c.saldoFinal)}</td>` +
+                            `<td class="text-center pe-3">${badgeCuotaHtml(c.estado)}</td>` +
+                            `</tr>`;
+                    }).join("");
+                }
             }
         }
 
         async function cargarPorId() {
-            if (!ventaIdParam || !ventasApi) return;
+            if (!identificadorParam || (!contratosApi && !ventasApi)) return;
 
             if (authApi && apiClient) {
                 const storage = deps.storage ?? (typeof sessionStorage !== "undefined" ? sessionStorage : null);
@@ -187,7 +254,9 @@
             }
 
             try {
-                const dto = await ventasApi.obtenerVentaPorId(ventaIdParam);
+                const dto = contratosApi
+                    ? await contratosApi.obtenerDetalleContrato(identificadorParam)
+                    : await ventasApi.obtenerVentaPorId(ventaIdParam);
                 poblarDesdeApi(dto);
             } catch (err) {
                 if (err?.status === 404) {
@@ -222,7 +291,7 @@
                     return;
                 }
 
-                if (!ventaIdParam || !ventasApi) {
+                if (!contratoVentaId || !ventasApi) {
                     actualizarBadgeEstado(nuevoEstado);
                     if (modalEl && bootstrapObj?.Modal) {
                         bootstrapObj.Modal.getOrCreateInstance(modalEl).hide();
@@ -236,9 +305,9 @@
 
                 try {
                     if (nuevoEstado === "Cancelado") {
-                        await ventasApi.cancelarVenta(ventaIdParam, motivo);
+                        await ventasApi.cancelarVenta(contratoVentaId, motivo);
                     } else {
-                        await ventasApi.cambiarEstadoVenta(ventaIdParam, nuevoEstado, motivo);
+                        await ventasApi.cambiarEstadoVenta(contratoVentaId, nuevoEstado, motivo);
                     }
 
                     actualizarBadgeEstado(nuevoEstado);

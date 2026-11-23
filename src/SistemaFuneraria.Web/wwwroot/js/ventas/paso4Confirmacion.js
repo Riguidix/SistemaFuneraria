@@ -48,6 +48,16 @@
         };
     }
 
+    function construirPayloadVentaFinanciada(draft) {
+        const fin = draft?.financiamiento || {};
+        return {
+            clienteId: draft?.cliente?.id || "",
+            loteId: draft?.lote?.id || "",
+            porcentajeEnganche: Number(fin.enganchePorcentaje ?? 20),
+            plazoMeses: Number(fin.plazoMeses ?? 24)
+        };
+    }
+
     function init(deps = {}) {
         const doc = deps.document ?? (typeof document !== "undefined" ? document : null);
         const win = deps.window ?? (typeof window !== "undefined" ? window : null);
@@ -296,34 +306,36 @@
                     return;
                 }
 
-                if (modalidad.toLowerCase() !== "contado") {
-                    mostrarError("El registro de ventas a crédito estará disponible en el Milestone v0.7.0 (SF-067). Para completar una venta hoy, elige modalidad Contado en el Paso 3.");
-                    return;
-                }
-
                 if (!ventasApi) {
                     mostrarError("No se encontró el cliente de API de ventas (ventasApi.js).");
                     return;
                 }
 
-                const payload = construirPayloadVentaContado(
-                    draft,
-                    selectMetodoPago ? selectMetodoPago.value : "Efectivo",
-                    txtReferenciaPago ? txtReferenciaPago.value : ""
-                );
+                const esContado = modalidad.toLowerCase() === "contado";
+                const payload = esContado
+                    ? construirPayloadVentaContado(
+                        draft,
+                        selectMetodoPago ? selectMetodoPago.value : "Efectivo",
+                        txtReferenciaPago ? txtReferenciaPago.value : ""
+                    )
+                    : construirPayloadVentaFinanciada(draft);
 
                 btnGenerar.disabled = true;
                 btnGenerar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Generando contrato...';
 
                 try {
-                    const res = await ventasApi.registrarVentaContado(payload);
+                    const res = esContado
+                        ? await ventasApi.registrarVentaContado(payload)
+                        : await ventasApi.registrarVentaFinanciada(payload);
 
                     btnGenerar.innerHTML = '<i class="fa-solid fa-check me-2" aria-hidden="true"></i> Contrato generado';
                     btnGenerar.style.backgroundColor = "#1e2e18";
 
                     const destinoDetalle = `/Contratos/Detalle?id=${encodeURIComponent(res.ventaId)}`;
                     if (lblFolioGenerado) {
-                        lblFolioGenerado.textContent = `Folio asignado: ${res.folioContrato} · Comprobante: ${res.folioPago || "-"}`;
+                        lblFolioGenerado.textContent = esContado
+                            ? `Folio asignado: ${res.folioContrato} · Comprobante: ${res.folioPago || "-"}`
+                            : `Folio asignado: ${res.folioContrato} · ${res.plazoMeses || res.totalMensualidades || "-"} mensualidades generadas`;
                     }
                     if (lnkVerContrato) {
                         lnkVerContrato.setAttribute("href", destinoDetalle);
@@ -355,7 +367,7 @@
                 } catch (err) {
                     const esConflicto = err?.status === 409;
                     mostrarError(
-                        err?.message || "No fue posible generar el contrato de contado.",
+                        err?.message || "No fue posible generar el contrato.",
                         esConflicto
                     );
                     btnGenerar.disabled = false;
@@ -372,6 +384,7 @@
 
     return {
         construirPayloadVentaContado,
+        construirPayloadVentaFinanciada,
         init
     };
 });
