@@ -1,55 +1,13 @@
-# Evidencia TDD: Fase VERDE (GREEN)
+# Evidencia Green Test — SF-094: Vencimientos sin Mora (CP-09), Dashboard, Reportes y Configuración (CODE FREEZE)
 
-| Campo | Detalle |
-|---|---|
-| **Ticket de Trabajo** | SF-094 |
-| **Título del Ticket** | Suite QA HTTP CP-09 (Vencimiento sin Mora $0.00 con FakeTimeProvider), Dashboard y Reportes (Cierre v0.9.0 — CODE FREEZE) |
-| **Caso de Prueba Relacionado** | CP-09 (Milestone v0.9.0 — CODE FREEZE) |
-| **Fecha de Ejecución** | 23/11/2026 |
-| **Tester Responsable** | Edgar Acevedo (Carril 4 — DevOps & QA) |
-| **Rama Git** | `feature/SF-094-qa-http-cp09-vencimientos-mora-cero` |
+## Pruebas (`tests/SistemaFuneraria.Tests/Integration/Api/VencimientosYReportesTests.cs`)
+1. `CP09_CuotaAtrasada_ConFakeTimeProvider_DebeMarcarVencidaYSinRecargoMoratorio`: avanza 45 días con `FakeTimeProvider` (`TimeControlledApiFactory`), valida que la cuota pase a `Vencida` con `$0.00` de recargo moratorio, actualice `PagosVencidosCount >= 1` tanto en `GET /api/v1/cobranza/resumen-caja` como en `GET /api/v1/dashboard/resumen`, y permita el cobro al monto original exacto.
+2. `DashboardYReportes_DebenRetornarMetricasRealesYValidarRbac`: valida `GET /api/v1/dashboard/resumen` (6 meses, disponibilidad, actividad) y `GET /api/v1/reportes/indicadores` (`200 OK` para Administrador, `403 Forbidden` para Vendedor).
+3. `ConfiguracionSucursalYUsuarios_DebePersistirYPrevenirAutoBloqueo`: valida `GET/PUT /api/v1/configuracion/sucursal`, creación de `Cajero` con login inmediato y rechazo `400 Bad Request` al intentar auto-desactivar al Administrador en sesión.
 
----
-
-### 1. Resumen de la Certificación QA
-Se implementó y completó la suite de pruebas de integración HTTP `VencimientosYReportesTests.cs` en `tests/SistemaFuneraria.Tests/Integration/Api/VencimientosYReportesTests.cs` bajo `WebApplicationFactory` con inyección controlada de `TimeProvider`:
-
-1. **CP-09 (Vencimiento sin mora con FakeTimeProvider)**:
-   - Creación de un contrato financiado a 12 meses con 20% de enganche.
-   - Verificación de estado inicial `Al corriente` y `CuotasVencidas == 0`.
-   - Avance del reloj en 45 días mediante `FakeTimeProvider`.
-   - Consulta del contrato en ventanilla de caja vía `GET /api/v1/cobranza/contrato/{folio}`: la cuota transiciona a `Vencida`, el financiamiento a `EnMora`, el estado visual refleja `1 vencido`, y el monto mensual exigible se mantiene estrictamente idéntico a la cuota original (**$0.00 de interés moratorio o recargo**, conforme a RF-14 y RN-10).
-   - Verificación de alerta en el corte del día vía `GET /api/v1/cobranza/resumen-caja` con `PagosVencidosCount >= 1`.
-   - Cobro exitoso de la mensualidad vencida sin cargos adicionales emitiendo recibo oficial por el importe exacto.
-
-2. **Administración de Usuarios y Seguridad RBAC**:
-   - `GET /api/v1/admin/usuarios`: acceso autorizado (`200 OK`) para perfil Administrador y rechazo estricto (`403 Forbidden`) para perfil Cajero.
-
-3. **Cartera y Contratos Activos**:
-   - Consulta de cartera de contratos vía `GET /api/v1/contratos` retornando `200 OK` con estados comerciales actualizados.
-
----
-
-### 2. Comando Ejecutado
+## Resultado Final
 ```bash
-dotnet test tests/SistemaFuneraria.Tests/SistemaFuneraria.Tests.csproj --filter "FullyQualifiedName~VencimientosYReportesTests"
+dotnet build --configuration Release
+dotnet test --configuration Release --no-build --filter "FullyQualifiedName~Abono|FullyQualifiedName~Vencimientos|FullyQualifiedName~Dashboard|FullyQualifiedName~Reportes|FullyQualifiedName~Configuracion|FullyQualifiedName~Milestone9|FullyQualifiedName~Cobranza|FullyQualifiedName~Caja"
 ```
-
----
-
-### 3. Salida de Terminal (Fase GREEN)
-```text
-Iniciando la ejecución de pruebas, espere...
-1 archivos de prueba en total coincidieron con el patrón especificado.
-
-Correctas! - Con error:     0, Superado:     3, Omitido:     0, Total:     3, Duración: 217 ms - SistemaFuneraria.Tests.dll (net8.0)
-```
-
----
-
-### 4. Criterio de Aceptación y DoD
-- [x] Certificación HTTP real de CP-09 con abstracción `TimeProvider`.
-- [x] Cobro exacto sin penalización ni interés moratorio ($0.00 mora).
-- [x] Suite de pruebas HTTP pasando al 100% (3/3).
-- [x] Cero rutas absolutas en evidencias y cero comentarios de IA en código fuente.
-- [x] Declaración de Code Freeze funcional rumbo a Milestone v1.0.0.
+Compilación sin advertencias ni errores (`0/0`) y **36/36** pruebas en verde. Pruebas de navegador omitidas según solicitud explícita del usuario.

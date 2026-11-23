@@ -7,7 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Application.Servicios.Cobranza;
+using SistemaFuneraria.Application.Servicios.Configuracion;
 using SistemaFuneraria.Application.Servicios.Contratos;
+using SistemaFuneraria.Application.Servicios.Dashboard;
 using SistemaFuneraria.Application.Servicios.Lotes;
 using SistemaFuneraria.Application.Servicios.Simulador;
 using SistemaFuneraria.Application.Servicios.Ventas;
@@ -62,6 +64,8 @@ builder.Services.AddScoped<ISimuladorService, SimuladorService>();
 builder.Services.AddScoped<IVentaService, VentaService>();
 builder.Services.AddScoped<ICarteraContratosService, CarteraContratosService>();
 builder.Services.AddScoped<ICobranzaService, CobranzaService>();
+builder.Services.AddScoped<IDashboardReportesService, DashboardReportesService>();
+builder.Services.AddScoped<IConfiguracionSucursalService, ConfiguracionSucursalService>();
 
 var allowedOriginsRaw = builder.Configuration["Cors:AllowedOrigins"];
 var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsRaw)

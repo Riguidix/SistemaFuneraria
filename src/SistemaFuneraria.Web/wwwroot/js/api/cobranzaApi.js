@@ -84,6 +84,42 @@ const cobranzaApi = {
     },
 
     /**
+     * Aplica un abono extraordinario 100% a capital enviando `X-Idempotency-Key` (SF-087).
+     * @param {{ folioContrato: string, montoAbono: number, metodoPago: string, referencia?: string|null, claveIdempotencia?: string }} payload
+     * @param {CobranzaApiOptions} [opts]
+     */
+    aplicarAbonoCapital: (payload, opts = {}) => {
+        const clave = payload?.claveIdempotencia || generarClaveIdempotencia();
+        const body = {
+            ...payload,
+            claveIdempotencia: clave
+        };
+        const headers = {
+            ...(opts.headers || {}),
+            "X-Idempotency-Key": clave
+        };
+        return resolveCobranzaClient(opts).post(`${COBRANZA_ENDPOINT}/abono-capital`, body, { ...opts, headers });
+    },
+
+    /**
+     * Aplica la liquidación anticipada con descuento del 10% sobre intereses futuros enviando `X-Idempotency-Key` (SF-087).
+     * @param {{ folioContrato: string, importeRecibido: number, metodoPago: string, referencia?: string|null, claveIdempotencia?: string }} payload
+     * @param {CobranzaApiOptions} [opts]
+     */
+    aplicarLiquidacion: (payload, opts = {}) => {
+        const clave = payload?.claveIdempotencia || generarClaveIdempotencia();
+        const body = {
+            ...payload,
+            claveIdempotencia: clave
+        };
+        const headers = {
+            ...(opts.headers || {}),
+            "X-Idempotency-Key": clave
+        };
+        return resolveCobranzaClient(opts).post(`${COBRANZA_ENDPOINT}/liquidacion`, body, { ...opts, headers });
+    },
+
+    /**
      * Consulta un recibo oficial PAG-YYYY-XXXXXX por su folio (SF-078 / SF-082).
      * @param {string} folio
      * @param {CobranzaApiOptions} [opts]

@@ -9,9 +9,10 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using SistemaFuneraria.Application.DTOs.Admin;
 using SistemaFuneraria.Application.DTOs.Auth;
 using SistemaFuneraria.Application.DTOs.Cobranza;
+using SistemaFuneraria.Application.DTOs.Configuracion;
+using SistemaFuneraria.Application.DTOs.Dashboard;
 using SistemaFuneraria.Application.DTOs.Ventas;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Infrastructure.Persistencia;
@@ -88,7 +89,7 @@ public class VencimientosYReportesTests : IClassFixture<VencimientosYReportesTes
         return (await resVenta.Content.ReadFromJsonAsync<ContratoFinanciadoResumenDto>())!;
     }
 
-    [Fact(DisplayName = "SF-094 / CP-09: Cuota atrasada evaluada con FakeTimeProvider debe marcarse Vencida con $0.00 de mora")]
+    [Fact(DisplayName = "SF-094 / CP-09: FakeTimeProvider marca cuota Vencida con $0.00 de mora y actualiza Dashboard/Caja")]
     public async Task CP09_CuotaAtrasada_ConFakeTimeProvider_DebeMarcarVencidaYSinRecargoMoratorio()
     {
         var vendedorToken = await AutenticarComoAsync("vendedor@sistemafunerario.mx", "Sistema Funerario2026!");
@@ -114,10 +115,15 @@ public class VencimientosYReportesTests : IClassFixture<VencimientosYReportesTes
         cajaVencidaDto.EstadoVisual.Should().Contain("vencido");
         cajaVencidaDto.MontoMensualidad.Should().Be(cuotaOriginal);
 
-        var resResumen = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/cobranza/resumen-caja", cajeroToken));
-        resResumen.StatusCode.Should().Be(HttpStatusCode.OK);
-        var resumenDto = (await resResumen.Content.ReadFromJsonAsync<CorteDelDiaDto>())!;
-        resumenDto.PagosVencidosCount.Should().BeGreaterThanOrEqualTo(1);
+        var resResumenCaja = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/cobranza/resumen-caja", cajeroToken));
+        resResumenCaja.StatusCode.Should().Be(HttpStatusCode.OK);
+        var resumenCajaDto = (await resResumenCaja.Content.ReadFromJsonAsync<CorteDelDiaDto>())!;
+        resumenCajaDto.PagosVencidosCount.Should().BeGreaterThanOrEqualTo(1);
+
+        var resDashboard = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/dashboard/resumen", vendedorToken));
+        resDashboard.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dashboardDto = (await resDashboard.Content.ReadFromJsonAsync<DashboardResumenDto>())!;
+        dashboardDto.Kpis.PagosVencidosCount.Should().BeGreaterThanOrEqualTo(1);
 
         var bodyPago = JsonSerializer.Serialize(new
         {
@@ -140,29 +146,83 @@ public class VencimientosYReportesTests : IClassFixture<VencimientosYReportesTes
         recibo!.MontoTotal.Should().Be(cuotaOriginal);
     }
 
-    [Fact(DisplayName = "SF-094: Consulta de cartera y contratos activos retorna 200 OK")]
-    public async Task Cartera_ConsultaContratos_DebeListarConEstadoCorrecto()
+    [Fact(DisplayName = "SF-088 / SF-094: Dashboard /resumen y Reportes /indicadores retornan métricas reales y validan RBAC")]
+    public async Task DashboardYReportes_DebenRetornarMetricasRealesYValidarRbac()
     {
+        var adminToken = await AutenticarComoAsync("andrea.morales@sistemafunerario.mx", "Sistema Funerario2026!");
         var vendedorToken = await AutenticarComoAsync("vendedor@sistemafunerario.mx", "Sistema Funerario2026!");
 
-        var resContratos = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/contratos", vendedorToken));
-        resContratos.StatusCode.Should().Be(HttpStatusCode.OK);
+        var resDash = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/dashboard/resumen", vendedorToken));
+        resDash.StatusCode.Should().Be(HttpStatusCode.OK);
+        var dash = (await resDash.Content.ReadFromJsonAsync<DashboardResumenDto>())!;
+        dash.VentasYCobranza.Should().HaveCount(6);
+        dash.Disponibilidad.TotalLotes.Should().BeGreaterThan(0);
+        dash.ActividadReciente.Should().NotBeEmpty();
+
+        var resRepVendedor = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/reportes/indicadores", vendedorToken));
+        resRepVendedor.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var resRepAdmin = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/reportes/indicadores?periodo=Noviembre+2025&sucursal=Jardines+del+Valle", adminToken));
+        resRepAdmin.StatusCode.Should().Be(HttpStatusCode.OK);
+        var rep = (await resRepAdmin.Content.ReadFromJsonAsync<ReportesIndicadoresDto>())!;
+        rep.Sucursal.Should().Be("Jardines del Valle");
+        rep.VentasPorTipoLote.Should().HaveCount(3);
+        rep.MetaMensual.ObjetivoMensual.Should().Be(600_000m);
     }
 
-    [Fact(DisplayName = "SF-094: Administración de usuarios y roles requiere rol Administrador (403 Forbidden para Cajero)")]
-    public async Task AdminUsuarios_ControlDeAcceso_DebePermitirAdminYRechazarCajero()
+    [Fact(DisplayName = "SF-091 / SF-094: Configuracion sucursal, creación de Cajero con login inmediato y prevención auto-bloqueo Admin")]
+    public async Task ConfiguracionSucursalYUsuarios_DebePersistirYPrevenirAutoBloqueo()
     {
         var adminToken = await AutenticarComoAsync("andrea.morales@sistemafunerario.mx", "Sistema Funerario2026!");
         var cajeroToken = await AutenticarComoAsync("cajero@sistemafunerario.mx", "Sistema Funerario2026!");
 
-        var resAdmin = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/admin/usuarios", adminToken));
-        resAdmin.StatusCode.Should().Be(HttpStatusCode.OK);
-        var usuarios = await resAdmin.Content.ReadFromJsonAsync<List<UsuarioSistemaDto>>();
-        usuarios.Should().NotBeNull();
-        usuarios!.Should().NotBeEmpty();
+        var resCajeroDenied = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/configuracion/sucursal", cajeroToken));
+        resCajeroDenied.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        var resCajero = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/admin/usuarios", cajeroToken));
-        resCajero.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var resSuc = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/configuracion/sucursal", adminToken));
+        resSuc.StatusCode.Should().Be(HttpStatusCode.OK);
+        var suc = (await resSuc.Content.ReadFromJsonAsync<ConfiguracionSucursalDto>())!;
+        suc.NombreComercial.Should().Be("Jardines del Valle");
+
+        var putSuc = JsonSerializer.Serialize(new ActualizarConfiguracionSucursalRequest(
+            NombreComercial: "Jardines del Valle Matriz",
+            TelefonoAtencion: "55 4120 9900",
+            CorreoOperativo: "matriz@sistemafunerario.mx",
+            Direccion: "Av. Paseo de los Cipreses 420, Zapopan",
+            Ciudad: "Zapopan",
+            CodigoPostal: "45010",
+            RecordatoriosPago: true,
+            ResumenDiarioCaja: false));
+        var resPut = await _client.SendAsync(CrearRequest(HttpMethod.Put, "/api/v1/configuracion/sucursal", adminToken, putSuc));
+        resPut.StatusCode.Should().Be(HttpStatusCode.OK);
+        var sucAct = (await resPut.Content.ReadFromJsonAsync<ConfiguracionSucursalDto>())!;
+        sucAct.NombreComercial.Should().Be("Jardines del Valle Matriz");
+        sucAct.ResumenDiarioCaja.Should().BeFalse();
+
+        // Crear nuevo usuario Cajero e iniciar sesión inmediatamente
+        var nuevoCorreo = $"cajero.{Guid.NewGuid():N}"[..16] + "@sistemafunerario.mx";
+        var crearUserBody = JsonSerializer.Serialize(new CrearUsuarioConfiguracionRequest(
+            Nombre: "Mario Nuevo",
+            Correo: nuevoCorreo,
+            Password: "CajeroNuevo2026!",
+            Rol: "Cajero"));
+        var resCrearUser = await _client.SendAsync(CrearRequest(HttpMethod.Post, "/api/v1/configuracion/usuarios", adminToken, crearUserBody));
+        resCrearUser.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var nuevoToken = await AutenticarComoAsync(nuevoCorreo, "CajeroNuevo2026!");
+        nuevoToken.Should().NotBeNullOrWhiteSpace();
+
+        // Prevención de auto-bloqueo del propio Administrador en sesión
+        var resUsuarios = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/configuracion/usuarios", adminToken));
+        var listaUsuarios = (await resUsuarios.Content.ReadFromJsonAsync<List<UsuarioSistemaDto>>())!;
+        var adminUser = listaUsuarios.First(u => u.Correo == "andrea.morales@sistemafunerario.mx");
+
+        var resSelfDisable = await _client.SendAsync(CrearRequest(
+            HttpMethod.Patch,
+            $"/api/v1/configuracion/usuarios/{adminUser.Id}/estado",
+            adminToken,
+            JsonSerializer.Serialize(new CambiarEstadoUsuarioRequest(Activo: false))));
+        resSelfDisable.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     public sealed class TimeControlledApiFactory : WebApplicationFactory<Program>

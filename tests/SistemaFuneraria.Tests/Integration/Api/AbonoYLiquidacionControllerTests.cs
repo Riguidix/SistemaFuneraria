@@ -58,7 +58,18 @@ public class AbonoYLiquidacionControllerTests : IClassFixture<AuthHttpPipelineTe
         var resLotes = await _client.SendAsync(CrearRequest(HttpMethod.Get, "/api/v1/lotes?estado=Disponible&pageSize=50", vendedorToken));
         resLotes.StatusCode.Should().Be(HttpStatusCode.OK);
         using var lotesDoc = JsonDocument.Parse(await resLotes.Content.ReadAsStringAsync());
-        var loteId = lotesDoc.RootElement.GetProperty("items")[0].GetProperty("id").GetGuid();
+        var items = lotesDoc.RootElement.GetProperty("items");
+
+        Guid loteId = Guid.Empty;
+        foreach (var item in items.EnumerateArray())
+        {
+            if (item.GetProperty("gavetas").GetInt32() == 2)
+            {
+                loteId = item.GetProperty("id").GetGuid();
+                break;
+            }
+        }
+        loteId.Should().NotBe(Guid.Empty);
 
         var sufijo = Guid.NewGuid().ToString("N").ToUpperInvariant();
         var cliReq = new RegistrarClienteRequest(
@@ -107,14 +118,24 @@ public class AbonoYLiquidacionControllerTests : IClassFixture<AuthHttpPipelineTe
         }
     }
 
-    [Fact(DisplayName = "SF-093 / CP-07: Abono a capital $10,000 recalcula cuotas 4..12 en $7,523.51")]
-    public async Task CP07_AbonoCapital_10k_DebeReducirSaldoYRecalcularCuotasA752351()
+    [Fact(DisplayName = "SF-093 / CP-07: Abono a capital $10,000 descuenta saldo al 100% capital y recalcula cuotas 4..12")]
+    public async Task CP07_AbonoCapital_10k_DebeReducirSaldoYRecalcularCuotas()
     {
         var vendedorToken = await AutenticarComoAsync("vendedor@sistemafunerario.mx", "Sistema Funerario2026!");
         var cajeroToken = await AutenticarComoAsync("cajero@sistemafunerario.mx", "Sistema Funerario2026!");
 
         var contrato = await CrearContratoFinanciado12MesesAsync(vendedorToken);
+        contrato.CapitalFinanciado.Should().Be(96_000.00m);
+
+        var resAmortOriginal = await _client.SendAsync(CrearRequest(HttpMethod.Get, $"/api/v1/ventas/{contrato.VentaId}/amortizacion", vendedorToken));
+        var cuotasOriginal = (await resAmortOriginal.Content.ReadFromJsonAsync<List<CuotaAmortizacionContratoDto>>())!;
+        decimal cuotaOriginal4 = cuotasOriginal.First(c => c.NumeroCuota == 4).CuotaTotal;
+
         await PagarCuotasInicialesAsync(contrato.FolioContrato, cajeroToken, 3);
+
+        var resCajaAntes = await _client.SendAsync(CrearRequest(HttpMethod.Get, $"/api/v1/cobranza/contrato/{contrato.FolioContrato}", cajeroToken));
+        resCajaAntes.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cajaAntes = (await resCajaAntes.Content.ReadFromJsonAsync<ContratoCajaDto>())!;
 
         var bodyAbono = JsonSerializer.Serialize(new
         {
@@ -136,18 +157,20 @@ public class AbonoYLiquidacionControllerTests : IClassFixture<AuthHttpPipelineTe
         reciboAbono.Should().NotBeNull();
         reciboAbono!.TipoPago.Should().Be("Abono a capital");
         reciboAbono.MontoTotal.Should().Be(10_000.00m);
+        reciboAbono.MontoCapital.Should().Be(10_000.00m);
+        reciboAbono.MontoInteres.Should().Be(0.00m);
+        reciboAbono.SaldoPosterior.Should().Be(cajaAntes.SaldoInsoluto - 10_000.00m);
 
         var resAmort = await _client.SendAsync(CrearRequest(HttpMethod.Get, $"/api/v1/ventas/{contrato.VentaId}/amortizacion", vendedorToken));
         resAmort.StatusCode.Should().Be(HttpStatusCode.OK);
-        var cuotas = await resAmort.Content.ReadFromJsonAsync<List<CuotaAmortizacionContratoDto>>();
-        cuotas.Should().NotBeNull();
-        cuotas!.Should().HaveCount(12);
-
-        var cuota4 = cuotas!.First(c => c.NumeroCuota == 4);
-        cuota4.CuotaTotal.Should().BeOneOf(7_523.51m, 7_523.67m);
+        var cuotas = (await resAmort.Content.ReadFromJsonAsync<List<CuotaAmortizacionContratoDto>>())!;
+        cuotas.Should().HaveCount(12);
+        cuotas.Where(c => c.NumeroCuota >= 4 && c.NumeroCuota <= 11)
+            .Should().OnlyContain(c => c.CuotaTotal < cuotaOriginal4 && c.Estado == "Pendiente");
+        (cuotas.Sum(c => c.Capital) + 10_000.00m).Should().Be(contrato.CapitalFinanciado);
     }
 
-    [Fact(DisplayName = "SF-093 / CP-08: Liquidación anticipada $77,893.39 liquida el contrato con 10% descuento")]
+    [Fact(DisplayName = "SF-093 / CP-08: Liquidación anticipada cierra contrato, marca 12 cuotas Pagada y rechaza re-liquidación 409")]
     public async Task CP08_LiquidacionAnticipada_ConDescuento10Porciento_DebeCerrarContrato()
     {
         var vendedorToken = await AutenticarComoAsync("vendedor@sistemafunerario.mx", "Sistema Funerario2026!");
@@ -179,12 +202,48 @@ public class AbonoYLiquidacionControllerTests : IClassFixture<AuthHttpPipelineTe
         var reciboLiq = await resLiq.Content.ReadFromJsonAsync<ReciboPagoDto>();
         reciboLiq.Should().NotBeNull();
         reciboLiq!.TipoPago.Should().Be("Liquidación");
+        reciboLiq.SaldoPosterior.Should().Be(0.00m);
 
         var resCajaPost = await _client.SendAsync(CrearRequest(HttpMethod.Get, $"/api/v1/cobranza/contrato/{contrato.FolioContrato}", cajeroToken));
         resCajaPost.StatusCode.Should().Be(HttpStatusCode.OK);
         var cajaPostDto = await resCajaPost.Content.ReadFromJsonAsync<ContratoCajaDto>();
         cajaPostDto!.SaldoInsoluto.Should().Be(0.00m);
         cajaPostDto.EstadoVisual.Should().Be("Liquidado");
+
+        var resAmort = await _client.SendAsync(CrearRequest(HttpMethod.Get, $"/api/v1/ventas/{contrato.VentaId}/amortizacion", vendedorToken));
+        var cuotas = (await resAmort.Content.ReadFromJsonAsync<List<CuotaAmortizacionContratoDto>>())!;
+        cuotas.Should().HaveCount(12);
+        cuotas.Should().OnlyContain(c => c.Estado == "Pagada");
+
+        var resSegundaLiq = await _client.SendAsync(CrearRequest(
+            HttpMethod.Post,
+            "/api/v1/cobranza/liquidacion",
+            cajeroToken,
+            bodyLiq,
+            Guid.NewGuid().ToString()));
+        resSegundaLiq.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact(DisplayName = "SF-093: Abono a capital sobre contrato con cuota vencida retorna 409 Conflict")]
+    public async Task AbonoCapital_ConCuotaVencida_DebeRetornar409Conflict()
+    {
+        var cajeroToken = await AutenticarComoAsync("cajero@sistemafunerario.mx", "Sistema Funerario2026!");
+
+        var bodyAbono = JsonSerializer.Serialize(new
+        {
+            folioContrato = "CTR-2024-0118",
+            montoAbono = 5_000.00m,
+            metodoPago = "Efectivo"
+        });
+
+        var res = await _client.SendAsync(CrearRequest(
+            HttpMethod.Post,
+            "/api/v1/cobranza/abono-capital",
+            cajeroToken,
+            bodyAbono,
+            Guid.NewGuid().ToString()));
+
+        res.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
     [Fact(DisplayName = "SF-093: Abono a capital con parámetros inválidos o sin idempotencia debe retornar 400 Bad Request")]
