@@ -16,14 +16,13 @@
 
 Este panel consolida el avance real de las corridas de pruebas sobre la rama de integración `dev` y staging `beta`:
 
-| Métrica de Calidad | Valor Actual (Milestone 1) | Meta para Release v1.0.0 |
+| Métrica de Calidad | Valor Registrado (`v1.0.0`) | Meta para Release v1.0.0 |
 |---|---|---|
-| **Total de Casos de Prueba Diseñados** | 10 base (CP-01 a CP-10) + 36 Oráculo + 4 Escenarios | 50 verificaciones |
-| **Casos Ejecutados** | 42 (CP-01, 03, 04, 05, 06, 10 + DT-01..36) | 50 (100%) |
-| **Casos Aprobados (Passed)** | 42 | 50 (100%) |
-| **Casos Fallidos (Failed)** | 0 | 0 (0%) |
-| **Casos Pendientes de Ejecución (Sprint 2 & 3)** | 8 (CP-02, CP-07, CP-08, CP-09 + ST-01..04) | 0 (0%) |
-| **Porcentaje de Cobertura de Requisitos Milestone 1** | 100% verificado (Cimientos & Motor TDD) | 100% verificado |
+| **Pruebas Automatizadas Ejecutadas (Sin Docker local)** | **688** pruebas | 100% en verde |
+| **Pruebas Aprobadas (Passed)** | **688** | 100% |
+| **Pruebas Fallidas / Omitidas (Skipped)** | **0 / 0** | 0 / 0 |
+| **Cobertura XPlat Observada (`Core` / `Application` / `Api`)** | **95.94% / 93.18% / 86.83%** | `>= 90% Core` / `>= 85% Application` |
+| **Auditoría de Carpetas de Evidencia (`SF-001`–`SF-100`)** | **100 / 100** (`validate-evidence.sh --all`) | 100 / 100 portables |
 
 ---
 

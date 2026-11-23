@@ -33,13 +33,13 @@ pie title Distribución de Casos de Prueba Ejecutados
 ```
 
 ### 2.1 Métricas Consolidadas de Calidad
-* **Requisitos Funcionales Verificados:** 14 / 14 (100%)
+* **Requisitos Funcionales Verificados:** 18 / 18 (100%)
 * **Requisitos No Funcionales Auditados:** 6 / 6 (100%)
 * **Reglas de Negocio Validadas:** 12 / 12 (100%)
-* **Total de Casos de Prueba Ejecutados:** 50 verificaciones
-* **Casos de Prueba Aprobados:** 50 (100%)
-* **Casos de Prueba Fallidos al Cierre:** 0 (0%)
-* **Bloqueos o Tests Omitidos:** 0 (0%)
+* **Suite Automatizada No-Docker (`Release`):** 688 / 688 superadas (100%)
+* **Pruebas Fallidas u Omitidas al Cierre:** 0 / 0 (0%)
+* **Cobertura XPlat Observada:** `Core` **95.94%**, `Application` **93.18%**, `Api` **86.83%**, `Infrastructure` **84.50%**, `Web` **70.46%**
+* **Evidencias Verificadas (`validate-evidence.sh --all`):** 100 / 100 carpetas (`SF-001` a `SF-100`) sin rutas absolutas de host
 
 ### 2.2 Verificación de los 10 Casos Principales (Sección 10)
 | ID Caso | Requisito | Descripción | Técnica | Resultado Final |
