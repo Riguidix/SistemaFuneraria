@@ -1,0 +1,111 @@
+@page "/Caja/Recibo"
+@model SistemaFuneraria.Web.Pages.Caja.ReciboModel
+@{
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.Folio) ? "Recibo Oficial - Caja" : $"Recibo {Model.Folio} - Caja";
+}
+
+<style>
+    @@media print {
+        .funeraria-sidebar, .funeraria-topbar, .funeraria-fab-help, .btn-no-print, #sf-toast-container {
+            display: none !important;
+        }
+        body, .funeraria-main-content {
+            background-color: #FFFFFF !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #D1D5DB !important;
+        }
+    }
+</style>
+
+<div id="reciboNoEncontrado" class="card border-0 shadow-sm rounded-4 p-5 text-center mb-4 d-none" role="alert">
+    <i class="fa-solid fa-receipt fa-2x text-muted mb-3" aria-hidden="true"></i>
+    <h2 class="h5 fw-bold text-dark mb-2">Recibo no encontrado (404)</h2>
+    <p class="text-muted small mb-3">No se localizó el folio de pago solicitado.</p>
+    <a href="/Caja" class="btn btn-funeraria-primary rounded-3 px-4">
+        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> Volver a Caja
+    </a>
+</div>
+
+<div id="reciboContenidoPrincipal" class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mx-auto" style="max-width: 780px;">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 border-bottom pb-4 mb-4">
+        <div>
+            <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.08em;">Sistema Funerario · Gestión Memorial</span>
+            <h1 class="h4 fw-bold text-dark mt-1 mb-0">Comprobante Oficial de Pago</h1>
+            <small class="text-muted">Sucursal Jardines del Valle</small>
+        </div>
+        <div class="text-md-end">
+            <div class="text-muted small">Folio de Recibo</div>
+            <div class="h5 fw-bold text-dark sf-monospace mb-0" id="reciboFolioPago">@(string.IsNullOrWhiteSpace(Model.Folio) ? "-" : Model.Folio)</div>
+            <div class="small text-muted" id="reciboFechaPago">-</div>
+        </div>
+    </div>
+
+    <div class="row g-3 small mb-4">
+        <div class="col-6 col-md-4">
+            <div class="text-muted">Contrato</div>
+            <div class="fw-bold text-dark sf-monospace" id="reciboFolioContrato">-</div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="text-muted">Cliente</div>
+            <div class="fw-bold text-dark" id="reciboClienteNombre">-</div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="text-muted">Lote</div>
+            <div class="fw-bold text-dark" id="reciboLoteClave">-</div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="text-muted">Concepto</div>
+            <div class="fw-bold text-dark" id="reciboConcepto">-</div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="text-muted">Método de pago</div>
+            <div class="fw-bold text-dark" id="reciboMetodoPago">-</div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="text-muted">Referencia</div>
+            <div class="fw-bold text-dark sf-monospace" id="reciboReferencia">-</div>
+        </div>
+    </div>
+
+    <div class="bg-light rounded-4 p-4 mb-4">
+        <h2 class="h6 fw-bold text-dark mb-3">Desglose Financiero</h2>
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Saldo anterior</span>
+            <span class="fw-semibold sf-money text-dark" id="reciboSaldoAnterior">$0.00</span>
+        </div>
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Aplicado a Capital</span>
+            <span class="fw-semibold sf-money text-dark" id="reciboMontoCapital">$0.00</span>
+        </div>
+        <div class="d-flex justify-content-between py-2 border-bottom small">
+            <span class="text-muted">Aplicado a Interés</span>
+            <span class="fw-semibold sf-money text-dark" id="reciboMontoInteres">$0.00</span>
+        </div>
+        <div class="d-flex justify-content-between py-2 border-bottom fw-bold">
+            <span class="text-dark">Importe total pagado</span>
+            <span class="sf-money text-success" id="reciboMontoTotal">$0.00</span>
+        </div>
+        <div class="d-flex justify-content-between pt-3 fw-bold">
+            <span class="text-dark">Nuevo saldo insoluto</span>
+            <span class="sf-money text-dark" id="reciboSaldoPosterior">$0.00</span>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 btn-no-print">
+        <a href="/Caja" class="btn btn-outline-secondary rounded-3 px-4">
+            <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> Volver a Caja
+        </a>
+        <button type="button" id="btnImprimirRecibo" class="btn text-white rounded-3 px-4 fw-medium" style="background-color: #2D4224;" onclick="window.print();">
+            <i class="fa-solid fa-print me-1" aria-hidden="true"></i> Imprimir comprobante
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/api/cobranzaApi.js" asp-append-version="true"></script>
+    <script src="~/js/pages/reciboPagoPage.js" asp-append-version="true"></script>
+}
