@@ -7,6 +7,7 @@ using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Application.Servicios.Lotes;
 using SistemaFuneraria.Application.Servicios.Simulador;
+using SistemaFuneraria.Application.Servicios.Ventas;
 using SistemaFuneraria.Infrastructure.Persistencia;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,8 +53,9 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IClienteService, ClienteService>();
-builder.Services.AddScoped<ISimuladorService, SimuladorService>();
 builder.Services.AddScoped<ILoteService, LoteService>();
+builder.Services.AddScoped<ISimuladorService, SimuladorService>();
+builder.Services.AddScoped<IVentaService, VentaService>();
 
 var allowedOriginsRaw = builder.Configuration["Cors:AllowedOrigins"];
 var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsRaw)
@@ -106,6 +108,7 @@ if (autoMigrate || seedDemoUsers)
         {
             await IdentitySeed.SeedAsync(app.Services);
             await LoteSeed.SeedAsync(app.Services);
+            await CarteraDemoSeed.SeedAsync(app.Services);
         }
     }
     catch (Exception ex)

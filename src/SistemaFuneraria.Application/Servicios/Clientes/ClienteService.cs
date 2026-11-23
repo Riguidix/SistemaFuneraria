@@ -178,6 +178,10 @@ public class ClienteService(IAppDbContext context) : IClienteService
         if (cliente == null)
             return Resultado.Fallo("[NO_ENCONTRADO] Cliente no encontrado.");
 
+        var tieneContratos = await context.Ventas.AnyAsync(v => v.ClienteId == id, cancellationToken);
+        if (tieneContratos)
+            return Resultado.Fallo("[CONFLICTO] No se puede eliminar un cliente con contratos asociados.");
+
         context.Clientes.Remove(cliente);
         await context.SaveChangesAsync(cancellationToken);
 

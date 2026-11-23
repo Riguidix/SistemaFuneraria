@@ -1,0 +1,111 @@
+@model SistemaFuneraria.Web.Pages.Ventas.NuevaModel
+
+<div class="bg-white rounded-4 shadow-sm border p-4 p-md-5" id="step1Card">
+    <div class="mb-4">
+        <h2 class="h4 fw-bold text-dark mb-1">Datos del cliente</h2>
+        <p class="small text-muted mb-0">Busca un cliente existente o registra uno nuevo.</p>
+    </div>
+
+    <!-- 2. Buscador de Cliente Existente -->
+    <div class="mb-3 position-relative">
+        <label class="form-label small fw-medium text-dark">Buscar cliente</label>
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0 text-muted rounded-start-3">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+            </span>
+            <input type="text"
+                   id="inputBuscarCliente"
+                   class="form-control border-start-0 border-end-0 py-2"
+                   placeholder="Nombre, CURP o teléfono"
+                   autocomplete="off" />
+            <span class="input-group-text bg-white border-start-0 text-muted rounded-end-3"
+                  role="button"
+                  id="btnLimpiarBusqueda"
+                  style="cursor: pointer;"
+                  title="Limpiar búsqueda">
+                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+            </span>
+        </div>
+        <!-- Dropdown flotante de sugerencias cuando haya resultados -->
+        <div id="resultadosBusquedaCliente"
+             class="list-group position-absolute shadow-sm d-none mt-1 z-3 w-100"
+             style="max-height: 200px; overflow-y: auto;">
+        </div>
+    </div>
+
+    <!-- 3. Divisor Central con Etiqueta -->
+    <div class="d-flex align-items-center my-4">
+        <hr class="flex-grow-1 text-muted-subtle m-0" />
+        <span class="px-3 text-muted small">o captura sus datos</span>
+        <hr class="flex-grow-1 text-muted-subtle m-0" />
+    </div>
+
+    <!-- 4. Formulario de Captura de Datos del Titular -->
+    <form id="formPaso1Cliente" novalidate onsubmit="event.preventDefault();">
+        <div class="row g-3">
+            <!-- Fila 1 (2 Columnas - col-md-6) -->
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-medium text-dark">Nombre(s) <span class="text-danger">*</span></label>
+                <input type="text"
+                       id="txtClienteNombre"
+                       class="form-control rounded-3 py-2"
+                       value="Mariana"
+                       placeholder="Ingresa el nombre"
+                       required />
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-medium text-dark">Apellidos <span class="text-danger">*</span></label>
+                <input type="text"
+                       id="txtClienteApellidos"
+                       class="form-control rounded-3 py-2"
+                       value="Torres Aguirre"
+                       placeholder="Ingresa los apellidos"
+                       required />
+            </div>
+
+            <!-- Fila 2 (2 Columnas - col-md-6) -->
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-medium text-dark">CURP</label>
+                <input type="text"
+                       id="txtClienteCurp"
+                       class="form-control rounded-3 py-2 text-uppercase sf-monospace"
+                       placeholder="18 caracteres"
+                       maxlength="18" />
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small fw-medium text-dark">Teléfono</label>
+                <input type="tel"
+                       id="txtClienteTelefono"
+                       class="form-control rounded-3 py-2"
+                       placeholder="55 0000 0000"
+                       maxlength="10" />
+            </div>
+
+            <!-- Fila 3 (Ancho completo - col-12) -->
+            <div class="col-12">
+                <label class="form-label small fw-medium text-dark">Correo electrónico</label>
+                <input type="email"
+                       id="txtClienteEmail"
+                       class="form-control rounded-3 py-2"
+                       value="mariana.torres@email.mx"
+                       placeholder="ejemplo@correo.com" />
+            </div>
+        </div>
+
+        <!-- Alerta de validación inline -->
+        <div id="paso1AlertaValidacion" class="alert alert-danger py-2 px-3 small d-none mt-3 mb-0 rounded-3" role="alert"></div>
+
+        <!-- 5. Botones de Navegación al Pie -->
+        <div class="border-top pt-4 mt-4 d-flex justify-content-between align-items-center">
+            <button type="button" class="btn btn-light border text-muted rounded-3 px-4 py-2" disabled>
+                Anterior
+            </button>
+            <button type="button"
+                    id="btnContinuarPaso1"
+                    class="btn text-white rounded-3 px-4 py-2 fw-medium d-inline-flex align-items-center shadow-sm"
+                    style="background-color: #2D4224; border-color: #2D4224;">
+                Continuar <i class="fa-solid fa-arrow-right ms-2" aria-hidden="true"></i>
+            </button>
+        </div>
+    </form>
+</div>

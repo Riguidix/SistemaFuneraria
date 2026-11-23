@@ -9,6 +9,9 @@ using SistemaFuneraria.Core.ValueObjects;
 
 namespace SistemaFuneraria.Application.Servicios.Lotes;
 
+/// <summary>
+/// Implementación del servicio de catálogo y gestión de inventario de lotes (SF-041).
+/// </summary>
 public class LoteService(IAppDbContext context) : ILoteService
 {
     private readonly IAppDbContext _context = context;
@@ -19,61 +22,67 @@ public class LoteService(IAppDbContext context) : ILoteService
         string? estado = null,
         int? gavetas = null,
         int pagina = 1,
-        int tamanoPagina = 20,
-        CancellationToken ct = default)
+        int tamanoPagina = 10,
+        CancellationToken cancellationToken = default)
     {
-        var todosLotes = await _context.Lotes
-            .AsNoTracking()
-            .ToListAsync(ct);
+        pagina = Math.Max(1, pagina);
+        tamanoPagina = Math.Clamp(tamanoPagina, 1, 100);
 
-        var disponibles = todosLotes.Where(l => l.Estado == EstadoLote.Disponible).ToList();
+        var todosLosLotes = await _context.Lotes
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        int totalLotes = todosLosLotes.Count;
+        var disponibles = todosLosLotes.Where(l => l.Estado == EstadoLote.Disponible).ToList();
         int totalDisponibles = disponibles.Count;
-        int totalLotes = todosLotes.Count;
-        decimal precioDesde = disponibles.Count > 0 ? disponibles.Min(l => l.PrecioContado.Monto) : 0m;
+        decimal precioDesde = totalDisponibles > 0 ? disponibles.Min(l => l.PrecioContado.Monto) : 0m;
 
         var grupoSeccion = disponibles
             .GroupBy(l => l.Seccion)
             .OrderByDescending(g => g.Count())
+            .ThenBy(g => g.Key)
             .FirstOrDefault();
 
-        string seccionMasEspacio = grupoSeccion?.Key ?? "Jardín Norte";
-        int libresSeccion = grupoSeccion?.Count() ?? 0;
+        string seccionMasEspacio = grupoSeccion?.Key ?? (todosLosLotes.FirstOrDefault()?.Seccion ?? "N/A");
+        int lotesLibresSeccionMasEspacio = grupoSeccion?.Count() ?? 0;
 
-        var query = todosLotes.AsEnumerable();
+        var query = todosLosLotes.AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(buscar))
         {
-            var b = buscar.Trim();
+            var termino = buscar.Trim().ToLowerInvariant();
             query = query.Where(l =>
-                l.Clave.Contains(b, StringComparison.OrdinalIgnoreCase) ||
-                l.Seccion.Contains(b, StringComparison.OrdinalIgnoreCase) ||
-                l.AndadorFila.Contains(b, StringComparison.OrdinalIgnoreCase));
+                l.Clave.ToLowerInvariant().Contains(termino) ||
+                l.Seccion.ToLowerInvariant().Contains(termino) ||
+                l.AndadorFila.ToLowerInvariant().Contains(termino) ||
+                $"{l.Gavetas} gavetas".Contains(termino) ||
+                $"{l.Gavetas} gaveta".Contains(termino) ||
+                l.Gavetas.ToString().Contains(termino));
         }
 
-        if (!string.IsNullOrWhiteSpace(seccion))
+        if (!string.IsNullOrWhiteSpace(seccion) && !seccion.Equals("todas", StringComparison.OrdinalIgnoreCase))
         {
             query = query.Where(l => l.Seccion.Equals(seccion.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
-        if (!string.IsNullOrWhiteSpace(estado))
+        if (!string.IsNullOrWhiteSpace(estado) && !estado.Equals("todos", StringComparison.OrdinalIgnoreCase))
         {
-            if (Enum.TryParse<EstadoLote>(estado.Trim(), true, out var est))
+            if (Enum.TryParse<EstadoLote>(estado.Trim(), true, out var estadoParsed))
             {
-                query = query.Where(l => l.Estado == est);
+                query = query.Where(l => l.Estado == estadoParsed);
             }
         }
 
-        if (gavetas.HasValue)
+        if (gavetas.HasValue && gavetas.Value > 0)
         {
             query = query.Where(l => l.Gavetas == gavetas.Value);
         }
 
-        var filtrados = query
-            .OrderBy(l => l.Seccion)
-            .ThenBy(l => l.Clave)
-            .ToList();
+        var listaFiltrada = query.OrderBy(l => l.Clave).ToList();
+        int totalFiltrados = listaFiltrada.Count;
+        int totalPaginas = Math.Max(1, (int)Math.Ceiling((double)totalFiltrados / tamanoPagina));
 
-        var items = filtrados
+        var itemsPaginados = listaFiltrada
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
             .Select(l => new LoteItemDto(
@@ -83,73 +92,85 @@ public class LoteService(IAppDbContext context) : ILoteService
                 l.AndadorFila,
                 l.Gavetas,
                 l.PrecioContado.Monto,
-                l.Estado.ToString()
-            ))
+                l.Estado.ToString()))
             .ToList();
-
-        int totalPaginas = (int)Math.Ceiling(filtrados.Count / (double)tamanoPagina);
-        if (totalPaginas < 1) totalPaginas = 1;
 
         var resumen = new ResumenCatalogoLotesDto(
             totalDisponibles,
             totalLotes,
             precioDesde,
             seccionMasEspacio,
-            libresSeccion,
-            items,
+            lotesLibresSeccionMasEspacio,
+            itemsPaginados,
             pagina,
-            totalPaginas
-        );
+            totalPaginas);
 
         return Resultado<ResumenCatalogoLotesDto>.Exito(resumen);
     }
 
-    public async Task<Resultado<LoteItemDto>> ObtenerPorIdAsync(Guid id, CancellationToken ct = default)
+    public async Task<Resultado<LoteItemDto>> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var lote = await _context.Lotes
             .AsNoTracking()
-            .FirstOrDefaultAsync(l => l.Id == id, ct);
+            .FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
 
-        if (lote is null)
-        {
-            return Resultado<LoteItemDto>.Fallo("Lote no encontrado.");
-        }
+        if (lote == null)
+            return Resultado<LoteItemDto>.Fallo("[NO_ENCONTRADO] Lote no encontrado.");
 
-        var dto = new LoteItemDto(
+        return Resultado<LoteItemDto>.Exito(new LoteItemDto(
             lote.Id,
             lote.Clave,
             lote.Seccion,
             lote.AndadorFila,
             lote.Gavetas,
             lote.PrecioContado.Monto,
-            lote.Estado.ToString()
-        );
-
-        return Resultado<LoteItemDto>.Exito(dto);
+            lote.Estado.ToString()));
     }
 
-    public async Task<Resultado<Guid>> CrearLoteAsync(CrearLoteRequest request, CancellationToken ct = default)
+    public async Task<Resultado<LoteItemDto>> ObtenerPorClaveAsync(string clave, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(clave))
+            return Resultado<LoteItemDto>.Fallo("La clave no puede estar vacía.");
+
+        var claveNorm = clave.Trim().ToUpperInvariant();
+        var lote = await _context.Lotes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(l => l.Clave == claveNorm, cancellationToken);
+
+        if (lote == null)
+            return Resultado<LoteItemDto>.Fallo("[NO_ENCONTRADO] Lote no encontrado.");
+
+        return Resultado<LoteItemDto>.Exito(new LoteItemDto(
+            lote.Id,
+            lote.Clave,
+            lote.Seccion,
+            lote.AndadorFila,
+            lote.Gavetas,
+            lote.PrecioContado.Monto,
+            lote.Estado.ToString()));
+    }
+
+    public async Task<Resultado<Guid>> CrearLoteAsync(CrearLoteCommand command, CancellationToken cancellationToken = default)
+    {
+        if (command == null)
+            return Resultado<Guid>.Fallo("El comando de creación no puede ser nulo.");
+
+        var claveNorm = command.Clave?.Trim().ToUpperInvariant() ?? string.Empty;
+        bool existeClave = await _context.Lotes.AnyAsync(l => l.Clave == claveNorm, cancellationToken);
+        if (existeClave)
+            return Resultado<Guid>.Fallo("[CONFLICTO] Ya existe un lote registrado con la clave especificada.");
+
         try
         {
-            var existeClave = await _context.Lotes
-                .AnyAsync(l => l.Clave == request.Clave.Trim().ToUpperInvariant(), ct);
-
-            if (existeClave)
-            {
-                return Resultado<Guid>.Fallo("Ya existe un lote registrado con esa clave.");
-            }
-
             var lote = Lote.Crear(
-                request.Clave,
-                request.Seccion,
-                request.AndadorFila,
-                request.Gavetas,
-                new Dinero(request.PrecioContado)
-            );
+                command.Clave ?? string.Empty,
+                command.Seccion ?? string.Empty,
+                command.AndadorFila ?? string.Empty,
+                command.Gavetas,
+                new Dinero(command.PrecioContado));
 
-            await _context.Lotes.AddAsync(lote, ct);
-            await _context.SaveChangesAsync(ct);
+            await _context.Lotes.AddAsync(lote, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
 
             return Resultado<Guid>.Exito(lote.Id);
         }
@@ -157,9 +178,72 @@ public class LoteService(IAppDbContext context) : ILoteService
         {
             return Resultado<Guid>.Fallo(ex.Message);
         }
-        catch (Exception ex)
+    }
+
+    public async Task<Resultado> ActualizarLoteAsync(Guid id, ActualizarLoteCommand command, CancellationToken cancellationToken = default)
+    {
+        if (command == null)
+            return Resultado.Fallo("El comando de actualización no puede ser nulo.");
+
+        var lote = await _context.Lotes.FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
+        if (lote == null)
+            return Resultado.Fallo("[NO_ENCONTRADO] Lote no encontrado.");
+
+        if (lote.Estado == EstadoLote.Vendido)
+            return Resultado.Fallo("[CONFLICTO] No es posible modificar un lote que ya se encuentra vendido.");
+
+        try
         {
-            return Resultado<Guid>.Fallo(ex.Message);
+            lote.ActualizarDatosAdmin(
+                command.Seccion,
+                command.AndadorFila,
+                command.Gavetas,
+                new Dinero(command.PrecioContado),
+                command.Estado);
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return Resultado.Exito();
+        }
+        catch (ReglaNegocioException ex)
+        {
+            return Resultado.Fallo(ex.Message);
+        }
+    }
+
+    public async Task<Resultado> CambiarEstadoLoteAsync(Guid id, EstadoLote nuevoEstado, CancellationToken cancellationToken = default)
+    {
+        var lote = await _context.Lotes.FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
+        if (lote == null)
+            return Resultado.Fallo("[NO_ENCONTRADO] Lote no encontrado.");
+
+        if (!Enum.IsDefined(nuevoEstado))
+            return Resultado.Fallo("El estado indicado no es válido.");
+
+        try
+        {
+            if (nuevoEstado == EstadoLote.Vendido)
+            {
+                lote.MarcarVendido();
+            }
+            else if (nuevoEstado == EstadoLote.Reservado)
+            {
+                lote.Reservar();
+            }
+            else if (nuevoEstado == EstadoLote.Disponible)
+            {
+                lote.Liberar();
+            }
+            else
+            {
+                lote.ActualizarDatosAdmin(lote.Seccion, lote.AndadorFila, lote.Gavetas, lote.PrecioContado, nuevoEstado);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            return Resultado.Exito();
+        }
+        catch (ReglaNegocioException ex)
+        {
+            return Resultado.Fallo(ex.Message);
         }
     }
 }
