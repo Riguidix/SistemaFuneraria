@@ -29,7 +29,7 @@ Este panel consolida el avance real de las corridas de pruebas sobre la rama de 
 
 ## 2. Bitácora Maestra de Ejecución (Formato Sección 12)
 
-Cada registro refleja una corrida formal. Cuando una prueba resulta `Fallida`, genera automáticamente un reporte en [`06-bitacora-incidencias.md`](file:///Users/riguidixrodriguez/RiderProjects/SistemaFuneraria/docs/06-bitacora-incidencias.md).
+Cada registro refleja una corrida formal. Cuando una prueba resulta `Fallida`, genera automáticamente un reporte en [`06-bitacora-incidencias.md`](06-bitacora-incidencias.md).
 
 | ID Prueba | Fecha | Requisito | Resultado Esperado | Resultado Obtenido | Estado | Tester Responsable | Evidencia TDD (Pull Request / Run) |
 |---|---|---|---|---|---|---|---|
@@ -59,6 +59,7 @@ Cada registro refleja una corrida formal. Cuando una prueba resulta `Fallida`, g
 | **QA Gate v0.5.0 (Auditoría Wizard Pasos 1–3 y Regresión)** | Unit / Web | `WizardPasosAuditoriaTests.cs` | `AuditoriaFigma_Paso1a3_ComponentesYResumenCotizacion_DebeCumplirEspecificacionFigma`, `AuditoriaBDD_RegresionPasos_AnteriorYSiguiente_DebeConservarDatosDeCotizacionYFinanciamiento`, `AuditoriaFrontend_ScriptsReactivosYPersistenciaDraft_DebenEstarRegistrados`, `AuditoriaFigma_ModalidadContado_DebeProyectarPagoUnicoInmediato` | 4 pruebas | `Aprobado` (SF-056) |
 | **Suite QA HTTP Simulador (CP-03..06, CP-10)** | Integration HTTP | `SimuladorControllerTests.cs` | `CP03_CotizarCredito_12Meses2Gavetas_DebeCalcularCuotasYAmortizacionExacta`, `CP04_CotizarCredito_24Meses2Gavetas_DebeCoincidirConCaptura7Figma`, `CP05_CotizarCredito_24Meses3Gavetas_DebeCalcularCuotasYAmortizacionExacta`, `CP06_Oraculo36Combinaciones_TodasDebenRetornar200OkYCapitalCuadrarExacto`, `CP10_FronterasInvalidas_DebeRetornar400BadRequest`, `ObtenerPlanes_DebeRetornar200OkConPlanesAutorizados`, `CotizarContado_DebeRetornar200OkSinAmortizacion` | 14 pruebas | `Aprobado` (SF-055) |
 | **Pipeline CI/CD y Cobertura (Gatekeeper v1.0.0)** | DevOps / QA | Solución Integral | Cobertura Core $\ge 90\%$ (96.22%), App $\ge 85\%$ (88.39%), 0 warnings, zero skips, cero rutas locales | Integral | `Aprobado` (SF-097) |
+| **Auditoría Final 100 Carpetas y RTM (Gatekeeper v1.0.0)** | DevOps / QA | `validate-evidence.sh` + RTM | 100 carpetas auditadas (SF-001..100), 0 enlaces rotos, 0 rutas host, RTM 100% Cubierto y Certificado | 100 carpetas | `Aprobado` (SF-099) |
 
 ---
 

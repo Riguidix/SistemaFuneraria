@@ -59,7 +59,7 @@ pie title Distribución de Casos de Prueba Ejecutados
 
 ## 3. Balance del Ciclo de Vida de Incidencias (Defect Management)
 
-Durante el ciclo de desarrollo y pruebas de integración se registraron y gestionaron formalmente las anomalías en la [Bitácora de Incidencias](file:///Users/riguidixrodriguez/RiderProjects/SistemaFuneraria/docs/06-bitacora-incidencias.md):
+Durante el ciclo de desarrollo y pruebas de integración se registraron y gestionaron formalmente las anomalías en la [Bitácora de Incidencias](06-bitacora-incidencias.md):
 
 | Severidad | Total Detectadas | Corregidas y Verificadas | Abiertas al Cierre | Estado para Release |
 |---|---|---|---|---|

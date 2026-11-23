@@ -221,7 +221,7 @@ Para asegurar que los miembros del equipo en **macOS (Apple Silicon M1/M2/M3/M4 
 |---|---|
 | **Auditor QA / Gatekeeper** | Edgar Acevedo (Lead QA - Especialista en V&V) |
 | **Dictamen Inicial (12:55)** | ❌ **RECHAZADO / RETRABAJO REQUERIDO** |
-| **Incidencia Asociada** | [INC-002 en docs/06-bitacora-incidencias.md](docs/06-bitacora-incidencias.md#L119) |
+| **Incidencia Asociada** | [INC-002 en docs/06-bitacora-incidencias.md](../../06-bitacora-incidencias.md#L119) |
 | **Causa de Rechazo** | Ausencia de `down.sql`, mutabilidad en `pagos`, evidencia cosmética sin Docker y falta de tests xUnit. |
 | **Tiempo de Retraso Generado** | **2.0 horas hombre** (ciclo completo de refactorización y retest). |
 | **Dictamen de Retest (13:12)** | ✅ **APROBADO Y CERTIFICADO PARA MERGE A `dev`** |

@@ -120,7 +120,7 @@ flowchart TD
 
 ## 5. Técnicas de Prueba Aplicadas (Metodología Académica)
 
-El diseño de casos se rige por las 4 técnicas formales detalladas en la [Matriz de Trazabilidad (RTM)](file:///Users/riguidixrodriguez/RiderProjects/SistemaFuneraria/docs/02-matriz-trazabilidad.md):
+El diseño de casos se rige por las 4 técnicas formales detalladas en la [Matriz de Trazabilidad (RTM)](02-matriz-trazabilidad.md):
 
 1. **Partición de Equivalencia (EP-01 a EP-17):** Clases válidas frente a inválidas para enganches, plazos, precios y pagos.
 2. **Análisis de Valores Límite (BVA-01 a BVA-15):** Pruebas en las fronteras de enganche ($9.99\%, 10\%, 10.01\%$), plazos ($11, 12, 48, 49$ meses) y exactitud de saldo cero final.

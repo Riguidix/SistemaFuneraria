@@ -18,11 +18,11 @@
 
 En apego al ciclo estricto TDD y las directrices del proyecto:
 1. **Contratos y Abstracciones Limpias:**
-   - Se diseñó la interfaz de persistencia [`IAppDbContext.cs`](file://<REPO_ROOT>/src/SistemaFuneraria.Application/Comun/Persistencia/IAppDbContext.cs) dentro de `SistemaFuneraria.Application` exponiendo `DbSet<Cliente> Clientes { get; }` y `Task<int> SaveChangesAsync(CancellationToken)`.
+   - Se diseñó la interfaz de persistencia [`IAppDbContext.cs`](../../../src/SistemaFuneraria.Application/Comun/Persistencia/IAppDbContext.cs) dentro de `SistemaFuneraria.Application` exponiendo `DbSet<Cliente> Clientes { get; }` y `Task<int> SaveChangesAsync(CancellationToken)`.
    - `SistemaFuneraria.Infrastructure.Persistencia.AppDbContext` implementa `IAppDbContext`, respetando la inversión de dependencias y asegurando que `Application` **jamás** dependa de `Infrastructure` (comprobado con `ReglasArquitecturaTests` 100% verde).
-   - Se creó el stub de [`ClienteService.cs`](file://<REPO_ROOT>/src/SistemaFuneraria.Application/Servicios/Clientes/ClienteService.cs) implementando `IClienteService` inyectando `IAppDbContext`, con sus 4 métodos arrojando `NotImplementedException("SF-018: Fase RED...")`.
+   - Se creó el stub de [`ClienteService.cs`](../../../src/SistemaFuneraria.Application/Servicios/Clientes/ClienteService.cs) implementando `IClienteService` inyectando `IAppDbContext`, con sus 4 métodos arrojando `NotImplementedException("SF-018: Fase RED...")`.
 2. **Suite de Pruebas BDD / Criterios de Aceptación:**
-   - Se implementaron 16 métodos de prueba en [`ClienteServiceTests.cs`](file://<REPO_ROOT>/tests/SistemaFuneraria.Tests/Application/ClienteServiceTests.cs) con `TheoryData` expandido (37 ejecuciones unitarias totales).
+   - Se implementaron 16 métodos de prueba en [`ClienteServiceTests.cs`](../../../tests/SistemaFuneraria.Tests/Application/ClienteServiceTests.cs) con `TheoryData` expandido (37 ejecuciones unitarias totales).
    - Cubren de forma exhaustiva:
      * Registro con datos válidos y normalización de CURP (uppercase) y correo (lowercase).
      * Validación de obligatoriedad (Nombre, Primer Apellido, CURP, Teléfono, Correo).
@@ -114,7 +114,7 @@ Correctas! - Con error:     0, Superado:   248, Omitido:     0, Total:   248, Du
 
 ## 4. Estado de Preparación para la Fase GREEN
 
-El entorno queda preparado para que el desarrollador implemente el cuerpo de [`ClienteService.cs`](file://<REPO_ROOT>/src/SistemaFuneraria.Application/Servicios/Clientes/ClienteService.cs):
+El entorno queda preparado para que el desarrollador implemente el cuerpo de [`ClienteService.cs`](../../../src/SistemaFuneraria.Application/Servicios/Clientes/ClienteService.cs):
 - **Dependencias inyectadas:** `IAppDbContext` listo para operaciones async de EF Core (`Clientes.AddAsync`, `Clientes.AnyAsync`, `Clientes.FirstOrDefaultAsync`, `Clientes.AsNoTracking().ToListAsync`).
 - **Validaciones esperadas:** Usar `Resultado.Fallo<T>(...)` ante errores de entrada sin lanzar excepciones no controladas.
 - **Normalización esperada:** CURP en mayúsculas (`Trim().ToUpperInvariant()`), correo en minúsculas (`Trim().ToLowerInvariant()`).
