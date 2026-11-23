@@ -4,6 +4,7 @@ using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.DTOs.Ventas;
 using SistemaFuneraria.Core.Entidades;
 using SistemaFuneraria.Core.Enums;
+using SistemaFuneraria.Core.Excepciones;
 using SistemaFuneraria.Core.ValueObjects;
 
 namespace SistemaFuneraria.Application.Servicios.Ventas;
@@ -103,6 +104,11 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
 
             return Resultado<ContratoResumenDto>.Exito(resumen);
         }
+        catch (ReglaNegocioException ex)
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            return Resultado<ContratoResumenDto>.Fallo(ex.Message);
+        }
         catch
         {
             await _context.RollbackTransactionAsync(cancellationToken);
@@ -200,6 +206,11 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
             await _context.SaveChangesAsync(cancellationToken);
             await _context.CommitTransactionAsync(cancellationToken);
             return Resultado.Exito();
+        }
+        catch (ReglaNegocioException ex)
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            return Resultado.Fallo(ex.Message);
         }
         catch
         {
