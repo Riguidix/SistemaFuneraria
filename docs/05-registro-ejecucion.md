@@ -56,6 +56,7 @@ Cada registro refleja una corrida formal. Cuando una prueba resulta `Fallida`, g
 | **Transaccionalidad y Concurrencia** | Integration | `PostgresConexionTests.cs` | `CanConnect_PostgresContainer_DebeAbrirConexion` | 1 prueba | `Aprobado` (PR #63 / SF-002) |
 | **QA Gate v0.2.0 (Auth, Lockout, RBAC y /health)** | Integration HTTP | `AuthYUsuariosAdminHttpTests.cs` | `Health_DebeRetornar200Ok`, `AdminUsuarios_DebePermitirAdministradorYRechazarVendedorYCajero`, `Login_AlQuintoIntentoFallido_DebeRetornar423Locked`, `OlvideContrasena_DebeAplicarJitterMinimo200Ms` | 4 pruebas | `Aprobado` (SF-030) |
 | **QA Gate v0.3.0 (CRUD Clientes, BVA y RBAC)** | Integration HTTP | `ClientesCrudHttpTests.cs` | `CicloCompleto_CrudClientes_DebeCrearBuscarActualizarYExportar`, `ValidacionBva_TelefonoYCurp_DebeRetornar400BadRequest`, `SeguridadRbac_EliminarCliente_VendedorDebeRecibir403YAdminDebeEliminar` | 3 pruebas | `Aprobado` (SF-038) |
+| **Suite QA HTTP Simulador (CP-03..06, CP-10)** | Integration HTTP | `SimuladorControllerTests.cs` | `CP03_CotizarCredito_12Meses2Gavetas_DebeCalcularCuotasYAmortizacionExacta`, `CP04_CotizarCredito_24Meses2Gavetas_DebeCoincidirConCaptura7Figma`, `CP05_CotizarCredito_24Meses3Gavetas_DebeCalcularCuotasYAmortizacionExacta`, `CP06_Oraculo36Combinaciones_TodasDebenRetornar200OkYCapitalCuadrarExacto`, `CP10_FronterasInvalidas_DebeRetornar400BadRequest`, `ObtenerPlanes_DebeRetornar200OkConPlanesAutorizados`, `CotizarContado_DebeRetornar200OkSinAmortizacion` | 14 pruebas | `Aprobado` (SF-055) |
 
 ---
 
