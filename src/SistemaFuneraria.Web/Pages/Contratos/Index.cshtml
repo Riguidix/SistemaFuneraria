@@ -35,9 +35,9 @@
         <div class="card border-0 shadow-sm rounded-4 p-3 p-xl-4 bg-white h-100">
             <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Activos</span>
             <div class="d-flex align-items-baseline gap-2 mt-2">
-                <span class="display-6 fw-bold text-dark sf-money">@Model.TotalActivos</span>
+                <span class="display-6 fw-bold text-dark sf-money" id="kpiTotalActivos">@Model.TotalActivos</span>
             </div>
-            <div class="text-muted small mt-1">Total vigentes en cartera</div>
+            <div class="text-muted small mt-1" id="kpiMontoCartera">Total vigentes en cartera</div>
         </div>
     </div>
 
@@ -46,10 +46,10 @@
         <div class="card border-0 shadow-sm rounded-4 p-3 p-xl-4 bg-white h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Al corriente</span>
-                <span class="badge bg-success-subtle text-success small fw-semibold px-2 py-1 rounded-pill">93.7%</span>
+                <span class="badge bg-success-subtle text-success small fw-semibold px-2 py-1 rounded-pill" id="kpiPorcentajeAlCorriente">93.7%</span>
             </div>
             <div class="d-flex align-items-baseline gap-2 mt-2">
-                <span class="display-6 fw-bold text-dark sf-money">@Model.TotalAlCorriente</span>
+                <span class="display-6 fw-bold text-dark sf-money" id="kpiTotalAlCorriente">@Model.TotalAlCorriente</span>
             </div>
             <div class="text-muted small mt-1">Sin atraso de cuotas</div>
         </div>
@@ -63,9 +63,9 @@
                 <span class="badge bg-danger-subtle text-danger small fw-semibold px-2 py-1 rounded-pill">Requieren atención</span>
             </div>
             <div class="d-flex align-items-baseline gap-2 mt-2">
-                <span class="display-6 fw-bold text-danger sf-money">@Model.TotalConAtraso</span>
+                <span class="display-6 fw-bold text-danger sf-money" id="kpiTotalConAtraso">@Model.TotalConAtraso</span>
             </div>
-            <div class="text-muted small mt-1">Mensualidades vencidas</div>
+            <div class="text-muted small mt-1" id="kpiMontoPorRecuperar">Mensualidades vencidas</div>
         </div>
     </div>
 
@@ -74,15 +74,17 @@
         <div class="card border-0 shadow-sm rounded-4 p-3 p-xl-4 bg-white h-100">
             <div class="d-flex justify-content-between align-items-center">
                 <span class="text-muted small fw-semibold text-uppercase" style="letter-spacing: 0.05em; font-size: 0.75rem;">Liquidados este año</span>
-                <span class="badge bg-warning-subtle text-warning-emphasis small fw-semibold px-2 py-1 rounded-pill">Meta 2025</span>
+                <span class="badge bg-warning-subtle text-warning-emphasis small fw-semibold px-2 py-1 rounded-pill">Cierre anual</span>
             </div>
             <div class="d-flex align-items-baseline gap-2 mt-2">
-                <span class="display-6 fw-bold text-dark sf-money">@Model.TotalLiquidados</span>
+                <span class="display-6 fw-bold text-dark sf-money" id="kpiTotalLiquidados">@Model.TotalLiquidados</span>
             </div>
             <div class="text-muted small mt-1">Cierre total de amortización</div>
         </div>
     </div>
 </div>
+
+<div id="alertaErrorContratos" class="alert alert-danger d-none rounded-3 small mb-3" role="alert"></div>
 
 <!-- ========================================================
      3. BARRA DE HERRAMIENTAS (TOOLBAR CON BÚSQUEDA Y TABS)
@@ -102,26 +104,22 @@
     <div class="bg-white p-1 rounded-3 border shadow-sm d-inline-flex gap-1" role="tablist">
         <button type="button" 
                 class="btn btn-sm px-3 py-1-5 rounded-2 fw-medium btn-tab-filtro active" 
-                data-filtro-estado="todos"
-                onclick="cambiarTab(this, 'todos')">
+                data-filtro-estado="todos">
             Todos
         </button>
         <button type="button" 
                 class="btn btn-sm px-3 py-1-5 rounded-2 fw-medium btn-tab-filtro text-muted" 
-                data-filtro-estado="activos"
-                onclick="cambiarTab(this, 'activos')">
+                data-filtro-estado="activos">
             Activos
         </button>
         <button type="button" 
                 class="btn btn-sm px-3 py-1-5 rounded-2 fw-medium btn-tab-filtro text-muted" 
-                data-filtro-estado="vencidos"
-                onclick="cambiarTab(this, 'vencidos')">
+                data-filtro-estado="vencidos">
             Vencidos
         </button>
         <button type="button" 
                 class="btn btn-sm px-3 py-1-5 rounded-2 fw-medium btn-tab-filtro text-muted" 
-                data-filtro-estado="liquidados"
-                onclick="cambiarTab(this, 'liquidados')">
+                data-filtro-estado="liquidados">
             Liquidados
         </button>
     </div>
@@ -293,81 +291,9 @@
 </style>
 
 <!-- ========================================================
-     5. FILTRADO REACTIVO EN TIEMPO REAL (VANILLA JS)
+     5. CONEXIÓN CON API REAL DE CARTERA Y FILTROS (SF-070)
      ======================================================== -->
-<script>
-    let tabActivo = 'todos';
-
-    function cambiarTab(btn, filtro) {
-        tabActivo = filtro;
-
-        // Actualizar clases de botones
-        document.querySelectorAll('.btn-tab-filtro').forEach(b => {
-            b.classList.remove('active');
-            b.classList.add('text-muted');
-        });
-
-        btn.classList.add('active');
-        btn.classList.remove('text-muted');
-
-        filtrarContratos();
-    }
-
-    function filtrarContratos() {
-        const query = (document.getElementById('inputBuscarContratos')?.value || '').trim().toLowerCase();
-        const filas = document.querySelectorAll('.fila-contrato');
-        let visibles = 0;
-
-        filas.forEach(fila => {
-            const estadoFila = fila.getAttribute('data-estado');
-            const searchData = fila.getAttribute('data-search') || '';
-
-            // Condición 1: Pestaña (Tab)
-            let coincideTab = false;
-            if (tabActivo === 'todos') {
-                coincideTab = true;
-            } else if (tabActivo === 'activos') {
-                coincideTab = (estadoFila === 'activos');
-            } else if (tabActivo === 'vencidos') {
-                coincideTab = (estadoFila === 'vencidos');
-            } else if (tabActivo === 'liquidados') {
-                coincideTab = (estadoFila === 'liquidados');
-            }
-
-            // Condición 2: Búsqueda
-            let coincideSearch = (query === '' || searchData.includes(query));
-
-            if (coincideTab && coincideSearch) {
-                fila.classList.remove('d-none');
-                visibles++;
-            } else {
-                fila.classList.add('d-none');
-            }
-        });
-
-        // Mostrar / Ocultar Empty State
-        const emptyState = document.getElementById('emptyStateContratos');
-        const tabla = document.getElementById('tablaContratos');
-        if (emptyState && tabla) {
-            if (visibles === 0) {
-                emptyState.classList.remove('d-none');
-            } else {
-                emptyState.classList.add('d-none');
-            }
-        }
-    }
-
-    document.getElementById('inputBuscarContratos')?.addEventListener('input', filtrarContratos);
-
-    // Detección automática de query string ?tab=Vencidos al venir de Caja
-    document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const tabParam = urlParams.get('tab');
-        if (tabParam) {
-            const targetBtn = document.querySelector(`.btn-tab-filtro[data-filtro-estado="${tabParam.toLowerCase()}"]`);
-            if (targetBtn) {
-                cambiarTab(targetBtn, tabParam.toLowerCase());
-            }
-        }
-    });
-</script>
+@section Scripts {
+    <script src="~/js/api/contratosApi.js" asp-append-version="true"></script>
+    <script src="~/js/pages/contratosIndexPage.js" asp-append-version="true"></script>
+}

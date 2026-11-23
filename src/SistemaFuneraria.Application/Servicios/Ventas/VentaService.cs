@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFuneraria.Application.Comun;
 using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.DTOs.Ventas;
+using SistemaFuneraria.Core.Calculos;
+using SistemaFuneraria.Core.Comun;
 using SistemaFuneraria.Core.Entidades;
 using SistemaFuneraria.Core.Enums;
 using SistemaFuneraria.Core.Excepciones;
@@ -217,5 +219,151 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
             await _context.RollbackTransactionAsync(cancellationToken);
             throw;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<Resultado<ContratoFinanciadoResumenDto>> RegistrarVentaFinanciadaAsync(
+        RegistrarVentaFinanciadaCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ParametrosNegocio.EsEngancheAutorizado(command.PorcentajeEnganche))
+        {
+            return Resultado<ContratoFinanciadoResumenDto>.Fallo("El porcentaje de enganche autorizado debe ser 10%, 20% o 30%.");
+        }
+
+        if (!ParametrosNegocio.EsPlazoAutorizado(command.PlazoMeses))
+        {
+            return Resultado<ContratoFinanciadoResumenDto>.Fallo("El plazo autorizado debe ser 12, 18, 24 o 48 meses.");
+        }
+
+        var cliente = await _context.Clientes
+            .FirstOrDefaultAsync(c => c.Id == command.ClienteId, cancellationToken);
+        if (cliente is null)
+        {
+            return Resultado<ContratoFinanciadoResumenDto>.Fallo("[NO_ENCONTRADO] El cliente especificado no existe.");
+        }
+
+        var lote = await _context.Lotes
+            .FirstOrDefaultAsync(l => l.Id == command.LoteId, cancellationToken);
+        if (lote is null)
+        {
+            return Resultado<ContratoFinanciadoResumenDto>.Fallo("[NO_ENCONTRADO] El lote especificado no existe.");
+        }
+
+        if (lote.Estado == EstadoLote.Vendido)
+        {
+            return Resultado<ContratoFinanciadoResumenDto>.Fallo("[CONFLICTO] El lote seleccionado ya fue vendido.");
+        }
+
+        if (lote.Estado == EstadoLote.Mantenimiento)
+        {
+            return Resultado<ContratoFinanciadoResumenDto>.Fallo("[CONFLICTO] El lote seleccionado se encuentra en mantenimiento y no está disponible para venta.");
+        }
+
+        await _context.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            var fechaVenta = _timeProvider.GetLocalNow();
+            var folioContrato = await _context.ObtenerSiguienteFolioContratoAsync(fechaVenta.Year, cancellationToken);
+
+            var (montoEnganche, capitalFinanciado) = CalculadoraFinanciamiento.CalcularEnganche(
+                lote.PrecioContado.Monto,
+                command.PorcentajeEnganche);
+            var (tasaAnual, tasaMensual) = CalculadoraFinanciamiento.ObtenerTasas(command.PlazoMeses);
+            var renglones = GeneradorAmortizacion.Generar(capitalFinanciado, tasaMensual, command.PlazoMeses);
+
+            var venta = Venta.CrearFinanciada(
+                folioContrato,
+                cliente.Id,
+                lote.Id,
+                command.VendedorId,
+                lote.PrecioContado,
+                fechaVenta);
+
+            var fechaPrimerPago = command.FechaPrimerPago
+                ?? DateOnly.FromDateTime(fechaVenta.DateTime).AddMonths(1);
+
+            var financiamiento = Financiamiento.Crear(
+                ventaId: venta.Id,
+                porcentajeEnganche: command.PorcentajeEnganche,
+                montoEnganche: new Dinero(montoEnganche),
+                capitalFinanciado: new Dinero(capitalFinanciado),
+                plazoMeses: command.PlazoMeses,
+                tasaAnual: tasaAnual,
+                filasAmortizacion: renglones,
+                fechaPrimerPago: fechaPrimerPago);
+
+            lote.MarcarVendido();
+
+            await _context.Ventas.AddAsync(venta, cancellationToken);
+            await _context.Financiamientos.AddAsync(financiamiento, cancellationToken);
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await _context.CommitTransactionAsync(cancellationToken);
+
+            return Resultado<ContratoFinanciadoResumenDto>.Exito(new ContratoFinanciadoResumenDto(
+                VentaId: venta.Id,
+                FinanciamientoId: financiamiento.Id,
+                FolioContrato: venta.FolioContrato,
+                ClienteId: cliente.Id,
+                ClienteNombre: $"{cliente.Nombre} {cliente.Apellidos}",
+                LoteId: lote.Id,
+                LoteClave: lote.Clave,
+                Modalidad: venta.Modalidad.ToString(),
+                PrecioPactado: venta.PrecioPactado.Monto,
+                PorcentajeEnganche: financiamiento.PorcentajeEnganche,
+                MontoEnganche: financiamiento.MontoEnganche.Monto,
+                CapitalFinanciado: financiamiento.CapitalFinanciado.Monto,
+                PlazoMeses: financiamiento.PlazoMeses,
+                TasaInteresAnual: financiamiento.TasaInteresAnual,
+                CuotaMensualActual: financiamiento.CuotaMensualActual.Monto,
+                SaldoInsoluto: financiamiento.SaldoInsoluto.Monto,
+                Estado: venta.Estado.ToString(),
+                FechaVenta: venta.FechaVenta,
+                TotalMensualidades: financiamiento.Mensualidades.Count));
+        }
+        catch (ReglaNegocioException ex)
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            return Resultado<ContratoFinanciadoResumenDto>.Fallo(ex.Message);
+        }
+        catch
+        {
+            await _context.RollbackTransactionAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Resultado<IReadOnlyList<CuotaAmortizacionContratoDto>>> ObtenerAmortizacionPorVentaIdAsync(
+        Guid ventaId,
+        CancellationToken cancellationToken = default)
+    {
+        var financiamiento = await _context.Financiamientos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f => f.VentaId == ventaId, cancellationToken);
+
+        if (financiamiento is null)
+        {
+            return Resultado<IReadOnlyList<CuotaAmortizacionContratoDto>>.Fallo("[NO_ENCONTRADO] No se encontró tabla de amortización para la venta especificada.");
+        }
+
+        var cuotas = await _context.Mensualidades
+            .AsNoTracking()
+            .Where(m => m.FinanciamientoId == financiamiento.Id)
+            .OrderBy(m => m.NumeroCuota)
+            .Select(m => new CuotaAmortizacionContratoDto(
+                m.NumeroCuota,
+                m.FechaVencimiento,
+                m.SaldoInicialPeriodo.Monto,
+                m.CapitalProgramado.Monto,
+                m.InteresProgramado.Monto,
+                m.MontoTotalCuota.Monto,
+                m.SaldoFinalPeriodo.Monto,
+                m.Estado.ToString(),
+                m.FechaPago))
+            .ToListAsync(cancellationToken);
+
+        return Resultado<IReadOnlyList<CuotaAmortizacionContratoDto>>.Exito(cuotas);
     }
 }

@@ -57,6 +57,45 @@ public class VentasController(IVentaService ventaService) : ApiControllerBase
     }
 
     /// <summary>
+    /// Registra una venta en modalidad financiada a crédito creando amortización persistida (SF-067).
+    /// </summary>
+    [HttpPost("financiada")]
+    [ProducesResponseType(typeof(ContratoFinanciadoResumenDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RegistrarFinanciada([FromBody] RegistrarVentaFinanciadaRequest request, CancellationToken ct = default)
+    {
+        if (request is null || request.ClienteId == Guid.Empty || request.LoteId == Guid.Empty)
+        {
+            return Problem(
+                detail: "El ClienteId y LoteId son obligatorios y no pueden ser vacíos.",
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Datos de entrada inválidos");
+        }
+
+        var vendedorId = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.Identity?.Name
+            ?? "sistema";
+
+        var command = new RegistrarVentaFinanciadaCommand(
+            ClienteId: request.ClienteId,
+            LoteId: request.LoteId,
+            VendedorId: vendedorId,
+            PorcentajeEnganche: request.PorcentajeEnganche,
+            PlazoMeses: request.PlazoMeses,
+            FechaPrimerPago: request.FechaPrimerPago);
+
+        var resultado = await _ventaService.RegistrarVentaFinanciadaAsync(command, ct);
+        if (resultado.EsFallo)
+        {
+            return FromResult(resultado);
+        }
+
+        return CreatedAtAction(nameof(ObtenerPorId), new { id = resultado.Valor.VentaId }, resultado.Valor);
+    }
+
+    /// <summary>
     /// Obtiene el detalle de un contrato comercial y comprobante de venta por su identificador UUID.
     /// </summary>
     [HttpGet("{id:guid}")]
@@ -65,6 +104,18 @@ public class VentasController(IVentaService ventaService) : ApiControllerBase
     public async Task<IActionResult> ObtenerPorId(Guid id, CancellationToken ct = default)
     {
         var resultado = await _ventaService.ObtenerPorIdAsync(id, ct);
+        return FromResult(resultado);
+    }
+
+    /// <summary>
+    /// Obtiene la tabla de amortización persistida de una venta financiada por su identificador UUID (SF-067).
+    /// </summary>
+    [HttpGet("{id:guid}/amortizacion")]
+    [ProducesResponseType(typeof(IReadOnlyList<CuotaAmortizacionContratoDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ObtenerAmortizacion(Guid id, CancellationToken ct = default)
+    {
+        var resultado = await _ventaService.ObtenerAmortizacionPorVentaIdAsync(id, ct);
         return FromResult(resultado);
     }
 
