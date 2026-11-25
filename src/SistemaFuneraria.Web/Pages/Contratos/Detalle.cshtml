@@ -1,8 +1,9 @@
 @page "/Contratos/Detalle"
 @model SistemaFuneraria.Web.Pages.Contratos.DetalleModel
 @{
-    ViewData["Title"] = $"Expediente {Model.Folio} - Contratos";
-    var culture = new System.Globalization.CultureInfo("es-MX");
+    ViewData["Title"] = string.IsNullOrWhiteSpace(Model.FolioParam)
+        ? "Expediente de Contrato - Contratos"
+        : $"Expediente {Model.FolioParam} - Contratos";
 }
 
 <style>
@@ -40,12 +41,22 @@
     </div>
 </div>
 
+<!-- Banner de Error de Carga (Red / 500) -->
+<div id="alertaErrorDetalleContrato" class="alert alert-danger d-none rounded-3 small mb-4 btn-no-print" role="alert">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span id="mensajeErrorDetalleContrato">No fue posible consultar el expediente del contrato.</span>
+        <button type="button" id="btnReintentarDetalleContrato" class="btn btn-sm btn-outline-danger rounded-3 fw-semibold">
+            <i class="fa-solid fa-rotate-right me-1" aria-hidden="true"></i> Reintentar
+        </button>
+    </div>
+</div>
+
 <div id="contratoContenidoPrincipal">
     <!-- Cabecera del Expediente de Contrato -->
     <div class="funeraria-page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <div>
             <span class="funeraria-kicker text-uppercase fw-bold text-muted small tracking-wide">CARTERA / EXPEDIENTE DE CONTRATO</span>
-            <h2 class="h2 fw-bold text-dark mb-1" id="detalleFolioContrato">@Model.Folio</h2>
+            <h1 class="h2 fw-bold text-dark mb-1" id="detalleFolioContrato">@Model.Folio</h1>
             <div class="d-flex align-items-center flex-wrap gap-2 text-muted small">
                 <span><strong>Titular:</strong> <span id="detalleTitularContrato">@Model.Titular</span></span>
                 <span>&middot;</span>
@@ -57,7 +68,7 @@
             <a href="/Contratos" class="btn btn-outline-secondary rounded-3 px-3 py-2">
                 <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> Volver a contratos
             </a>
-            <a href="/Caja?contrato=@Model.Folio" id="btnIrACajaContrato" class="btn text-white rounded-3 px-3 py-2 fw-medium shadow-sm" style="background-color: #2D4224;">
+            <a href="/Caja" id="btnIrACajaContrato" data-roles="Administrador,Cajero" class="btn text-white rounded-3 px-3 py-2 fw-medium shadow-sm d-none" style="background-color: #2D4224;">
                 <i class="fa-solid fa-cash-register me-1" aria-hidden="true"></i> Registrar pago en Caja
             </a>
             <button type="button" id="btnImprimirContrato" class="btn btn-light border rounded-3 px-3 py-2" onclick="window.print();" title="Imprimir contrato">
@@ -74,29 +85,29 @@
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="bg-white rounded-4 shadow-sm border p-3 h-100">
                 <small class="text-muted fw-semibold d-block text-uppercase">PRECIO PACTADO</small>
-                <div class="h5 fw-bold text-dark mb-0 text-tabular" id="detallePrecioPactado">@Model.PrecioPactado.ToString("C2", culture)</div>
-                <small class="text-muted" id="detalleSubtituloPrecio">Enganche: @Model.Enganche.ToString("C2", culture) (@Model.EnganchePorcentaje.ToString("0")%)</small>
+                <div class="h5 fw-bold text-dark mb-0 text-tabular" id="detallePrecioPactado">—</div>
+                <small class="text-muted" id="detalleSubtituloPrecio">Cargando plan...</small>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="bg-white rounded-4 shadow-sm border p-3 h-100">
                 <small class="text-muted fw-semibold d-block text-uppercase">SALDO INSOLUTO</small>
-                <div class="h5 fw-bold text-success mb-0 text-tabular" id="detalleSaldoInsoluto">@Model.SaldoInsoluto.ToString("C2", culture)</div>
+                <div class="h5 fw-bold text-success mb-0 text-tabular" id="detalleSaldoInsoluto">—</div>
                 <small class="text-muted">Capital pendiente</small>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="bg-white rounded-4 shadow-sm border p-3 h-100">
                 <small class="text-muted fw-semibold d-block text-uppercase">MENSUALIDAD</small>
-                <div class="h5 fw-bold text-dark mb-0 text-tabular" id="detalleMensualidad">@Model.MensualidadRegular.ToString("C2", culture)</div>
-                <small class="text-muted" id="detalleSubtituloMensualidad">Próximo vencimiento: @Model.ProximoVencimiento</small>
+                <div class="h5 fw-bold text-dark mb-0 text-tabular" id="detalleMensualidad">—</div>
+                <small class="text-muted" id="detalleSubtituloMensualidad">Cargando vencimiento...</small>
             </div>
         </div>
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="bg-white rounded-4 shadow-sm border p-3 h-100">
                 <small class="text-muted fw-semibold d-block text-uppercase">PLAZO Y TASA</small>
-                <div class="h5 fw-bold text-dark mb-0" id="detallePlazoTasa">@Model.PlazoMeses meses</div>
-                <small class="text-muted" id="detalleSubtituloTasa">Tasa anual fija: @Model.TasaAnual.ToString("0")%</small>
+                <div class="h5 fw-bold text-dark mb-0" id="detallePlazoTasa">—</div>
+                <small class="text-muted" id="detalleSubtituloTasa">Cargando condiciones...</small>
             </div>
         </div>
     </div>
@@ -140,7 +151,7 @@
                 <p class="small text-muted mb-0">Detalle de cuotas ordinarias, desglose de capital, interés y saldo remanente con ajuste francés.</p>
             </div>
             <span id="badgeConteoAmortizacion" class="badge bg-light text-dark border px-3 py-2 rounded-pill small">
-                <i class="fa-solid fa-file-invoice-dollar me-1 text-success" aria-hidden="true"></i> @Model.Amortizacion.Count Cuotas calculadas
+                <i class="fa-solid fa-file-invoice-dollar me-1 text-success" aria-hidden="true"></i> Cargando cuotas...
             </span>
         </div>
 
@@ -159,21 +170,12 @@
                     </tr>
                 </thead>
                 <tbody id="tbodyAmortizacion">
-                    @foreach (var c in Model.Amortizacion)
-                    {
-                        <tr>
-                            <td class="ps-3 fw-bold text-muted">@c.Numero</td>
-                            <td class="text-dark">@c.Vencimiento</td>
-                            <td class="text-end text-muted">@c.SaldoInicial.ToString("C2", culture)</td>
-                            <td class="text-end text-dark">@c.Capital.ToString("C2", culture)</td>
-                            <td class="text-end text-muted">@c.Interes.ToString("C2", culture)</td>
-                            <td class="text-end fw-bold text-dark">@c.CuotaTotal.ToString("C2", culture)</td>
-                            <td class="text-end fw-medium @(c.SaldoFinal == 0 ? "text-success" : "text-dark")">@c.SaldoFinal.ToString("C2", culture)</td>
-                            <td class="text-center pe-3">
-                                <span class="@c.EstadoBadgeClass rounded-pill px-2 py-1 small">@c.Estado</span>
-                            </td>
-                        </tr>
-                    }
+                    <tr id="filaCargandoAmortizacion">
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Cargando tabla de amortización...
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>

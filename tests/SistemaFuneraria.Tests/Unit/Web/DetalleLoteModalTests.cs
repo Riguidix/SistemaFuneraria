@@ -70,14 +70,18 @@ public class DetalleLoteModalTests
         contenido.Should().Contain("actualizarLote");
     }
 
-    [Fact(DisplayName = "SF-046: DetalleModel debe soportar parámetro de búsqueda por loteClave")]
+    [Fact(DisplayName = "SF-046: DetalleModel y contratoDetallePage.js deben soportar parámetro de búsqueda por loteClave")]
     public void ContratosDetalleModel_DebeSoportarParametroLoteClave()
     {
-        var path = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Contratos", "Detalle.cshtml.cs");
-        var contenido = File.ReadAllText(path);
+        var modelPath = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Contratos", "Detalle.cshtml.cs");
+        var modelContenido = File.ReadAllText(modelPath);
+        var jsPath = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "wwwroot", "js", "pages", "contratoDetallePage.js");
+        var jsContenido = File.ReadAllText(jsPath);
 
-        contenido.Should().Contain("loteClave");
-        contenido.Should().Contain("LM-A-014");
+        modelContenido.Should().Contain("loteClave");
+        modelContenido.Should().Contain("LoteClaveParam");
+        jsContenido.Should().Contain("loteClave");
+        jsContenido.Should().Contain("obtenerCartera");
     }
 
     [Fact(DisplayName = "SF-046: lotesApi.js debe exponer método obtenerLotePorClave")]

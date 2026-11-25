@@ -248,7 +248,11 @@ public class CarteraContratosService(IAppDbContext context, TimeProvider? timePr
 
         var cliente = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == venta.ClienteId, cancellationToken);
         var lote = await _context.Lotes.AsNoTracking().FirstOrDefaultAsync(l => l.Id == venta.LoteId, cancellationToken);
-        var pago = await _context.Pagos.AsNoTracking().FirstOrDefaultAsync(p => p.VentaId == venta.Id, cancellationToken);
+        var pago = await _context.Pagos
+            .AsNoTracking()
+            .Where(p => p.VentaId == venta.Id)
+            .OrderByDescending(p => p.FechaPago)
+            .FirstOrDefaultAsync(cancellationToken);
         var financiamiento = await _context.Financiamientos.AsNoTracking().FirstOrDefaultAsync(f => f.VentaId == venta.Id, cancellationToken);
 
         var cuotas = financiamiento is null

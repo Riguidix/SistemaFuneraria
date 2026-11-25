@@ -40,6 +40,12 @@
 
     function obtenerBadgeEstadoVenta(estado) {
         const norm = String(estado || "").trim().toLowerCase();
+        if (norm === "vencido") {
+            return {
+                texto: "Vencido",
+                clase: "badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 fw-medium"
+            };
+        }
         if (norm === "liquidado" || norm === "activo" || norm === "al corriente") {
             return {
                 texto: norm === "liquidado" ? "Liquidado" : (norm === "activo" ? "Activo" : estado),
@@ -86,12 +92,20 @@
 
         if (!doc) return null;
 
-        if (authApi) {
-            authApi.applyRolePermissions(doc);
+        const hasExplicitStorage = deps.storage !== undefined;
+        const storageOpts = apiClient
+            ? (hasExplicitStorage ? { client: apiClient, storage: deps.storage } : { client: apiClient })
+            : {};
+
+        if (authApi && typeof authApi.applyRolePermissions === "function") {
+            authApi.applyRolePermissions(doc, storageOpts);
         }
 
         const contenidoPrincipal = doc.getElementById("contratoContenidoPrincipal");
         const contratoNoEncontrado = doc.getElementById("contratoNoEncontrado");
+        const alertaErrorDetalle = doc.getElementById("alertaErrorDetalleContrato");
+        const mensajeErrorDetalle = doc.getElementById("mensajeErrorDetalleContrato");
+        const btnReintentarDetalle = doc.getElementById("btnReintentarDetalleContrato");
 
         const elFolio = doc.getElementById("detalleFolioContrato");
         const elTitular = doc.getElementById("detalleTitularContrato");
@@ -105,6 +119,7 @@
         const elPlazo = doc.getElementById("detallePlazoTasa");
         const elSubTasa = doc.getElementById("detalleSubtituloTasa");
         const btnIrACaja = doc.getElementById("btnIrACajaContrato");
+        const btnAbrirAdmin = doc.getElementById("btnAbrirModalAdminEstado");
 
         const seccionAmortizacion = doc.getElementById("seccionTablaAmortizacion");
         const badgeConteoAmortizacion = doc.getElementById("badgeConteoAmortizacion");
@@ -125,8 +140,41 @@
         const params = new URLSearchParams(win?.location?.search || "");
         const ventaIdParam = (params.get("id") || "").trim();
         const folioParam = (params.get("folio") || "").trim();
+        const loteClaveParam = (params.get("loteClave") || "").trim();
         const identificadorParam = ventaIdParam || folioParam;
         let contratoVentaId = ventaIdParam;
+        let rolActual = "";
+
+        function verificarAcceso() {
+            if (!authApi || !apiClient) {
+                return { autorizado: true, session: null };
+            }
+
+            const token = typeof authApi.getToken === "function"
+                ? authApi.getToken(storageOpts)
+                : (deps.storage ? deps.storage.getItem(apiClient.TOKEN_STORAGE_KEY) : null);
+            const session = typeof authApi.getSession === "function"
+                ? authApi.getSession(storageOpts)
+                : null;
+            const expirado = typeof authApi.isTokenExpired === "function" && token
+                ? authApi.isTokenExpired(token)
+                : false;
+
+            if (!token || !session || expirado) {
+                if (typeof authApi.logout === "function") {
+                    authApi.logout({ ...storageOpts, skipRedirect: true });
+                }
+                let destino = "/Cuenta/Login";
+                const path = win?.location?.pathname || "";
+                if (path && path !== "/" && !path.toLowerCase().startsWith("/cuenta/")) {
+                    destino = `/Cuenta/Login?returnUrl=${encodeURIComponent(path + (win?.location?.search || ""))}`;
+                }
+                win?.location?.assign?.(destino);
+                return { autorizado: false, session: null };
+            }
+
+            return { autorizado: true, session };
+        }
 
         function mostrarAlertaModal(msg) {
             if (!alertaModal) return;
@@ -138,6 +186,30 @@
             if (!alertaModal) return;
             alertaModal.classList.add("d-none");
             alertaModal.textContent = "";
+        }
+
+        function mostrarErrorDetalle(msg) {
+            const texto = limpiarPrefijoError(msg) || "No fue posible consultar el expediente del contrato.";
+            if (alertaErrorDetalle) {
+                if (mensajeErrorDetalle) {
+                    mensajeErrorDetalle.textContent = texto;
+                } else {
+                    alertaErrorDetalle.textContent = texto;
+                }
+                alertaErrorDetalle.classList.remove("d-none");
+            }
+        }
+
+        function ocultarErrorDetalle() {
+            if (alertaErrorDetalle) {
+                alertaErrorDetalle.classList.add("d-none");
+            }
+        }
+
+        function mostrarNoEncontrado() {
+            ocultarErrorDetalle();
+            if (contenidoPrincipal) contenidoPrincipal.classList.add("d-none");
+            if (contratoNoEncontrado) contratoNoEncontrado.classList.remove("d-none");
         }
 
         function actualizarBadgeEstado(estadoTexto) {
@@ -164,14 +236,42 @@
                 contratoVentaId = String(dto.ventaId);
             }
 
+            ocultarErrorDetalle();
+            if (contratoNoEncontrado) contratoNoEncontrado.classList.add("d-none");
+            if (contenidoPrincipal) contenidoPrincipal.classList.remove("d-none");
+
             const precioStr = formatearMonedaMXN(dto.precioPactado);
             const esContado = String(dto.modalidad || "").toLowerCase() === "contado";
+            const estadoNorm = String(dto.estado || "").toLowerCase();
+            const esCerrado = estadoNorm === "liquidado" || estadoNorm === "cancelado";
+            const puedeIrACaja = !rolActual || rolActual === "Administrador" || rolActual === "Cajero";
 
             if (elFolio) elFolio.textContent = dto.folioContrato || "-";
             if (modalFolio) modalFolio.textContent = dto.folioContrato || "-";
             if (elTitular) elTitular.textContent = dto.clienteNombre || "-";
-            if (elLote) elLote.textContent = dto.loteClave || "-";
+            if (elLote) {
+                const clave = dto.loteClave || "-";
+                const tieneSeccion = Boolean(dto.loteSeccion && dto.loteSeccion !== "N/D");
+                const tieneGavetas = Number(dto.loteGavetas) > 0;
+                if (tieneSeccion && tieneGavetas) {
+                    elLote.textContent = `${clave} (${dto.loteSeccion}, ${dto.loteGavetas} gavetas)`;
+                } else if (tieneSeccion) {
+                    elLote.textContent = `${clave} (${dto.loteSeccion})`;
+                } else {
+                    elLote.textContent = clave;
+                }
+            }
             actualizarBadgeEstado(dto.estadoVisual || dto.estado);
+
+            if (selectEstado && (dto.estado === "Activo" || dto.estado === "EnRevision")) {
+                selectEstado.value = dto.estado;
+            }
+            if (btnAbrirAdmin) {
+                btnAbrirAdmin.disabled = esCerrado;
+                btnAbrirAdmin.title = esCerrado
+                    ? "No se puede modificar el estado de un contrato liquidado o cancelado."
+                    : "Panel exclusivo de administración";
+            }
 
             if (elPrecio) elPrecio.textContent = precioStr;
 
@@ -212,62 +312,99 @@
                 if (elPlazo) elPlazo.textContent = `${fin.plazoMeses || cuotas.length || "-"} meses`;
                 if (elSubTasa) elSubTasa.textContent = `Tasa anual fija: ${tasaPct.toFixed(0)}%`;
 
-                const esCerrado = ["liquidado", "cancelado"].includes(String(dto.estado || "").toLowerCase());
                 if (btnIrACaja) {
                     btnIrACaja.setAttribute("href", `/Caja?contrato=${encodeURIComponent(dto.folioContrato || "")}`);
-                    btnIrACaja.classList.toggle("d-none", esCerrado);
+                    btnIrACaja.classList.toggle("d-none", esCerrado || !puedeIrACaja);
                 }
                 if (comprobanteCard) comprobanteCard.classList.add("d-none");
                 if (seccionAmortizacion) seccionAmortizacion.classList.remove("d-none");
                 if (badgeConteoAmortizacion) {
                     badgeConteoAmortizacion.innerHTML = `<i class="fa-solid fa-file-invoice-dollar me-1 text-success" aria-hidden="true"></i> ${cuotas.length} Cuotas calculadas`;
                 }
-                if (tbodyAmortizacion && cuotas.length > 0) {
-                    tbodyAmortizacion.innerHTML = cuotas.map(function (c) {
-                        const saldoClass = Number(c.saldoFinal) === 0 ? "text-success" : "text-dark";
-                        return `<tr>` +
-                            `<td class="ps-3 fw-bold text-muted">${c.numeroCuota}</td>` +
-                            `<td class="text-dark">${formatearFecha(c.fechaVencimiento)}</td>` +
-                            `<td class="text-end text-muted">${formatearMonedaMXN(c.saldoInicial)}</td>` +
-                            `<td class="text-end text-dark">${formatearMonedaMXN(c.capital)}</td>` +
-                            `<td class="text-end text-muted">${formatearMonedaMXN(c.interes)}</td>` +
-                            `<td class="text-end fw-bold text-dark">${formatearMonedaMXN(c.cuotaTotal)}</td>` +
-                            `<td class="text-end fw-medium ${saldoClass}">${formatearMonedaMXN(c.saldoFinal)}</td>` +
-                            `<td class="text-center pe-3">${badgeCuotaHtml(c.estado)}</td>` +
-                            `</tr>`;
-                    }).join("");
+                if (tbodyAmortizacion) {
+                    if (cuotas.length > 0) {
+                        tbodyAmortizacion.innerHTML = cuotas.map(function (c) {
+                            const saldoClass = Number(c.saldoFinal) === 0 ? "text-success" : "text-dark";
+                            return `<tr>` +
+                                `<td class="ps-3 fw-bold text-muted">${c.numeroCuota}</td>` +
+                                `<td class="text-dark">${formatearFecha(c.fechaVencimiento)}</td>` +
+                                `<td class="text-end text-muted">${formatearMonedaMXN(c.saldoInicial)}</td>` +
+                                `<td class="text-end text-dark">${formatearMonedaMXN(c.capital)}</td>` +
+                                `<td class="text-end text-muted">${formatearMonedaMXN(c.interes)}</td>` +
+                                `<td class="text-end fw-bold text-dark">${formatearMonedaMXN(c.cuotaTotal)}</td>` +
+                                `<td class="text-end fw-medium ${saldoClass}">${formatearMonedaMXN(c.saldoFinal)}</td>` +
+                                `<td class="text-center pe-3">${badgeCuotaHtml(c.estado)}</td>` +
+                                `</tr>`;
+                        }).join("");
+                    } else {
+                        tbodyAmortizacion.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No hay cuotas registradas para este contrato.</td></tr>`;
+                    }
                 }
             }
         }
 
         async function cargarPorId() {
-            if (!identificadorParam || (!contratosApi && !ventasApi)) return;
+            const acceso = verificarAcceso();
+            if (!acceso.autorizado) return;
+            rolActual = acceso.session?.rol || "";
 
-            if (authApi && apiClient) {
-                const storage = deps.storage ?? (typeof sessionStorage !== "undefined" ? sessionStorage : null);
-                const token = storage ? storage.getItem(apiClient.TOKEN_STORAGE_KEY) : null;
-                const session = authApi.getSession({ client: apiClient, storage });
-                if (!token || !session) {
-                    win?.location?.assign?.("/Cuenta/Login");
-                    return;
-                }
+            if (!identificadorParam && !loteClaveParam) {
+                mostrarNoEncontrado();
+                return;
             }
 
+            if (!contratosApi && !ventasApi) return;
+
+            ocultarErrorDetalle();
+
             try {
-                const dto = contratosApi
-                    ? await contratosApi.obtenerDetalleContrato(identificadorParam)
-                    : await ventasApi.obtenerVentaPorId(ventaIdParam);
+                let dto = null;
+                if (identificadorParam) {
+                    dto = contratosApi
+                        ? await contratosApi.obtenerDetalleContrato(identificadorParam)
+                        : await ventasApi.obtenerVentaPorId(ventaIdParam);
+                } else if (loteClaveParam && contratosApi && typeof contratosApi.obtenerCartera === "function") {
+                    const cartera = await contratosApi.obtenerCartera({
+                        buscar: loteClaveParam,
+                        tab: "Todos",
+                        page: 1,
+                        pageSize: 20
+                    });
+                    const items = Array.isArray(cartera?.items) ? cartera.items : [];
+                    const loteUpper = loteClaveParam.toUpperCase();
+                    const coincidencias = items.filter(function (i) {
+                        return String(i.loteClave || "").trim().toUpperCase() === loteUpper;
+                    });
+                    const match = coincidencias.find(function (i) {
+                        return String(i.estado || "").toLowerCase() !== "cancelado";
+                    }) || coincidencias[0];
+
+                    if (!match) {
+                        mostrarNoEncontrado();
+                        return;
+                    }
+                    dto = await contratosApi.obtenerDetalleContrato(match.folioContrato || match.ventaId);
+                } else {
+                    mostrarNoEncontrado();
+                    return;
+                }
+
                 poblarDesdeApi(dto);
             } catch (err) {
                 if (err?.status === 404) {
-                    if (contenidoPrincipal) contenidoPrincipal.classList.add("d-none");
-                    if (contratoNoEncontrado) contratoNoEncontrado.classList.remove("d-none");
-                } else if (sfUi && typeof sfUi.showToast === "function") {
-                    sfUi.showToast({
-                        type: "error",
-                        title: "Error al cargar contrato",
-                        message: "No fue posible consultar el expediente del contrato."
-                    });
+                    mostrarNoEncontrado();
+                } else {
+                    mostrarErrorDetalle(err?.message || "No fue posible consultar el expediente del contrato.");
+                    if (tbodyAmortizacion && doc.getElementById("filaCargandoAmortizacion")) {
+                        tbodyAmortizacion.innerHTML = "";
+                    }
+                    if (sfUi && typeof sfUi.showToast === "function") {
+                        sfUi.showToast({
+                            type: "error",
+                            title: "Error al cargar contrato",
+                            message: "No fue posible consultar el expediente del contrato."
+                        });
+                    }
                 }
             }
         }
@@ -276,6 +413,12 @@
             modalEl.addEventListener("hidden.bs.modal", function () {
                 ocultarAlertaModal();
                 if (motivoInput) motivoInput.value = "";
+            });
+        }
+
+        if (btnReintentarDetalle) {
+            btnReintentarDetalle.addEventListener("click", function () {
+                cargarPorId();
             });
         }
 
@@ -310,7 +453,6 @@
                         await ventasApi.cambiarEstadoVenta(contratoVentaId, nuevoEstado, motivo);
                     }
 
-                    actualizarBadgeEstado(nuevoEstado);
                     if (modalEl && bootstrapObj?.Modal) {
                         bootstrapObj.Modal.getOrCreateInstance(modalEl).hide();
                     }
@@ -321,6 +463,7 @@
                             message: "El estado del contrato fue actualizado correctamente."
                         });
                     }
+                    await cargarPorId();
                 } catch (err) {
                     mostrarAlertaModal(err?.message || "No fue posible actualizar el estado del contrato.");
                 } finally {
