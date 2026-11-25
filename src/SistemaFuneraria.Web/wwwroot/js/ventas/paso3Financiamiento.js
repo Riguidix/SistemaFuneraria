@@ -94,6 +94,10 @@
         const lblTitulo = doc.getElementById("lblBannerTitulo");
         const lblSubtitulo = doc.getElementById("lblBannerSubtitulo");
         const lblMonto = doc.getElementById("lblBannerMonto");
+        const contenedorBtnAmortizacion = doc.getElementById("contenedorBtnAmortizacion");
+        const btnVerTablaAmortizacion = doc.getElementById("btnVerTablaAmortizacion");
+        const tbodyAmortizacion = doc.getElementById("tbodyTablaAmortizacionPaso3");
+        const subtituloAmortizacion = doc.getElementById("subtituloTablaAmortizacion");
 
         const alertaError = doc.getElementById("paso3AlertaError");
         const mensajeError = doc.getElementById("paso3MensajeError");
@@ -170,8 +174,38 @@
             }
         }
 
+        function renderizarTablaAmortizacion(res) {
+            if (!tbodyAmortizacion) return;
+            const filas = Array.isArray(res?.tablaAmortizacion) ? res.tablaAmortizacion : [];
+            if (filas.length === 0) {
+                tbodyAmortizacion.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">Sin tabla de amortización para modalidad de contado.</td></tr>';
+                if (btnVerTablaAmortizacion) btnVerTablaAmortizacion.disabled = true;
+                return;
+            }
+
+            if (subtituloAmortizacion) {
+                subtituloAmortizacion.textContent = `${res.plazoMeses} mensualidades · Tasa ${res.tasaAnualPorcentaje}% anual · Capital financiado: ${formatearMonedaMXN(res.saldoAFinanciar)} · Total a pagar: ${formatearMonedaMXN(res.totalAPagar)}`;
+            }
+
+            tbodyAmortizacion.innerHTML = filas.map(function (f) {
+                return `<tr>` +
+                    `<td class="ps-4 fw-semibold">${Number(f.numeroCuota || 0)}</td>` +
+                    `<td class="text-muted">${formatearFechaPrimerPago(f.fechaVencimiento)}</td>` +
+                    `<td class="text-end sf-money">${formatearMonedaMXN(f.saldoInicial)}</td>` +
+                    `<td class="text-end sf-money text-muted">${formatearMonedaMXN(f.interes)}</td>` +
+                    `<td class="text-end sf-money">${formatearMonedaMXN(f.capital)}</td>` +
+                    `<td class="text-end sf-money fw-bold text-dark">${formatearMonedaMXN(f.cuotaTotal)}</td>` +
+                    `<td class="text-end pe-4 sf-money fw-semibold">${formatearMonedaMXN(f.saldoFinal)}</td>` +
+                    `</tr>`;
+            }).join("");
+
+            if (btnVerTablaAmortizacion) btnVerTablaAmortizacion.disabled = false;
+        }
+
         function actualizarEstilosToggle(esContado) {
             if (btnCredito && btnContado) {
+                btnCredito.setAttribute("aria-pressed", esContado ? "false" : "true");
+                btnContado.setAttribute("aria-pressed", esContado ? "true" : "false");
                 if (esContado) {
                     btnContado.style.backgroundColor = "#2D4224";
                     btnContado.style.borderColor = "#2D4224";
@@ -193,6 +227,9 @@
             if (contenedorCredito) {
                 contenedorCredito.classList.toggle("d-none", esContado);
             }
+            if (contenedorBtnAmortizacion) {
+                contenedorBtnAmortizacion.classList.toggle("d-none", esContado);
+            }
         }
 
         async function cotizarEnServidor() {
@@ -200,6 +237,7 @@
             ocultarError();
             cotizacionActual = null;
             if (btnContinuar) btnContinuar.disabled = true;
+            if (btnVerTablaAmortizacion) btnVerTablaAmortizacion.disabled = true;
 
             const draft = wizardState ? wizardState.getDraft() : {};
             if (draft?.lote?.precio) {
@@ -239,6 +277,7 @@
                     if (lblSubtitulo) lblSubtitulo.textContent = `Primer pago: ${formatearFechaPrimerPago(res.fechaPrimerPago)}`;
                     if (lblMonto) lblMonto.textContent = formatearMonedaMXN(res.mensualidadEstimada);
                 }
+                renderizarTablaAmortizacion(res);
 
                 if (wizardState) {
                     wizardState.updateDraft({

@@ -15,10 +15,11 @@
     <!-- 2. Selector de Modalidad (Toggle Crédito / Contado) -->
     <div class="mb-4">
         <label class="form-label small fw-medium text-dark mb-2">Modalidad</label>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2" role="group" aria-label="Seleccionar modalidad de pago">
             <!-- Botón Crédito (Activo por defecto) -->
             <button type="button"
                     id="btnModalidadCredito"
+                    aria-pressed="true"
                     class="btn px-4 py-2 rounded-3 fw-medium text-white shadow-sm transition-all"
                     style="background-color: #2D4224; border: 1px solid #2D4224;">
                 Crédito
@@ -26,6 +27,7 @@
             <!-- Botón Contado (Inactivo) -->
             <button type="button"
                     id="btnModalidadContado"
+                    aria-pressed="false"
                     class="btn px-4 py-2 rounded-3 fw-medium text-dark bg-white transition-all"
                     style="border: 1px solid #E5E7EB;">
                 Contado
@@ -56,14 +58,71 @@
 
     <!-- 4. Banner Verde Institucional (Mensualidad estimada) -->
     <div id="bannerFinanciamiento"
-         class="rounded-4 p-4 d-flex justify-content-between align-items-center mb-4 text-white shadow-sm transition-all"
+         class="rounded-4 p-4 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-3 text-white shadow-sm transition-all"
          style="background-color: #2D4224;">
         <div>
             <div class="fw-bold fs-6 mb-1" id="lblBannerTitulo">Mensualidad estimada</div>
-            <small class="opacity-75" id="lblBannerSubtitulo">Calculando fecha de primer pago...</small>
+            <small class="opacity-75 d-block" id="lblBannerSubtitulo">Calculando fecha de primer pago...</small>
         </div>
-        <div class="text-end">
+        <div class="text-sm-end">
             <span class="display-6 fw-bold sf-money" id="lblBannerMonto">$0.00</span>
+        </div>
+    </div>
+
+    <!-- Acción para inspeccionar la tabla de amortización completa (RF-08 / CP-06) -->
+    <div class="mb-4" id="contenedorBtnAmortizacion">
+        <button type="button"
+                id="btnVerTablaAmortizacion"
+                class="btn btn-sm btn-outline-dark rounded-3 fw-medium d-inline-flex align-items-center gap-2"
+                data-bs-toggle="modal"
+                data-bs-target="#modalTablaAmortizacionPaso3"
+                disabled>
+            <i class="fa-solid fa-table-list" aria-hidden="true"></i>
+            <span>Ver tabla de amortización completa</span>
+        </button>
+    </div>
+
+    <!-- Modal de Tabla de Amortización Completa (6 columnas tabular-nums con cierre en $0.00) -->
+    <div class="modal fade" id="modalTablaAmortizacionPaso3" tabindex="-1" aria-labelledby="modalTablaAmortizacionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+            <div class="modal-content rounded-4 border-0 shadow">
+                <div class="modal-header border-bottom px-4 py-3">
+                    <div>
+                        <h3 class="modal-title h5 fw-bold text-dark mb-0" id="modalTablaAmortizacionLabel">
+                            Tabla de amortización estimada
+                        </h3>
+                        <p class="text-muted small mb-0" id="subtituloTablaAmortizacion">
+                            Sistema francés sobre saldos insolutos · Ajuste al centavo en el último periodo ($0.00).
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small" aria-label="Tabla de amortización proyectada">
+                            <thead class="table-light text-muted">
+                                <tr>
+                                    <th scope="col" class="ps-4">#</th>
+                                    <th scope="col">Vencimiento</th>
+                                    <th scope="col" class="text-end">Saldo inicial</th>
+                                    <th scope="col" class="text-end">Interés</th>
+                                    <th scope="col" class="text-end">Capital</th>
+                                    <th scope="col" class="text-end">Cuota</th>
+                                    <th scope="col" class="text-end pe-4">Saldo final</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyTablaAmortizacionPaso3">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">Sin cotización activa.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3">
+                    <button type="button" class="btn btn-secondary rounded-3 px-4" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -16,24 +16,31 @@
     <link rel="stylesheet" href="~/css/sistema-tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/funeraria-theme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body.sf-auth-pending { visibility: hidden; }
+    </style>
 </head>
 @{
     var rutaActual = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
-    bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
+    bool esResumen = rutaActual.StartsWith("/Resumen", StringComparison.OrdinalIgnoreCase);
     bool esCatalogo = rutaActual.StartsWith("/Catalogo", StringComparison.OrdinalIgnoreCase);
+    bool esClientes = rutaActual.StartsWith("/Clientes", StringComparison.OrdinalIgnoreCase);
+    bool esNuevaVenta = rutaActual.StartsWith("/Ventas", StringComparison.OrdinalIgnoreCase);
     bool esContratos = rutaActual.StartsWith("/Contratos", StringComparison.OrdinalIgnoreCase);
     bool esCaja = rutaActual.StartsWith("/Caja", StringComparison.OrdinalIgnoreCase) || rutaActual.StartsWith("/Cobranza", StringComparison.OrdinalIgnoreCase);
+    bool esReportes = rutaActual.StartsWith("/Reportes", StringComparison.OrdinalIgnoreCase);
+    bool esConfiguracion = rutaActual.StartsWith("/Configuracion", StringComparison.OrdinalIgnoreCase);
     bool esParametrosUi = rutaActual.StartsWith("/ParametrosUi", StringComparison.OrdinalIgnoreCase);
 }
-<body class="funeraria-app">
+<body class="funeraria-app sf-auth-pending">
     <div class="funeraria-wrapper">
         <!-- ==========================================
              SIDEBAR LATERAL FUNERARIA (CAPA 1)
              ========================================== -->
-        <aside class="funeraria-sidebar" aria-label="Navegación principal Funeraria">
+        <aside class="funeraria-sidebar" aria-label="Barra lateral de navegación Funeraria">
             <div>
                 <!-- Logotipo e Identidad de Marca Funeraria -->
-                <a href="/Clientes" class="funeraria-brand mb-3">
+                <a href="/Resumen" class="funeraria-brand mb-3" data-auth-home>
                     <div class="funeraria-brand-icon" aria-hidden="true">F</div>
                     <div>
                         <div class="funeraria-brand-title">Funeraria</div>
@@ -43,77 +50,81 @@
 
                 <!-- SECCIÓN: OPERACIÓN -->
                 <div class="funeraria-nav-section-title">OPERACIÓN</div>
-                <ul class="funeraria-nav-list" role="navigation">
-                    <!-- 1. Resumen (Inerte) -->
-                    <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Resumen (No navegable)">
-                            <i class="fa-solid fa-table-cells-large fa-fw" aria-hidden="true"></i>
-                            <span>Resumen</span>
-                        </a>
-                    </li>
-                    <!-- 2. Catálogo de lotes (Funcional en SF-023) -->
-                    <li>
-                        <a href="/Catalogo" class="funeraria-nav-item @(esCatalogo ? "active" : "")" @(esCatalogo ? "aria-current=\"page\"" : "")>
-                            <i class="fa-solid fa-book-open fa-fw" aria-hidden="true"></i>
-                            <span>Catálogo de lotes</span>
-                        </a>
-                    </li>
-                    <!-- 3. Clientes (Funcional en SF-019 / SF-020) -->
-                    <li>
-                        <a href="/Clientes" class="funeraria-nav-item @(esClientes ? "active" : "")" @(esClientes ? "aria-current=\"page\"" : "")>
-                            <i class="fa-solid fa-users fa-fw" aria-hidden="true"></i>
-                            <span>Clientes</span>
-                        </a>
-                    </li>
-                    <!-- 4. + Nueva venta (Inerte) -->
-                    <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Nueva venta (No navegable)">
-                            <i class="fa-solid fa-circle-plus fa-fw" aria-hidden="true"></i>
-                            <span>+ Nueva venta</span>
-                        </a>
-                    </li>
-                    <!-- 5. Contratos (Activo SF-070) -->
-                    <li>
-                        <a href="/Contratos" class="funeraria-nav-item @(esContratos ? "active" : "")" @(esContratos ? "aria-current=\"page\"" : "") title="Contratos">
-                            <i class="fa-solid fa-file-lines fa-fw" aria-hidden="true"></i>
-                            <span>Contratos</span>
-                        </a>
-                    </li>
-                    <!-- 6. Caja y cobranza (Figma Captura 10 · SF-080) -->
-                    <li>
-                        <a href="/Caja" class="funeraria-nav-item @(esCaja ? "active" : "")" @(esCaja ? "aria-current=\"page\"" : "") title="Caja y cobranza">
-                            <i class="fa-solid fa-cash-register fa-fw" aria-hidden="true"></i>
-                            <span>Caja y cobranza</span>
-                            <span class="funeraria-badge-gold">8</span>
-                        </a>
-                    </li>
-                </ul>
+                <nav aria-label="Menú operativo">
+                    <ul class="funeraria-nav-list">
+                        <!-- 1. Resumen -->
+                        <li data-roles="Administrador,Vendedor">
+                            <a href="/Resumen" class="funeraria-nav-item @(esResumen ? "active" : "")" @(esResumen ? "aria-current=\"page\"" : "") title="Resumen">
+                                <i class="fa-solid fa-table-cells-large fa-fw" aria-hidden="true"></i>
+                                <span>Resumen</span>
+                            </a>
+                        </li>
+                        <!-- 2. Catálogo de lotes -->
+                        <li data-roles="Administrador,Vendedor">
+                            <a href="/Catalogo" class="funeraria-nav-item @(esCatalogo ? "active" : "")" @(esCatalogo ? "aria-current=\"page\"" : "") title="Catálogo de lotes">
+                                <i class="fa-solid fa-book-open fa-fw" aria-hidden="true"></i>
+                                <span>Catálogo de lotes</span>
+                            </a>
+                        </li>
+                        <!-- 3. Clientes -->
+                        <li data-roles="Administrador,Vendedor">
+                            <a href="/Clientes" class="funeraria-nav-item @(esClientes ? "active" : "")" @(esClientes ? "aria-current=\"page\"" : "") title="Clientes">
+                                <i class="fa-solid fa-users fa-fw" aria-hidden="true"></i>
+                                <span>Clientes</span>
+                            </a>
+                        </li>
+                        <!-- 4. Nueva venta -->
+                        <li data-roles="Administrador,Vendedor">
+                            <a href="/Ventas/Nueva" class="funeraria-nav-item @(esNuevaVenta ? "active" : "")" @(esNuevaVenta ? "aria-current=\"page\"" : "") title="Nueva venta">
+                                <i class="fa-solid fa-circle-plus fa-fw" aria-hidden="true"></i>
+                                <span>Nueva venta</span>
+                            </a>
+                        </li>
+                        <!-- 5. Contratos -->
+                        <li data-roles="Administrador,Vendedor,Cajero">
+                            <a href="/Contratos" class="funeraria-nav-item @(esContratos ? "active" : "")" @(esContratos ? "aria-current=\"page\"" : "") title="Contratos">
+                                <i class="fa-solid fa-file-lines fa-fw" aria-hidden="true"></i>
+                                <span>Contratos</span>
+                            </a>
+                        </li>
+                        <!-- 6. Caja y cobranza -->
+                        <li data-roles="Administrador,Cajero">
+                            <a href="/Caja" class="funeraria-nav-item @(esCaja ? "active" : "")" @(esCaja ? "aria-current=\"page\"" : "") title="Caja y cobranza">
+                                <i class="fa-solid fa-cash-register fa-fw" aria-hidden="true"></i>
+                                <span>Caja y cobranza</span>
+                                <span id="sidebarCajaBadge" class="funeraria-badge-gold d-none" aria-label="Pagos vencidos">0</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
 
                 <!-- SECCIÓN: ADMINISTRACIÓN -->
                 <div class="funeraria-nav-section-title" data-roles="Administrador">ADMINISTRACIÓN</div>
-                <ul class="funeraria-nav-list" role="navigation" data-roles="Administrador">
-                    <!-- 7. Reportes (Inerte) -->
-                    <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Reportes (No navegable)">
-                            <i class="fa-solid fa-chart-line fa-fw" aria-hidden="true"></i>
-                            <span>Reportes</span>
-                        </a>
-                    </li>
-                    <!-- 8. Configuración (Inerte) -->
-                    <li>
-                        <a href="#" class="funeraria-nav-item inert" onclick="return false;" title="Configuración (No navegable)">
-                            <i class="fa-solid fa-gear fa-fw" aria-hidden="true"></i>
-                            <span>Configuración</span>
-                        </a>
-                    </li>
-                    <!-- 9. Parámetros UI (Activo SF-025) -->
-                    <li>
-                        <a href="/ParametrosUi" class="funeraria-nav-item @(esParametrosUi ? "active" : "")" @(esParametrosUi ? "aria-current=\"page\"" : "") title="Parámetros UI">
-                            <i class="fa-solid fa-sliders fa-fw" aria-hidden="true"></i>
-                            <span>Parámetros UI</span>
-                        </a>
-                    </li>
-                </ul>
+                <nav aria-label="Menú de administración" data-roles="Administrador">
+                    <ul class="funeraria-nav-list">
+                        <!-- 7. Reportes -->
+                        <li>
+                            <a href="/Reportes" class="funeraria-nav-item @(esReportes ? "active" : "")" @(esReportes ? "aria-current=\"page\"" : "") title="Reportes">
+                                <i class="fa-solid fa-chart-line fa-fw" aria-hidden="true"></i>
+                                <span>Reportes</span>
+                            </a>
+                        </li>
+                        <!-- 8. Configuración -->
+                        <li>
+                            <a href="/Configuracion" class="funeraria-nav-item @(esConfiguracion ? "active" : "")" @(esConfiguracion ? "aria-current=\"page\"" : "") title="Configuración">
+                                <i class="fa-solid fa-gear fa-fw" aria-hidden="true"></i>
+                                <span>Configuración</span>
+                            </a>
+                        </li>
+                        <!-- 9. Parámetros UI -->
+                        <li>
+                            <a href="/ParametrosUi" class="funeraria-nav-item @(esParametrosUi ? "active" : "")" @(esParametrosUi ? "aria-current=\"page\"" : "") title="Parámetros UI">
+                                <i class="fa-solid fa-sliders fa-fw" aria-hidden="true"></i>
+                                <span>Parámetros UI</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
 
             <!-- Pie de Sidebar: Tarjeta Visual de Soporte -->
@@ -197,22 +208,33 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" onerror="this.onerror=null;this.src='/lib/bootstrap/dist/js/bootstrap.bundle.min.js';"></script>
     <script src="~/js/api/apiClient.js" asp-append-version="true"></script>
     <script src="~/js/api/authApi.js" asp-append-version="true"></script>
+    <script src="~/js/ui/sfFormatters.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            if (!window.authApi) return;
-            window.authApi.applyRolePermissions(document);
-            var session = window.authApi.getSession();
-            if (session) {
-                var initialsEl = document.querySelector("[data-auth-initials]");
-                var nameEl = document.querySelector("[data-auth-name]");
-                var roleEl = document.querySelector("[data-auth-role]");
-                var branchEl = document.querySelector("[data-auth-branch]");
-                if (initialsEl) initialsEl.textContent = session.iniciales || "--";
-                if (nameEl) nameEl.textContent = session.nombreCompleto || session.correo || "Usuario";
-                if (roleEl) roleEl.textContent = session.rol || "";
-                if (branchEl && session.sucursal) branchEl.textContent = session.sucursal;
+            if (!window.authApi) {
+                document.body.classList.remove("sf-auth-pending");
+                return;
             }
+            var session = window.authApi.requireAuth();
+            if (!session) {
+                return;
+            }
+            window.authApi.applyRolePermissions(document);
+            var homeEl = document.querySelector("[data-auth-home]");
+            if (homeEl && typeof window.authApi.getDefaultRouteForRole === "function") {
+                homeEl.setAttribute("href", window.authApi.getDefaultRouteForRole(session.rol));
+            }
+            var initialsEl = document.querySelector("[data-auth-initials]");
+            var nameEl = document.querySelector("[data-auth-name]");
+            var roleEl = document.querySelector("[data-auth-role]");
+            var branchEl = document.querySelector("[data-auth-branch]");
+            if (initialsEl) initialsEl.textContent = session.iniciales || "--";
+            if (nameEl) nameEl.textContent = session.nombreCompleto || session.correo || "Usuario";
+            if (roleEl) roleEl.textContent = session.rol || "";
+            if (branchEl && session.sucursal) branchEl.textContent = session.sucursal;
+            document.body.classList.remove("sf-auth-pending");
+
             var btnLogout = document.getElementById("btnLogout");
             if (btnLogout) {
                 btnLogout.addEventListener("click", function () {

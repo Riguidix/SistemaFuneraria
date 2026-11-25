@@ -13,7 +13,8 @@ public record LoteItemDto(
     int Gavetas,
     decimal PrecioContado,
     string Estado,
-    Guid? ContratoActivoId = null
+    Guid? ContratoActivoId = null,
+    string? FolioContratoActivo = null
 );
 
 /// <summary>
@@ -27,7 +28,8 @@ public record ResumenCatalogoLotesDto(
     int LotesLibresSeccionMasEspacio,
     IReadOnlyList<LoteItemDto> Items,
     int PaginaActual,
-    int TotalPaginas
+    int TotalPaginas,
+    int TotalFiltrados = 0
 );
 
 /// <summary>

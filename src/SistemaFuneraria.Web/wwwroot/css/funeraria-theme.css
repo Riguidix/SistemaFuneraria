@@ -894,17 +894,26 @@ body.funeraria-app {
 }
 
 /* Badges específicos para estados de lote */
-.badge-disponible {
+.badge-disponible,
+.badge-sf-success {
   background-color: #E6F4EA;
   color: #137333;
 }
 
-.badge-reservado {
+.badge-reservado,
+.badge-sf-warning {
   background-color: #FEF7E0;
   color: #B06000;
 }
 
-.badge-vendido {
+.badge-vendido,
+.badge-sf-neutral {
   background-color: #F1F3F4;
   color: #5F6368;
+}
+
+.badge-mantenimiento,
+.badge-sf-maintenance {
+  background-color: #FDECEB;
+  color: #A84F4B;
 }

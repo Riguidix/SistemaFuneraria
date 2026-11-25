@@ -1,0 +1,77 @@
+@* Modal CRUD Administrativo de Lotes (Alta y Edición - RN-01 precio fijo por gavetas) *@
+<div class="modal fade" id="modalFormularioLote" tabindex="-1" aria-labelledby="modalFormularioLoteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content funeraria-modal-card p-2 p-md-3 rounded-4 shadow-sm border-0 bg-white">
+            <div class="modal-header border-0 pb-1 align-items-start">
+                <div>
+                    <span class="funeraria-kicker text-uppercase fw-bold text-muted small">ADMINISTRACIÓN DE INVENTARIO</span>
+                    <h2 class="modal-title fs-4 fw-bold text-dark mb-1" id="modalFormularioLoteLabel">Nuevo lote</h2>
+                    <p class="text-muted small mb-0">El precio de contado se asigna automáticamente según la capacidad (RN-01).</p>
+                </div>
+                <button type="button" class="btn-close ms-auto mt-1" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <form id="formLoteAdmin" novalidate>
+                <div class="modal-body py-3">
+                    <input type="hidden" id="loteFormId" value="" />
+
+                    <div id="alertaFormLote" class="alert d-none rounded-3 py-2 px-3 small mb-3" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="loteFormClave" class="form-label small fw-semibold">Clave física</label>
+                            <input type="text" id="loteFormClave" class="form-control text-uppercase" placeholder="JN-A-099" maxlength="20" required />
+                            <div class="form-text">Formato: XX-X-000 (ej. JN-A-099)</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="loteFormSeccion" class="form-label small fw-semibold">Sección</label>
+                            <select id="loteFormSeccion" class="form-select" required>
+                                <option value="Jardín Norte">Jardín Norte</option>
+                                <option value="Jardín Central">Jardín Central</option>
+                                <option value="Robles">Robles</option>
+                                <option value="Las Magnolias">Las Magnolias</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="loteFormAndador" class="form-label small fw-semibold">Andador y fila</label>
+                            <input type="text" id="loteFormAndador" class="form-control" placeholder="Andador A · Fila 5" maxlength="60" required />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="loteFormGavetas" class="form-label small fw-semibold">Capacidad</label>
+                            <select id="loteFormGavetas" class="form-select" required>
+                                <option value="2">2 gavetas (Básico)</option>
+                                <option value="3">3 gavetas (Familiar)</option>
+                                <option value="4">4 gavetas (Ampliado)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="loteFormPrecio" class="form-label small fw-semibold">Precio de contado (RN-01)</label>
+                            <input type="text" id="loteFormPrecio" class="form-control bg-light sf-money fw-semibold" value="$120,000.00" readonly aria-readonly="true" />
+                        </div>
+
+                        <div class="col-12 d-none" id="grupoLoteFormEstado">
+                            <label for="loteFormEstado" class="form-label small fw-semibold">Estado operativo</label>
+                            <select id="loteFormEstado" class="form-select">
+                                <option value="Disponible">Disponible</option>
+                                <option value="Reservado">Reservado</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-3 px-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="btnGuardarLote" class="btn text-white rounded-3 px-4 fw-semibold"
+                            style="background-color: #2D4224; border-color: #2D4224;">
+                        Guardar lote
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

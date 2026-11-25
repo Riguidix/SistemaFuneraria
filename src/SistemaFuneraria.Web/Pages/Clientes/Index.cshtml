@@ -32,8 +32,8 @@
         <p class="text-muted small mx-auto mb-3" style="max-width: 460px;">
             Tu rol actual no tiene permisos para consultar el directorio de clientes. Esta sección está disponible para <strong>Administrador</strong> y <strong>Vendedor</strong>.
         </p>
-        <a href="/Catalogo" class="btn btn-funeraria-primary rounded-3 px-4">
-            <i class="fa-solid fa-table-cells-large me-1" aria-hidden="true"></i> Ir al catálogo de lotes
+        <a id="btnVolver403Clientes" href="/Caja" class="btn btn-funeraria-primary rounded-3 px-4">
+            <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> Volver a mi inicio
         </a>
     </div>
 </div>
@@ -46,7 +46,7 @@
             <input type="text"
                    id="inputBuscarClientes"
                    class="form-control funeraria-search-input"
-                   placeholder="Buscar por nombre, teléfono o CURP"
+                   placeholder="Buscar por nombre, correo, teléfono o CURP"
                    autocomplete="off"
                    aria-label="Buscar clientes" />
             <button type="button" id="btnClearSearch" class="btn-clear-search" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
@@ -66,7 +66,7 @@
 
     <!-- Filtros Rápidos por Estado -->
     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
-        <div class="funeraria-filter-pills" role="tablist" aria-label="Filtrar por estado">
+        <div class="funeraria-filter-pills" role="group" aria-label="Filtrar por estado">
             <button type="button" class="filter-pill active" data-filter="todos" aria-pressed="true">
                 Todos <span class="badge bg-white text-dark ms-1 rounded-pill" id="badgeTotalTodos">0</span>
             </button>
@@ -91,15 +91,15 @@
             <table class="table funeraria-table align-middle mb-0" id="tablaClientes" aria-label="Directorio de clientes">
                 <thead>
                     <tr>
-                        <th scope="col" class="ps-4 th-sortable" data-sort-col="nombre" title="Ordenar por Nombre">
+                        <th scope="col" class="ps-4 th-sortable" data-sort-col="nombre" tabindex="0" role="button" aria-sort="none" title="Ordenar por Nombre">
                             CLIENTE <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
                         </th>
                         <th scope="col">CONTACTO</th>
                         <th scope="col">CONTRATOS</th>
-                        <th scope="col" class="text-end th-sortable" data-sort-col="saldo" title="Ordenar por Saldo Actual">
+                        <th scope="col" class="text-end th-sortable" data-sort-col="saldo" tabindex="0" role="button" aria-sort="none" title="Ordenar por Saldo Actual">
                             SALDO ACTUAL <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
                         </th>
-                        <th scope="col" class="th-sortable" data-sort-col="fecha" title="Ordenar por Fecha de Pago">
+                        <th scope="col" class="th-sortable" data-sort-col="fecha" tabindex="0" role="button" aria-sort="none" title="Ordenar por Fecha de Pago">
                             ÚLTIMO PAGO <i class="fa-solid fa-sort sort-icon" aria-hidden="true"></i>
                         </th>
                         <th scope="col">ESTADO</th>
@@ -269,6 +269,19 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Accesos Rápidos del Expediente -->
+        <div class="d-flex gap-2 mb-4">
+            <a id="btnDrawerNuevaVenta" href="/Ventas/Nueva" class="btn btn-sm btn-funeraria-primary flex-grow-1 rounded-3 fw-semibold text-white text-decoration-none d-inline-flex align-items-center justify-content-center gap-1"
+               style="background-color: var(--sf-primary-olive, #2D4224); border-color: var(--sf-primary-olive, #2D4224);">
+                <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                <span>Nueva venta</span>
+            </a>
+            <a id="btnDrawerVerContratos" href="/Contratos" class="btn btn-sm btn-outline-secondary flex-grow-1 rounded-3 fw-semibold text-decoration-none d-inline-flex align-items-center justify-content-center gap-1">
+                <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                <span>Ver contratos</span>
+            </a>
         </div>
 
         <!-- Formulario de Edición -->

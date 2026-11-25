@@ -82,17 +82,37 @@ public class LoteService(IAppDbContext context) : ILoteService
         int totalFiltrados = listaFiltrada.Count;
         int totalPaginas = Math.Max(1, (int)Math.Ceiling((double)totalFiltrados / tamanoPagina));
 
-        var itemsPaginados = listaFiltrada
+        var lotesPagina = listaFiltrada
             .Skip((pagina - 1) * tamanoPagina)
             .Take(tamanoPagina)
-            .Select(l => new LoteItemDto(
-                l.Id,
-                l.Clave,
-                l.Seccion,
-                l.AndadorFila,
-                l.Gavetas,
-                l.PrecioContado.Monto,
-                l.Estado.ToString()))
+            .ToList();
+
+        var loteIds = lotesPagina.Select(l => l.Id).ToList();
+        var ventasPorLote = loteIds.Count == 0
+            ? new Dictionary<Guid, (Guid Id, string Folio)>()
+            : (await _context.Ventas
+                .AsNoTracking()
+                .Where(v => loteIds.Contains(v.LoteId) && v.Estado != EstadoVenta.Cancelado)
+                .Select(v => new { v.LoteId, v.Id, v.FolioContrato })
+                .ToListAsync(cancellationToken))
+                .GroupBy(v => v.LoteId)
+                .ToDictionary(g => g.Key, g => (Id: g.First().Id, Folio: g.First().FolioContrato));
+
+        var itemsPaginados = lotesPagina
+            .Select(l =>
+            {
+                ventasPorLote.TryGetValue(l.Id, out var contrato);
+                return new LoteItemDto(
+                    l.Id,
+                    l.Clave,
+                    l.Seccion,
+                    l.AndadorFila,
+                    l.Gavetas,
+                    l.PrecioContado.Monto,
+                    l.Estado.ToString(),
+                    contrato.Id == Guid.Empty ? null : contrato.Id,
+                    contrato.Folio);
+            })
             .ToList();
 
         var resumen = new ResumenCatalogoLotesDto(
@@ -103,7 +123,8 @@ public class LoteService(IAppDbContext context) : ILoteService
             lotesLibresSeccionMasEspacio,
             itemsPaginados,
             pagina,
-            totalPaginas);
+            totalPaginas,
+            totalFiltrados);
 
         return Resultado<ResumenCatalogoLotesDto>.Exito(resumen);
     }
@@ -117,6 +138,12 @@ public class LoteService(IAppDbContext context) : ILoteService
         if (lote == null)
             return Resultado<LoteItemDto>.Fallo("[NO_ENCONTRADO] Lote no encontrado.");
 
+        var contrato = await _context.Ventas
+            .AsNoTracking()
+            .Where(v => v.LoteId == lote.Id && v.Estado != EstadoVenta.Cancelado)
+            .Select(v => new { v.Id, v.FolioContrato })
+            .FirstOrDefaultAsync(cancellationToken);
+
         return Resultado<LoteItemDto>.Exito(new LoteItemDto(
             lote.Id,
             lote.Clave,
@@ -124,7 +151,9 @@ public class LoteService(IAppDbContext context) : ILoteService
             lote.AndadorFila,
             lote.Gavetas,
             lote.PrecioContado.Monto,
-            lote.Estado.ToString()));
+            lote.Estado.ToString(),
+            contrato?.Id,
+            contrato?.FolioContrato));
     }
 
     public async Task<Resultado<LoteItemDto>> ObtenerPorClaveAsync(string clave, CancellationToken cancellationToken = default)
@@ -140,6 +169,12 @@ public class LoteService(IAppDbContext context) : ILoteService
         if (lote == null)
             return Resultado<LoteItemDto>.Fallo("[NO_ENCONTRADO] Lote no encontrado.");
 
+        var contrato = await _context.Ventas
+            .AsNoTracking()
+            .Where(v => v.LoteId == lote.Id && v.Estado != EstadoVenta.Cancelado)
+            .Select(v => new { v.Id, v.FolioContrato })
+            .FirstOrDefaultAsync(cancellationToken);
+
         return Resultado<LoteItemDto>.Exito(new LoteItemDto(
             lote.Id,
             lote.Clave,
@@ -147,7 +182,9 @@ public class LoteService(IAppDbContext context) : ILoteService
             lote.AndadorFila,
             lote.Gavetas,
             lote.PrecioContado.Monto,
-            lote.Estado.ToString()));
+            lote.Estado.ToString(),
+            contrato?.Id,
+            contrato?.FolioContrato));
     }
 
     public async Task<Resultado<Guid>> CrearLoteAsync(CrearLoteCommand command, CancellationToken cancellationToken = default)
