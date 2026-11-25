@@ -93,6 +93,8 @@ public class LotesApiWrapperTests
         contenido.Should().Contain("badge-sf-success");
         contenido.Should().Contain("badge-sf-warning");
         contenido.Should().Contain("badge-sf-neutral");
+        contenido.Should().Contain("badge-sf-maintenance");
+        contenido.Should().Contain("Mantenimiento");
         contenido.Should().Contain("Cotizar");
         contenido.Should().Contain("Ver detalle");
         contenido.Should().Contain("Ver contrato");

@@ -14,27 +14,18 @@ public abstract class ApiControllerBase : ControllerBase
 
     private IActionResult MapearError(Resultado resultado)
     {
-        var error = resultado.Error;
-
-        if (error.StartsWith("[CONFLICTO]", StringComparison.Ordinal))
+        var (statusCode, title) = resultado.TipoError switch
         {
-            return Problem(
-                detail: error,
-                statusCode: StatusCodes.Status409Conflict,
-                title: "Conflicto de negocio");
-        }
-
-        if (error.StartsWith("[NO_ENCONTRADO]", StringComparison.Ordinal))
-        {
-            return Problem(
-                detail: error,
-                statusCode: StatusCodes.Status404NotFound,
-                title: "Recurso no encontrado");
-        }
+            TipoError.Conflicto => (StatusCodes.Status409Conflict, "Conflicto de negocio"),
+            TipoError.NoEncontrado => (StatusCodes.Status404NotFound, "Recurso no encontrado"),
+            TipoError.NoAutorizado => (StatusCodes.Status401Unauthorized, "No autorizado"),
+            TipoError.Prohibido => (StatusCodes.Status403Forbidden, "Acceso denegado"),
+            _ => (StatusCodes.Status400BadRequest, "Error de validación o regla de negocio")
+        };
 
         return Problem(
-            detail: error,
-            statusCode: StatusCodes.Status400BadRequest,
-            title: "Error de validación o regla de negocio");
+            detail: resultado.Error,
+            statusCode: statusCode,
+            title: title);
     }
 }

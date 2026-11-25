@@ -21,6 +21,17 @@
     }
 </style>
 
+<div id="reciboAccesoRestringido" class="card border-0 shadow-sm rounded-4 p-5 text-center mb-4 d-none" role="alert">
+    <i class="fa-solid fa-lock fa-2x text-danger mb-3" aria-hidden="true"></i>
+    <h2 class="h5 fw-bold text-dark mb-2">Acceso restringido (403)</h2>
+    <p class="text-muted small mb-3">
+        Tu rol actual no tiene permisos para consultar comprobantes de caja. Esta sección está disponible para <strong>Administrador</strong> y <strong>Cajero</strong>.
+    </p>
+    <a id="btnVolver403Recibo" href="/Resumen" class="btn btn-funeraria-primary rounded-3 px-4">
+        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> Volver a mi inicio
+    </a>
+</div>
+
 <div id="reciboNoEncontrado" class="card border-0 shadow-sm rounded-4 p-5 text-center mb-4 d-none" role="alert">
     <i class="fa-solid fa-receipt fa-2x text-muted mb-3" aria-hidden="true"></i>
     <h2 class="h5 fw-bold text-dark mb-2">Recibo no encontrado (404)</h2>
@@ -28,6 +39,15 @@
     <a href="/Caja" class="btn btn-funeraria-primary rounded-3 px-4">
         <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> Volver a Caja
     </a>
+</div>
+
+<div id="alertaErrorRecibo" class="alert alert-danger d-none rounded-4 shadow-sm mb-4 mx-auto btn-no-print" style="max-width: 780px;" role="alert">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span id="mensajeErrorRecibo">No fue posible consultar el recibo oficial.</span>
+        <button type="button" id="btnReintentarRecibo" class="btn btn-sm btn-outline-danger rounded-3 fw-semibold">
+            <i class="fa-solid fa-rotate-right me-1" aria-hidden="true"></i> Reintentar
+        </button>
+    </div>
 </div>
 
 <div id="reciboContenidoPrincipal" class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white mx-auto" style="max-width: 780px;">
@@ -47,7 +67,12 @@
     <div class="row g-3 small mb-4">
         <div class="col-6 col-md-4">
             <div class="text-muted">Contrato</div>
-            <div class="fw-bold text-dark sf-monospace" id="reciboFolioContrato">-</div>
+            <div>
+                <a id="lnkContratoDesdeRecibo" href="/Contratos" class="fw-bold text-dark sf-monospace text-decoration-none">
+                    <span id="reciboFolioContrato">-</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square ms-1 small text-muted btn-no-print" aria-hidden="true"></i>
+                </a>
+            </div>
         </div>
         <div class="col-6 col-md-4">
             <div class="text-muted">Cliente</div>

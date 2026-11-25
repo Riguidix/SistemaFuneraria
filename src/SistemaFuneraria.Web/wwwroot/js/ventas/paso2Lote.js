@@ -111,18 +111,35 @@
             if (alertaError) alertaError.classList.remove("d-none");
         }
 
-        function sincronizarPanelDerecho(loteDraft) {
-            if (!loteDraft) return;
-            const precioStr = formatearMonedaMXN(loteDraft.precio);
-            if (resumenTitulo) resumenTitulo.textContent = loteDraft.tipo;
-            if (resumenClave) resumenClave.textContent = loteDraft.clave;
-            if (resumenCapacidad) resumenCapacidad.textContent = `${loteDraft.gavetas} gavetas`;
-            if (resumenPrecio) resumenPrecio.textContent = precioStr;
-            if (resumenTotal) resumenTotal.textContent = precioStr;
+        function sincronizarCuadriculaSlots(loteDraft) {
+            const numericCells = Array.from(slotCells).filter(function (cell) {
+                const s = cell.getAttribute("data-slot") || "";
+                return !/^[A-Z]$/i.test(s);
+            });
+
+            if (numericCells.length > 0 && lotesDisponibles.length > 0) {
+                const slotsReales = [];
+                for (const l of lotesDisponibles) {
+                    const sl = extraerSlotDeClave(l.clave);
+                    if (sl && !slotsReales.includes(sl)) {
+                        slotsReales.push(sl);
+                    }
+                    if (slotsReales.length >= numericCells.length) break;
+                }
+                if (loteDraft?.slot && !slotsReales.includes(loteDraft.slot) && slotsReales.length > 0) {
+                    slotsReales[0] = loteDraft.slot;
+                }
+                numericCells.forEach(function (cell, idx) {
+                    if (slotsReales[idx]) {
+                        cell.setAttribute("data-slot", slotsReales[idx]);
+                        cell.textContent = slotsReales[idx];
+                    }
+                });
+            }
 
             slotCells.forEach(function (cell) {
                 const cellSlot = cell.getAttribute("data-slot");
-                if (cellSlot && cellSlot === loteDraft.slot) {
+                if (cellSlot && loteDraft?.slot && cellSlot === loteDraft.slot) {
                     cell.style.backgroundColor = "#2D4224";
                     cell.style.color = "#FFFFFF";
                     cell.style.fontWeight = "bold";
@@ -136,6 +153,18 @@
                     cell.classList.add("text-secondary", "bg-white", "border");
                 }
             });
+        }
+
+        function sincronizarPanelDerecho(loteDraft) {
+            if (!loteDraft) return;
+            const precioStr = formatearMonedaMXN(loteDraft.precio);
+            if (resumenTitulo) resumenTitulo.textContent = loteDraft.tipo;
+            if (resumenClave) resumenClave.textContent = loteDraft.clave;
+            if (resumenCapacidad) resumenCapacidad.textContent = `${loteDraft.gavetas} gavetas`;
+            if (resumenPrecio) resumenPrecio.textContent = precioStr;
+            if (resumenTotal) resumenTotal.textContent = precioStr;
+
+            sincronizarCuadriculaSlots(loteDraft);
         }
 
         function marcarTarjetaActiva(clave) {
@@ -243,7 +272,7 @@
         function obtenerLoteClaveQuery() {
             if (!win?.location?.search) return "";
             const params = new URLSearchParams(win.location.search);
-            return (params.get("loteClave") || "").trim().toUpperCase();
+            return (params.get("lote") || params.get("loteClave") || "").trim().toUpperCase();
         }
 
         async function cargarLotesDisponibles() {
@@ -379,9 +408,11 @@
             }
         }
 
-        // Precargar lotes si el usuario ya está autenticado (el acceso se valida en paso1Cliente)
+        // Precargar lotes si el usuario ya está autenticado (soporta sessionStorage y localStorage "Recordarme")
         const token = deps.storage?.getItem?.("sf_token")
-            ?? (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("sf_token") : null);
+            ?? (typeof win?.authApi?.getToken === "function" ? win.authApi.getToken() : null)
+            ?? (typeof sessionStorage !== "undefined" ? sessionStorage.getItem("sf_token") : null)
+            ?? (typeof localStorage !== "undefined" ? localStorage.getItem("sf_token") : null);
         if (token && lotesApi) {
             cargarLotesDisponibles();
         }

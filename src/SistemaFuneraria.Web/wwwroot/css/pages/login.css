@@ -1,0 +1,314 @@
+* {
+    box-sizing: border-box;
+}
+
+body.login-page-body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: var(--sf-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+    background-color: #FFFFFF;
+    color: var(--sf-text-dark, #1F2937);
+    overflow-x: hidden;
+}
+
+.login-main-wrapper {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* Columna izquierda: hero memorial (42%) */
+.login-hero-column {
+    flex: 0 0 42%;
+    width: 42%;
+    min-width: 400px;
+    position: relative;
+    background-color: #1B2B18;
+    background-image:
+        linear-gradient(135deg, rgba(22, 38, 20, 0.82) 0%, rgba(12, 22, 11, 0.90) 100%),
+        url('https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=1600&q=80');
+    background-size: cover;
+    background-position: center center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4rem 4.5rem;
+    color: #FFFFFF;
+}
+
+.hero-top-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    padding: 0.45rem 1.1rem;
+    border-radius: 2rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    width: fit-content;
+}
+
+.hero-quote-container {
+    max-width: 460px;
+    margin: auto 0;
+    padding: 2rem 0;
+}
+
+.hero-memorial-flower-icon {
+    font-size: 2.2rem;
+    color: var(--gold, #c59d52);
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+}
+
+.hero-quote-text {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 2.2rem;
+    line-height: 1.35;
+    font-style: italic;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.94);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.hero-quote-author {
+    font-size: 0.98rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+    font-weight: 300;
+}
+
+.hero-footer-location {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+}
+
+/* Columna derecha: formulario (58%) */
+.login-form-column {
+    flex: 1;
+    width: 58%;
+    padding: 3.5rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #FFFFFF;
+}
+
+.login-form-inner-container {
+    width: 100%;
+    max-width: 500px;
+}
+
+.login-brand-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 2rem;
+    text-decoration: none;
+}
+
+.login-brand-logo-icon {
+    width: 44px;
+    height: 44px;
+    background-color: var(--sf-primary-olive, #2D4224);
+    color: var(--gold, #c59d52);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 10px rgba(45, 66, 36, 0.18);
+}
+
+.login-brand-logo-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--sf-primary-olive, #2D4224);
+}
+
+.sign-in-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--ink, #17211f);
+    letter-spacing: -0.03em;
+    margin-bottom: 0.4rem;
+}
+
+.sign-in-kicker {
+    font-size: 0.95rem;
+    color: var(--sf-text-muted, #6B7280);
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.sign-in-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.sign-in-input {
+    width: 100%;
+    border: 1px solid #D1D5DB;
+    border-radius: 0.85rem;
+    padding: 0.85rem 1.15rem;
+    font-size: 1rem;
+    color: var(--sf-text-dark, #1F2937);
+    background-color: #FFFFFF;
+    transition: all 0.2s ease-in-out;
+}
+
+.sign-in-input:focus {
+    outline: none;
+    border-color: var(--sf-primary-olive, #2D4224);
+    box-shadow: 0 0 0 3px rgba(45, 66, 36, 0.12);
+}
+
+.sign-in-input::placeholder {
+    color: #9CA3AF;
+}
+
+.password-input-wrapper {
+    position: relative;
+}
+
+.btn-eye-toggle {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--sf-text-muted, #6B7280);
+    cursor: pointer;
+    padding: 0.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+}
+
+.btn-eye-toggle:hover {
+    color: var(--sf-primary-olive, #2D4224);
+}
+
+.btn-sign-in-primary {
+    width: 100%;
+    background-color: var(--sf-primary-olive, #2D4224) !important;
+    border-color: var(--sf-primary-olive, #2D4224) !important;
+    color: #FFFFFF !important;
+    border: none;
+    border-radius: 0.85rem;
+    padding: 0.95rem 1.5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.btn-sign-in-primary:hover:not(:disabled) {
+    background-color: #22341B !important;
+    box-shadow: 0 6px 16px rgba(45, 66, 36, 0.25);
+}
+
+.btn-sign-in-primary:disabled {
+    background-color: #9CA3AF !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.or-divider-row {
+    display: flex;
+    align-items: center;
+    margin: 1.75rem 0 1.25rem 0;
+}
+
+.or-divider-row hr {
+    flex-grow: 1;
+    margin: 0;
+    border: none;
+    border-top: 1px solid #E5E7EB;
+}
+
+.or-divider-text {
+    padding: 0 1rem;
+    color: #9CA3AF;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.btn-demo-access {
+    width: 100%;
+    border: 1px solid #E5E7EB;
+    background: #FFFFFF;
+    border-radius: 0.85rem;
+    padding: 0.8rem 1.25rem;
+    display: flex;
+    align-items: center;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.65rem;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.btn-demo-access:hover:not(:disabled) {
+    background-color: #F9FAFB;
+    border-color: #CBD5E1;
+    transform: translateX(3px);
+}
+
+.btn-demo-access.active {
+    border-color: var(--sf-primary-olive, #2D4224);
+    background-color: #F0FDF4;
+    color: var(--sf-primary-olive, #2D4224);
+    font-weight: 600;
+}
+
+/* Alertas semánticas de seguridad SF-028 */
+.sf-alert-gold {
+    background-color: #fbf6ec;
+    border: 1px solid var(--gold, #c59d52);
+    color: #7a5814;
+}
+
+.sf-alert-rose {
+    background-color: #fdf2f2;
+    border: 1px solid var(--rose, #a84f4b);
+    color: var(--rose, #a84f4b);
+}
+
+.sf-lockout-countdown {
+    color: var(--rose, #a84f4b);
+}
+
+@media (max-width: 992px) {
+    .login-hero-column {
+        display: none;
+    }
+
+    .login-form-column {
+        width: 100%;
+        padding: 3rem 1.75rem;
+    }
+}

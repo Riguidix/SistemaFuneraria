@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SistemaFuneraria.Application.Servicios.Dashboard;
 using SistemaFuneraria.Core.Entidades;
+using SistemaFuneraria.Core.Enums;
 using SistemaFuneraria.Core.ValueObjects;
 using SistemaFuneraria.Infrastructure.Persistencia;
 using Xunit;
@@ -80,5 +81,91 @@ public class DashboardReportesServiceTests : IDisposable
         resRep.Valor.MetaMensual.ObjetivoMensual.Should().Be(600000m);
         resRep.Valor.MetaMensual.Acumulado.Should().Be(150000m);
         resRep.Valor.MetaMensual.PorcentajeAvance.Should().Be(25m);
+    }
+
+    [Fact(DisplayName = "Dashboard: Soporta rango anual (12m), unifica Ventas + Pagos con FolioContrato y calcula variaciones")]
+    public async Task ObtenerResumenDashboard_ConRangoAnioPagosYMesAnterior_DebeUnificarActividadYVariacion()
+    {
+        var ahora = DateTimeOffset.UtcNow;
+        var mesAnterior = ahora.AddMonths(-1);
+
+        var cliente = Cliente.Crear("Carlos", "Mendoza", "MEMC800101HDFRRN01", "5522223333", "carlos@ejemplo.mx", "Dir");
+        var lote1 = Lote.Crear("JN-A-010", "Jardín Norte", "A", 2, new Dinero(120000m));
+        var lote2 = Lote.Crear("JC-B-011", "Jardín Central", "B", 3, new Dinero(150000m));
+
+        lote1.MarcarVendido();
+        lote2.MarcarVendido();
+
+        var ventaMesAnterior = Venta.CrearContado("CTR-2026-0101", cliente.Id, lote1.Id, "vend-1", lote1.PrecioContado, mesAnterior);
+        var ventaActual = Venta.CrearContado("CTR-2026-0102", cliente.Id, lote2.Id, "vend-1", lote2.PrecioContado, ahora.AddMinutes(-10));
+        var pagoReciente = Pago.Crear(
+            folio: "PAG-2026-000050",
+            ventaId: ventaActual.Id,
+            financiamientoId: null,
+            mensualidadId: null,
+            cajeroId: "cajero-1",
+            tipo: TipoPago.Contado,
+            metodo: MetodoPago.TransferenciaBancaria,
+            referencia: "REF-50",
+            montoTotal: new Dinero(150000m),
+            montoCapital: new Dinero(150000m),
+            montoInteres: new Dinero(0m),
+            saldoAnterior: new Dinero(150000m),
+            saldoPosterior: new Dinero(0m),
+            claveIdempotencia: "idem-dash-50",
+            fechaPago: ahora);
+
+        await _dbContext.Clientes.AddAsync(cliente);
+        await _dbContext.Lotes.AddRangeAsync(lote1, lote2);
+        await _dbContext.Ventas.AddRangeAsync(ventaMesAnterior, ventaActual);
+        await _dbContext.Pagos.AddAsync(pagoReciente);
+        await _dbContext.SaveChangesAsync();
+
+        var resAnio = await _service.ObtenerResumenDashboardAsync("anio");
+
+        resAnio.EsExitoso.Should().BeTrue();
+        resAnio.Valor.VentasYCobranza.Should().HaveCount(12);
+        resAnio.Valor.Kpis.VariacionVentasPct.Should().Be(25.0m);
+        resAnio.Valor.ActividadReciente.Should().Contain(a =>
+            a.Referencia == "PAG-2026-000050" &&
+            a.FolioContrato == "CTR-2026-0102" &&
+            a.Movimiento == "Pago de contado");
+        resAnio.Valor.ActividadReciente.Should().Contain(a =>
+            a.Referencia == "CTR-2026-0102" &&
+            a.FolioContrato == "CTR-2026-0102");
+    }
+
+    [Fact(DisplayName = "Reportes: ObtenerIndicadoresReportesAsync filtra por periodo mes-actual vs historico")]
+    public async Task ObtenerIndicadoresReportes_DebeFiltrarPorPeriodoMesActualEHistorico()
+    {
+        var hoy = DateTimeOffset.UtcNow;
+        var enMesActual = new DateTimeOffset(hoy.Year, hoy.Month, 1, 12, 0, 0, TimeSpan.Zero);
+        var haceDosMeses = enMesActual.AddMonths(-2);
+
+        var cliente = Cliente.Crear("Elena", "Vargas", "VARE800101MDFRRN02", "5533334444", "elena@ejemplo.mx", "Dir");
+        var lote1 = Lote.Crear("RO-A-001", "Rosales", "A", 2, new Dinero(120000m));
+        var lote2 = Lote.Crear("RO-A-002", "Rosales", "A", 4, new Dinero(180000m));
+
+        lote1.MarcarVendido();
+        lote2.MarcarVendido();
+
+        var ventaAntigua = Venta.CrearContado("CTR-2026-0301", cliente.Id, lote1.Id, "vend-1", lote1.PrecioContado, haceDosMeses);
+        var ventaActual = Venta.CrearContado("CTR-2026-0302", cliente.Id, lote2.Id, "vend-1", lote2.PrecioContado, enMesActual);
+
+        await _dbContext.Clientes.AddAsync(cliente);
+        await _dbContext.Lotes.AddRangeAsync(lote1, lote2);
+        await _dbContext.Ventas.AddRangeAsync(ventaAntigua, ventaActual);
+        await _dbContext.SaveChangesAsync();
+
+        var resMes = await _service.ObtenerIndicadoresReportesAsync("mes-actual", "Jardines del Valle");
+        resMes.EsExitoso.Should().BeTrue();
+        resMes.Valor.MetaMensual.Acumulado.Should().Be(180000m);
+        resMes.Valor.TicketPromedio.Should().Be(180000m);
+
+        var resHist = await _service.ObtenerIndicadoresReportesAsync("historico", "Todas las sucursales");
+        resHist.EsExitoso.Should().BeTrue();
+        resHist.Valor.Periodo.Should().Be("Histórico completo");
+        resHist.Valor.MetaMensual.Acumulado.Should().Be(300000m);
+        resHist.Valor.TicketPromedio.Should().Be(150000m);
     }
 }

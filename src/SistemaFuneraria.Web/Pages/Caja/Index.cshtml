@@ -4,6 +4,21 @@
     ViewData["Title"] = "Caja y cobranza - Operación Diaria";
 }
 
+<!-- Estado de Acceso Restringido (403 Forbidden) -->
+<div id="cajaAccesoRestringido" class="card border-0 shadow-sm rounded-4 p-5 text-center mb-4 d-none" role="alert">
+    <div class="py-3">
+        <i class="fa-solid fa-lock fa-2x text-danger mb-3" aria-hidden="true"></i>
+        <h2 class="h5 fw-bold text-dark mb-2">Acceso restringido (403)</h2>
+        <p class="text-muted small mx-auto mb-3" style="max-width: 460px;">
+            Tu rol actual no tiene permisos para operar ventanilla de Caja. Esta sección está disponible para <strong>Administrador</strong> y <strong>Cajero</strong>.
+        </p>
+        <a id="btnVolver403Caja" href="/Resumen" class="btn btn-funeraria-primary rounded-3 px-4">
+            <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> Volver a mi inicio
+        </a>
+    </div>
+</div>
+
+<div id="cajaContenidoPrincipal">
 <!-- ========================================================
      1. ENCABEZADO DE PÁGINA (Figma Captura 10)
      ======================================================== -->
@@ -16,10 +31,10 @@
 
     <!-- Badge de Estado de Caja (Pill Superior Derecha) -->
     <div class="d-inline-flex align-items-center gap-2 bg-white px-3 py-2 rounded-4 border shadow-sm" style="min-width: 170px;">
-        <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #10B981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);"></span>
+        <span class="rounded-circle" style="width: 10px; height: 10px; background-color: #10B981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);" aria-hidden="true"></span>
         <div class="d-flex flex-column">
             <span class="fw-bold text-dark" style="font-size: 0.85rem; line-height: 1.15;">Caja abierta</span>
-            <span class="text-muted" style="font-size: 0.72rem; line-height: 1.15;">Desde las 08:02</span>
+            <span id="horaAperturaCaja" class="text-muted" style="font-size: 0.72rem; line-height: 1.15;">Turno activo</span>
         </div>
     </div>
 </div>
@@ -41,54 +56,72 @@
             <!-- Buscador de Contrato -->
             <div class="position-relative mb-4">
                 <div class="input-group input-group-lg rounded-3 overflow-hidden border">
-                    <span class="input-group-text bg-white border-0 ps-3 pe-2 text-muted">
+                    <span class="input-group-text bg-white border-0 ps-3 pe-2 text-muted" aria-hidden="true">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
-                    <input type="text" 
-                           id="inputBuscadorContrato" 
-                           class="form-control border-0 ps-1 py-3 text-dark fw-medium" 
-                           placeholder="Buscar por folio de contrato (ej. CTR-2024-0118)..." 
+                    <input type="text"
+                           id="inputBuscadorContrato"
+                           class="form-control border-0 ps-1 py-3 text-dark fw-medium"
+                           placeholder="Buscar por folio de contrato (ej. CTR-2025-0189)..."
                            value="@Model.FolioContrato"
-                           aria-label="Localizar contrato"
+                           aria-label="Localizar contrato por folio"
                            autocomplete="off" />
-                    <button type="button" 
-                            id="btnLimpiarBuscador" 
-                            class="btn bg-white border-0 text-muted px-3" 
+                    <button type="button"
+                            id="btnLimpiarBuscador"
+                            class="btn bg-white border-0 text-muted px-3"
+                            aria-label="Limpiar búsqueda"
                             title="Limpiar búsqueda">
-                        <i class="fa-solid fa-xmark"></i>
+                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                    </button>
+                    <button type="button"
+                            id="btnBuscarContratoCaja"
+                            class="btn btn-light border-0 border-start text-dark fw-semibold px-3 fs-6"
+                            aria-label="Buscar contrato">
+                        Buscar
                     </button>
                 </div>
             </div>
 
-            <!-- Tarjeta de Cliente Localizado (Elena Vargas) -->
-            <div id="cardClienteLocalizado" class="p-3 mb-4 rounded-3 d-flex align-items-center justify-content-between" style="background-color: #FAF8F5; border: 1px solid #EBE5DC;">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" 
-                         style="width: 48px; height: 48px; background-color: #D3C3A8; color: #4B3F2F; font-size: 1rem; flex-shrink: 0;"
-                         id="avatarCliente">
-                        @Model.InicialesCliente
+            <!-- Placeholder Inicial sin Contrato Seleccionado -->
+            <div id="estadoSinContratoCaja" class="p-3 mb-4 rounded-3 text-muted small border bg-light bg-opacity-50 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-circle-info text-muted" aria-hidden="true"></i>
+                <span>Ingresa un folio de contrato (ej. CTR-2025-0189) para cargar su saldo y aplicar pagos.</span>
+            </div>
+
+            <!-- Tarjeta de Cliente Localizado -->
+            <div id="cardClienteLocalizado" class="p-3 mb-4 rounded-3 d-none" style="background-color: #FAF8F5; border: 1px solid #EBE5DC;">
+                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm"
+                             style="width: 48px; height: 48px; background-color: #D3C3A8; color: #4B3F2F; font-size: 1rem; flex-shrink: 0;"
+                             id="avatarCliente">
+                            —
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark fs-6" id="nombreCliente">—</div>
+                            <div class="text-muted small" id="detalleContrato">—</div>
+                        </div>
                     </div>
                     <div>
-                        <div class="fw-bold text-dark fs-6" id="nombreCliente">@Model.ClienteNombre</div>
-                        <div class="text-muted small" id="detalleContrato">@Model.FolioContrato · @Model.UbicacionLote</div>
+                        <span class="badge rounded-pill fw-semibold px-3 py-2"
+                              id="badgeEstadoCliente"
+                              style="background-color: #E8F5E9; color: #1B5E20; border: 1px solid #A7F3D0; font-size: 0.8rem;">
+                            —
+                        </span>
                     </div>
-                </div>
-                <div>
-                    <span class="badge rounded-pill fw-semibold px-3 py-2" 
-                          id="badgeEstadoCliente" 
-                          style="background-color: #FEE8E8; color: #B91C1C; border: 1px solid #FCA5A5; font-size: 0.8rem;">
-                        @Model.EstadoCuota
-                    </span>
                 </div>
             </div>
 
             <!-- Selector de Tipo de Movimiento (3 Tarjetas Interactivas) -->
-            <div class="row g-3 mb-4">
+            <div class="row g-3 mb-4" role="group" aria-label="Tipo de movimiento de caja">
                 <!-- 1. Mensualidad (Pago ordinario) -->
                 <div class="col-12 col-md-4">
-                    <div id="cardOpcionMensualidad" 
+                    <div id="cardOpcionMensualidad"
+                         role="button"
+                         tabindex="0"
+                         aria-pressed="true"
                          class="card-movimiento active h-100 p-3 rounded-3">
-                        <i class="fa-solid fa-credit-card fs-5 mb-2 icono-movimiento"></i>
+                        <i class="fa-solid fa-credit-card fs-5 mb-2 icono-movimiento" aria-hidden="true"></i>
                         <div class="fw-bold titulo-movimiento">Mensualidad</div>
                         <div class="text-muted small subtitulo-movimiento">Pago ordinario</div>
                     </div>
@@ -96,9 +129,12 @@
 
                 <!-- 2. Abono a capital (Reduce mensualidad) -->
                 <div class="col-12 col-md-4">
-                    <div id="cardOpcionAbono" 
+                    <div id="cardOpcionAbono"
+                         role="button"
+                         tabindex="0"
+                         aria-pressed="false"
                          class="card-movimiento h-100 p-3 rounded-3">
-                        <i class="fa-solid fa-arrow-trend-down fs-5 mb-2 icono-movimiento"></i>
+                        <i class="fa-solid fa-arrow-trend-down fs-5 mb-2 icono-movimiento" aria-hidden="true"></i>
                         <div class="fw-bold titulo-movimiento">Abono a capital</div>
                         <div class="text-muted small subtitulo-movimiento">Reduce mensualidad</div>
                     </div>
@@ -106,9 +142,12 @@
 
                 <!-- 3. Liquidación (Cierre anticipado) -->
                 <div class="col-12 col-md-4">
-                    <div id="cardOpcionLiquidacion" 
+                    <div id="cardOpcionLiquidacion"
+                         role="button"
+                         tabindex="0"
+                         aria-pressed="false"
                          class="card-movimiento h-100 p-3 rounded-3">
-                        <i class="fa-solid fa-check fs-5 mb-2 icono-movimiento"></i>
+                        <i class="fa-solid fa-check fs-5 mb-2 icono-movimiento" aria-hidden="true"></i>
                         <div class="fw-bold titulo-movimiento">Liquidación</div>
                         <div class="text-muted small subtitulo-movimiento">Cierre anticipado</div>
                     </div>
@@ -122,17 +161,17 @@
                 <div class="row g-3 mb-3">
                     <!-- 1. Importe a recibir -->
                     <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-medium mb-1">Importe a recibir</label>
-                        <input type="text" 
-                               id="inputImporteRecibir" 
-                               class="form-control form-control-lg sf-money fw-bold text-dark rounded-3" 
-                               value="$ 6,248.50" 
+                        <label for="inputImporteRecibir" class="form-label text-muted small fw-medium mb-1">Importe a recibir</label>
+                        <input type="text"
+                               id="inputImporteRecibir"
+                               class="form-control form-control-lg sf-money fw-bold text-dark rounded-3"
+                               value="$0.00"
                                readonly />
                     </div>
 
                     <!-- 2. Método de pago -->
                     <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-medium mb-1">Método de pago</label>
+                        <label for="selectMetodoPago" class="form-label text-muted small fw-medium mb-1">Método de pago</label>
                         <select id="selectMetodoPago" class="form-select form-select-lg rounded-3 text-dark fw-medium">
                             <option value="TransferenciaBancaria" selected>Transferencia bancaria</option>
                             <option value="Efectivo">Efectivo</option>
@@ -143,20 +182,24 @@
 
                 <!-- 3. Referencia -->
                 <div class="mb-4">
-                    <label class="form-label text-muted small fw-medium mb-1">Referencia</label>
-                    <input type="text" 
-                           id="inputReferencia" 
-                           class="form-control form-control-lg rounded-3" 
+                    <label for="inputReferencia" class="form-label text-muted small fw-medium mb-1">
+                        Referencia <span id="asteriscoReferenciaCaja" class="text-danger">*</span>
+                    </label>
+                    <input type="text"
+                           id="inputReferencia"
+                           class="form-control form-control-lg rounded-3"
                            placeholder="Folio o últimos 4 dígitos" />
+                    <small id="ayudaReferenciaCaja" class="text-muted d-block mt-1">Obligatoria para transferencia o tarjeta (mín. 4 caracteres).</small>
                 </div>
 
                 <!-- Botón de Acción Principal -->
-                <button type="submit" 
-                        id="btnAplicarPago" 
-                        class="btn w-100 py-3 rounded-3 fw-bold shadow-sm d-flex align-items-center justify-content-center" 
+                <button type="submit"
+                        id="btnAplicarPago"
+                        disabled
+                        class="btn w-100 py-3 rounded-3 fw-bold shadow-sm d-flex align-items-center justify-content-center"
                         style="background-color: #2D4224; color: #ffffff; border: none; font-size: 1.05rem;">
-                    <i class="fa-solid fa-circle-check me-2"></i>
-                    <span id="textoBtnAplicarPago">Aplicar pago por $6,248.50</span>
+                    <span id="iconoBtnAplicarPago" class="me-2"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
+                    <span id="textoBtnAplicarPago">Selecciona un contrato para cobrar</span>
                 </button>
             </form>
 
@@ -164,18 +207,20 @@
             <div id="alertaErrorCaja" class="alert alert-danger d-none rounded-4 shadow-sm mt-4 small" role="alert"></div>
 
             <!-- Alerta Éxito Dinámica -->
-            <div id="alertaPagoExitoso" class="alert alert-success d-none align-items-center justify-content-between rounded-4 shadow-sm mt-4 border-0" role="alert" style="background-color: #E8F5E9; color: #1B5E20;">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-circle-check fs-4 text-success"></i>
-                    <div>
-                        <strong id="textoPagoExitoso">¡Pago registrado exitosamente!</strong>
-                        <div class="small" id="subtextoPagoExitoso">Comprobante oficial emitido. Saldo de la cuota actualizado.</div>
-                        <a href="#" id="lnkVerReciboPago" class="small fw-semibold text-success d-none">
-                            Ver e imprimir recibo oficial <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i>
-                        </a>
+            <div id="alertaPagoExitoso" class="alert alert-success d-none rounded-4 shadow-sm mt-4 border-0" role="alert" style="background-color: #E8F5E9; color: #1B5E20;">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-circle-check fs-4 text-success" aria-hidden="true"></i>
+                        <div>
+                            <strong id="textoPagoExitoso">¡Pago registrado exitosamente!</strong>
+                            <div class="small" id="subtextoPagoExitoso">Comprobante oficial emitido. Saldo de la cuota actualizado.</div>
+                            <a href="#" id="lnkVerReciboPago" class="small fw-semibold text-success d-none">
+                                Ver e imprimir recibo oficial <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i>
+                            </a>
+                        </div>
                     </div>
+                    <button type="button" class="btn-close" aria-label="Cerrar alerta" onclick="document.getElementById('alertaPagoExitoso').classList.add('d-none');"></button>
                 </div>
-                <button type="button" class="btn-close" onclick="document.getElementById('alertaPagoExitoso').classList.add('d-none');"></button>
             </div>
         </div>
     </div>
@@ -187,7 +232,7 @@
         <!-- Card 1: Corte del día -->
         <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
             <div class="mb-4">
-                <h3 class="h5 fw-bold mb-1" style="color: var(--sf-text-dark, #1F2937);">Corte del día</h3>
+                <h2 class="h5 fw-bold mb-1" style="color: var(--sf-text-dark, #1F2937);">Corte del día</h2>
                 <p class="text-muted small mb-0" id="fechaCorteDia">Operación del día</p>
             </div>
 
@@ -195,15 +240,15 @@
             <div class="d-flex flex-column gap-3 mb-4">
                 <div class="d-flex justify-content-between align-items-center text-muted small">
                     <span>Saldo inicial</span>
-                    <span class="sf-money text-dark fw-semibold" id="montoSaldoInicial">$2,000.00</span>
+                    <span class="sf-money text-dark fw-semibold" id="montoSaldoInicial">—</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center text-muted small">
                     <span>Pagos recibidos</span>
-                    <span class="fw-semibold text-dark" id="contadorPagosRecibidos">0</span>
+                    <span class="fw-semibold text-dark" id="contadorPagosRecibidos">—</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center text-muted small">
                     <span>Ingresos del día</span>
-                    <span class="sf-money text-dark fw-semibold" id="montoIngresosDia">$0.00</span>
+                    <span class="sf-money text-dark fw-semibold" id="montoIngresosDia">—</span>
                 </div>
             </div>
 
@@ -212,12 +257,12 @@
             <!-- Total destacado en caja -->
             <div class="d-flex justify-content-between align-items-baseline mb-4">
                 <span class="text-muted fw-medium">Total en caja</span>
-                <span class="h4 fw-bold text-success sf-money mb-0" id="montoTotalCaja">$2,000.00</span>
+                <span class="h4 fw-bold text-success sf-money mb-0" id="montoTotalCaja">—</span>
             </div>
 
             <!-- Botón de acción: Preparar corte -->
-            <button type="button" 
-                    class="btn btn-outline-secondary w-100 py-2 rounded-3 fw-medium" 
+            <button type="button"
+                    class="btn btn-outline-secondary w-100 py-2 rounded-3 fw-medium"
                     onclick="window.print();">
                 Preparar corte
             </button>
@@ -226,17 +271,18 @@
         <!-- Card 2: Alerta "Pagos que requieren atención" -->
         <div class="card bg-warning-subtle border border-warning-subtle rounded-4 p-4 shadow-sm">
             <div class="d-flex align-items-start gap-3">
-                <i class="fa-solid fa-triangle-exclamation text-warning fs-4 me-2 mt-1"></i>
+                <i class="fa-solid fa-triangle-exclamation text-warning fs-4 me-2 mt-1" aria-hidden="true"></i>
                 <div>
-                    <h4 class="h6 fw-bold text-dark mb-1" id="tituloPagosAtencion">0 pagos requieren atención</h4>
+                    <h3 class="h6 fw-bold text-dark mb-1" id="tituloPagosAtencion">Verificando vencimientos...</h3>
                     <p class="small text-muted mb-3">Contacta a los clientes con mensualidades vencidas para mantener la cartera al corriente.</p>
                     <a href="/Contratos?tab=Vencidos" class="text-decoration-none fw-semibold" style="color: #2D4224;">
-                        Revisar cartera vencida <i class="fa-solid fa-arrow-right ms-1"></i>
+                        Revisar cartera vencida <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i>
                     </a>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <style>

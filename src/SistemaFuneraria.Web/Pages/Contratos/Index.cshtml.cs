@@ -15,21 +15,19 @@ public class IndexModel : PageModel
         bool RequiereCobro
     );
 
-    public int TotalActivos { get; set; } = 128;
-    public int TotalAlCorriente { get; set; } = 120;
-    public int TotalConAtraso { get; set; } = 8;
-    public int TotalLiquidados { get; set; } = 32;
+    public int TotalActivos { get; set; }
+    public int TotalAlCorriente { get; set; }
+    public int TotalConAtraso { get; set; }
+    public int TotalLiquidados { get; set; }
+    public string TabInicial { get; set; } = "Todos";
+    public string BusquedaInicial { get; set; } = string.Empty;
 
     public List<ContratoItemDto> Contratos { get; set; } = new();
 
-    public void OnGet()
+    public void OnGet(string? tab = null, string? buscar = null)
     {
-        Contratos = new List<ContratoItemDto>
-        {
-            new("CTR-2024-0118", "Elena Vargas", "RO-B-027", 76180.40m, "02 oct. 2025", "Vencido", "bg-danger-subtle text-danger", true),
-            new("CTR-2025-0189", "Laura Castañeda", "JN-A-042", 127500.00m, "18 nov. 2025", "Al corriente", "bg-success-subtle text-success", false),
-            new("CTR-2025-0182", "Roberto Méndez", "JC-C-118", 58743.20m, "18 nov. 2025", "Al corriente", "bg-success-subtle text-success", false),
-            new("CTR-2025-0144", "Jorge Salinas", "RO-E-081", 94265.80m, "17 nov. 2025", "En revisión", "bg-warning-subtle text-warning-emphasis", false)
-        };
+        TabInicial = string.IsNullOrWhiteSpace(tab) ? "Todos" : tab.Trim();
+        BusquedaInicial = string.IsNullOrWhiteSpace(buscar) ? string.Empty : buscar.Trim();
+        Contratos = new List<ContratoItemDto>();
     }
 }

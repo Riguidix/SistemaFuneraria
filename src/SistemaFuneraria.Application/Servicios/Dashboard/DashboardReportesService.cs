@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaFuneraria.Application.Comun;
 using SistemaFuneraria.Application.Comun.Persistencia;
 using SistemaFuneraria.Application.DTOs.Dashboard;
+using SistemaFuneraria.Core.Comun;
 using SistemaFuneraria.Core.Enums;
 
 namespace SistemaFuneraria.Application.Servicios.Dashboard;
@@ -18,11 +19,14 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
     /// <inheritdoc />
-    public async Task<Resultado<DashboardResumenDto>> ObtenerResumenDashboardAsync(CancellationToken cancellationToken = default)
+    public async Task<Resultado<DashboardResumenDto>> ObtenerResumenDashboardAsync(
+        string? rango = null,
+        CancellationToken cancellationToken = default)
     {
         var ahora = _timeProvider.GetLocalNow();
         var inicioMes = new DateTimeOffset(ahora.Year, ahora.Month, 1, 0, 0, 0, ahora.Offset);
         var finMes = inicioMes.AddMonths(1);
+        var inicioMesAnterior = inicioMes.AddMonths(-1);
 
         var ventas = await _context.Ventas
             .AsNoTracking()
@@ -59,29 +63,27 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
                 .ToListAsync(cancellationToken);
 
         var ventasMes = ventas.Where(v => v.FechaVenta >= inicioMes && v.FechaVenta < finMes).ToList();
+        var ventasMesAnterior = ventas.Where(v => v.FechaVenta >= inicioMesAnterior && v.FechaVenta < inicioMes).ToList();
         var pagosMes = pagos.Where(p => p.FechaPago >= inicioMes && p.FechaPago < finMes).ToList();
+        var pagosMesAnterior = pagos.Where(p => p.FechaPago >= inicioMesAnterior && p.FechaPago < inicioMes).ToList();
         var contratosActivos = ventas.Count(v => v.Estado is EstadoVenta.Activo or EstadoVenta.EnRevision);
 
+        decimal ventasDelMesMonto = ventasMes.Sum(v => v.PrecioPactado.Monto);
+        decimal ventasMesAnteriorMonto = ventasMesAnterior.Sum(v => v.PrecioPactado.Monto);
+        decimal cobranzaMesMonto = pagosMes.Sum(p => p.MontoTotal.Monto);
+        decimal cobranzaMesAnteriorMonto = pagosMesAnterior.Sum(p => p.MontoTotal.Monto);
+
         var kpis = new DashboardKpisDto(
-            VentasDelMes: ventasMes.Sum(v => v.PrecioPactado.Monto),
-            CobranzaMensual: pagosMes.Sum(p => p.MontoTotal.Monto),
+            VentasDelMes: ventasDelMesMonto,
+            CobranzaMensual: cobranzaMesMonto,
             ContratosActivos: contratosActivos,
             ContratosNuevosMes: ventasMes.Count,
             PagosVencidosCount: cuotasVencidas.Count,
-            MontoPorRecuperar: cuotasVencidas.Sum());
+            MontoPorRecuperar: cuotasVencidas.Sum(),
+            VariacionVentasPct: CalcularVariacionPct(ventasDelMesMonto, ventasMesAnteriorMonto),
+            VariacionCobranzaPct: CalcularVariacionPct(cobranzaMesMonto, cobranzaMesAnteriorMonto));
 
-        var series = new List<SerieMensualDto>(6);
-        for (int offset = 5; offset >= 0; offset--)
-        {
-            var mesInicio = inicioMes.AddMonths(-offset);
-            var mesFin = mesInicio.AddMonths(1);
-            var etiqueta = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(
-                mesInicio.ToString("MMM", CulturaEsMx).TrimEnd('.'));
-
-            decimal sumVentas = ventas.Where(v => v.FechaVenta >= mesInicio && v.FechaVenta < mesFin).Sum(v => v.PrecioPactado.Monto);
-            decimal sumCobranza = pagos.Where(p => p.FechaPago >= mesInicio && p.FechaPago < mesFin).Sum(p => p.MontoTotal.Monto);
-            series.Add(new SerieMensualDto(etiqueta, sumVentas, sumCobranza));
-        }
+        var series = ConstruirSerieMensual(rango, ahora, inicioMes, ventas, pagos);
 
         var lotesDisponibles = lotes.Where(l => l.Estado == EstadoLote.Disponible).ToList();
         int totalLotes = lotes.Count;
@@ -98,25 +100,25 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
             Gavetas4: lotesDisponibles.Count(l => l.Gavetas == 4),
             PorcentajeOcupacion: pctOcupacion);
 
-        var actividad = ventas
-            .OrderByDescending(v => v.FechaVenta)
-            .Take(5)
-            .Select(v =>
-            {
-                clientes.TryGetValue(v.ClienteId, out var cli);
-                var nombre = cli is not null ? $"{cli.Nombre} {cli.Apellidos}".Trim() : "Cliente";
-                var email = cli?.Correo ?? "-";
-                var ini = cli is not null
-                    ? $"{char.ToUpperInvariant(cli.Nombre[0])}{char.ToUpperInvariant(cli.Apellidos[0])}"
-                    : "SF";
-                var estadoTexto = v.Estado switch
-                {
-                    EstadoVenta.Liquidado => "Aplicado",
-                    EstadoVenta.EnRevision => "En revisión",
-                    _ => "Firmado"
-                };
+        var ventasPorId = ventas.ToDictionary(v => v.Id);
 
-                return new ActividadRecienteDto(
+        var movimientosVentas = ventas.Select(v =>
+        {
+            clientes.TryGetValue(v.ClienteId, out var cli);
+            var nombre = cli is not null ? $"{cli.Nombre} {cli.Apellidos}".Trim() : "Cliente";
+            var email = cli?.Correo ?? "-";
+            var ini = TextoHelper.ObtenerIniciales(nombre);
+            var estadoTexto = v.Estado switch
+            {
+                EstadoVenta.Liquidado => "Aplicado",
+                EstadoVenta.EnRevision => "En revisión",
+                _ => "Firmado"
+            };
+
+            return new
+            {
+                FechaOrden = v.FechaVenta,
+                Dto = new ActividadRecienteDto(
                     Cliente: nombre,
                     Email: email,
                     Iniciales: ini,
@@ -124,8 +126,54 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
                     Referencia: v.FolioContrato,
                     Importe: v.PrecioPactado.Monto,
                     Estado: estadoTexto,
-                    FechaRelativa: v.FechaVenta.ToString("dd MMM yyyy", CulturaEsMx));
-            })
+                    FechaRelativa: v.FechaVenta.ToString("dd MMM yyyy", CulturaEsMx),
+                    FolioContrato: v.FolioContrato)
+            };
+        });
+
+        var movimientosPagos = pagos.Select(p =>
+        {
+            ventasPorId.TryGetValue(p.VentaId, out var ventaPago);
+            Core.Entidades.Cliente? cli = null;
+            if (ventaPago is not null)
+            {
+                clientes.TryGetValue(ventaPago.ClienteId, out cli);
+            }
+
+            var nombre = cli is not null ? $"{cli.Nombre} {cli.Apellidos}".Trim() : "Cliente";
+            var email = cli?.Correo ?? "-";
+            var ini = TextoHelper.ObtenerIniciales(nombre);
+            var movimiento = p.Tipo switch
+            {
+                TipoPago.Mensualidad => "Mensualidad",
+                TipoPago.AbonoCapital => "Abono a capital",
+                TipoPago.Liquidacion => "Liquidación anticipada",
+                TipoPago.Enganche => "Enganche",
+                TipoPago.Contado => "Pago de contado",
+                _ => "Pago registrado"
+            };
+
+            return new
+            {
+                FechaOrden = p.FechaPago,
+                Dto = new ActividadRecienteDto(
+                    Cliente: nombre,
+                    Email: email,
+                    Iniciales: ini,
+                    Movimiento: movimiento,
+                    Referencia: p.Folio,
+                    Importe: p.MontoTotal.Monto,
+                    Estado: "Aplicado",
+                    FechaRelativa: p.FechaPago.ToString("dd MMM yyyy", CulturaEsMx),
+                    FolioContrato: ventaPago?.FolioContrato)
+            };
+        });
+
+        var actividad = movimientosVentas
+            .Concat(movimientosPagos)
+            .OrderByDescending(x => x.FechaOrden)
+            .Take(6)
+            .Select(x => x.Dto)
             .ToList();
 
         return Resultado<DashboardResumenDto>.Exito(new DashboardResumenDto(
@@ -135,6 +183,58 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
             ActividadReciente: actividad));
     }
 
+    private static decimal? CalcularVariacionPct(decimal actual, decimal anterior)
+    {
+        if (anterior > 0m)
+        {
+            return Math.Round((actual - anterior) * 100m / anterior, 1, MidpointRounding.AwayFromZero);
+        }
+
+        return actual == 0m ? 0m : null;
+    }
+
+    private static List<SerieMensualDto> ConstruirSerieMensual(
+        string? rango,
+        DateTimeOffset ahora,
+        DateTimeOffset inicioMesActual,
+        IReadOnlyCollection<Core.Entidades.Venta> ventas,
+        IReadOnlyCollection<Core.Entidades.Pago> pagos)
+    {
+        bool esAnio = string.Equals(rango?.Trim(), "anio", StringComparison.OrdinalIgnoreCase);
+
+        if (esAnio)
+        {
+            var seriesAnio = new List<SerieMensualDto>(12);
+            var inicioAnio = new DateTimeOffset(ahora.Year, 1, 1, 0, 0, 0, ahora.Offset);
+            for (int mes = 0; mes < 12; mes++)
+            {
+                var mesInicio = inicioAnio.AddMonths(mes);
+                var mesFin = mesInicio.AddMonths(1);
+                var etiqueta = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(
+                    mesInicio.ToString("MMM", CulturaEsMx).TrimEnd('.'));
+
+                decimal sumVentas = ventas.Where(v => v.FechaVenta >= mesInicio && v.FechaVenta < mesFin).Sum(v => v.PrecioPactado.Monto);
+                decimal sumCobranza = pagos.Where(p => p.FechaPago >= mesInicio && p.FechaPago < mesFin).Sum(p => p.MontoTotal.Monto);
+                seriesAnio.Add(new SerieMensualDto(etiqueta, sumVentas, sumCobranza));
+            }
+            return seriesAnio;
+        }
+
+        var series6m = new List<SerieMensualDto>(6);
+        for (int offset = 5; offset >= 0; offset--)
+        {
+            var mesInicio = inicioMesActual.AddMonths(-offset);
+            var mesFin = mesInicio.AddMonths(1);
+            var etiqueta = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(
+                mesInicio.ToString("MMM", CulturaEsMx).TrimEnd('.'));
+
+            decimal sumVentas = ventas.Where(v => v.FechaVenta >= mesInicio && v.FechaVenta < mesFin).Sum(v => v.PrecioPactado.Monto);
+            decimal sumCobranza = pagos.Where(p => p.FechaPago >= mesInicio && p.FechaPago < mesFin).Sum(p => p.MontoTotal.Monto);
+            series6m.Add(new SerieMensualDto(etiqueta, sumVentas, sumCobranza));
+        }
+        return series6m;
+    }
+
     /// <inheritdoc />
     public async Task<Resultado<ReportesIndicadoresDto>> ObtenerIndicadoresReportesAsync(
         string? periodo = null,
@@ -142,15 +242,17 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
         CancellationToken cancellationToken = default)
     {
         var ahora = _timeProvider.GetLocalNow();
-        var periodoEfectivo = string.IsNullOrWhiteSpace(periodo)
-            ? CultureInfo.InvariantCulture.TextInfo.ToTitleCase(ahora.ToString("MMMM yyyy", CulturaEsMx))
-            : periodo.Trim();
+        var (periodoEfectivo, fechaDesde, fechaHasta) = ResolverRangoPeriodo(periodo, ahora);
         var sucursalEfectiva = string.IsNullOrWhiteSpace(sucursal) ? "Jardines del Valle" : sucursal.Trim();
 
-        var ventas = await _context.Ventas
+        var todasVentas = await _context.Ventas
             .AsNoTracking()
             .Where(v => v.Estado != EstadoVenta.Cancelado)
             .ToListAsync(cancellationToken);
+
+        var ventas = fechaDesde.HasValue && fechaHasta.HasValue
+            ? todasVentas.Where(v => v.FechaVenta >= fechaDesde.Value && v.FechaVenta < fechaHasta.Value).ToList()
+            : todasVentas;
 
         var lotes = await _context.Lotes
             .AsNoTracking()
@@ -203,5 +305,51 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
                 ObjetivoMensual: ObjetivoMensualOficial,
                 Acumulado: totalVentas,
                 PorcentajeAvance: porcentajeAvance)));
+    }
+
+    private static (string Etiqueta, DateTimeOffset? Desde, DateTimeOffset? Hasta) ResolverRangoPeriodo(
+        string? periodo,
+        DateTimeOffset ahora)
+    {
+        var raw = periodo?.Trim() ?? string.Empty;
+        var norm = raw.ToLowerInvariant();
+        var inicioMesActual = new DateTimeOffset(ahora.Year, ahora.Month, 1, 0, 0, 0, ahora.Offset);
+
+        switch (norm)
+        {
+            case "mes-actual":
+            {
+                var label = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(
+                    inicioMesActual.ToString("MMMM yyyy", CulturaEsMx));
+                return (label, inicioMesActual, inicioMesActual.AddMonths(1));
+            }
+            case "mes-anterior":
+            {
+                var inicioMesAnt = inicioMesActual.AddMonths(-1);
+                var label = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(
+                    inicioMesAnt.ToString("MMMM yyyy", CulturaEsMx));
+                return (label, inicioMesAnt, inicioMesActual);
+            }
+            case "trimestre-actual":
+            {
+                int q = (ahora.Month - 1) / 3 + 1;
+                var inicioTrim = new DateTimeOffset(ahora.Year, (q - 1) * 3 + 1, 1, 0, 0, 0, ahora.Offset);
+                return ($"Trimestre actual (T{q} {ahora.Year})", inicioTrim, inicioTrim.AddMonths(3));
+            }
+            case "anio-actual":
+            {
+                var inicioAnio = new DateTimeOffset(ahora.Year, 1, 1, 0, 0, 0, ahora.Offset);
+                return ($"Año {ahora.Year}", inicioAnio, inicioAnio.AddYears(1));
+            }
+            case "historico":
+                return ("Histórico completo", null, null);
+            default:
+            {
+                var label = string.IsNullOrWhiteSpace(raw)
+                    ? CultureInfo.InvariantCulture.TextInfo.ToTitleCase(ahora.ToString("MMMM yyyy", CulturaEsMx))
+                    : raw;
+                return (label, null, null);
+            }
+        }
     }
 }

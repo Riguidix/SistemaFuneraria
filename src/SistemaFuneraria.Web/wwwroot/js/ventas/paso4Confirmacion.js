@@ -293,6 +293,24 @@
             btnElegirOtroLote.addEventListener("click", regresarAPaso2PorConflicto);
         }
 
+        function sincronizarReferenciaContado() {
+            if (!selectMetodoPago || !txtReferenciaPago) return;
+            const metodo = String(selectMetodoPago.value || "Efectivo").trim();
+            const requiereRef = metodo === "TransferenciaBancaria" || metodo === "Tarjeta";
+            txtReferenciaPago.required = requiereRef;
+            txtReferenciaPago.placeholder = requiereRef
+                ? "Obligatoria: folio de transferencia o autorización"
+                : "Opcional para pagos en efectivo";
+        }
+
+        if (selectMetodoPago) {
+            selectMetodoPago.addEventListener("change", function () {
+                sincronizarReferenciaContado();
+                ocultarError();
+            });
+            sincronizarReferenciaContado();
+        }
+
         if (btnGenerar) {
             btnGenerar.addEventListener("click", async function () {
                 if (!chkConfirmar?.checked) return;
@@ -312,12 +330,17 @@
                 }
 
                 const esContado = modalidad.toLowerCase() === "contado";
+                const metodoSeleccionado = selectMetodoPago ? selectMetodoPago.value : "Efectivo";
+                const referenciaTexto = txtReferenciaPago ? txtReferenciaPago.value.trim() : "";
+
+                if (esContado && (metodoSeleccionado === "TransferenciaBancaria" || metodoSeleccionado === "Tarjeta") && !referenciaTexto) {
+                    mostrarError("La referencia de pago es obligatoria para pagos con Transferencia bancaria o Tarjeta.");
+                    if (txtReferenciaPago) txtReferenciaPago.focus();
+                    return;
+                }
+
                 const payload = esContado
-                    ? construirPayloadVentaContado(
-                        draft,
-                        selectMetodoPago ? selectMetodoPago.value : "Efectivo",
-                        txtReferenciaPago ? txtReferenciaPago.value : ""
-                    )
+                    ? construirPayloadVentaContado(draft, metodoSeleccionado, referenciaTexto)
                     : construirPayloadVentaFinanciada(draft);
 
                 btnGenerar.disabled = true;

@@ -88,13 +88,16 @@ function buildUrl(endpoint, params, baseUrl) {
  * @returns {string|null}
  */
 function getStoredToken(storage) {
-    const targetStorage = storage ?? (typeof sessionStorage !== "undefined" ? sessionStorage : null);
-    
-    if (!targetStorage) {
-        return null;
+    if (storage) {
+        return storage.getItem(TOKEN_STORAGE_KEY);
     }
-    
-    return targetStorage.getItem(TOKEN_STORAGE_KEY);
+
+    const sessionToken = typeof sessionStorage !== "undefined" ? sessionStorage.getItem(TOKEN_STORAGE_KEY) : null;
+    if (sessionToken) {
+        return sessionToken;
+    }
+
+    return typeof localStorage !== "undefined" ? localStorage.getItem(TOKEN_STORAGE_KEY) : null;
 }
 
 /**
@@ -102,14 +105,21 @@ function getStoredToken(storage) {
  * @returns {void}
  */
 function clearStoredSession(storage) {
-    const targetStorage = storage ?? (typeof sessionStorage !== "undefined" ? sessionStorage : null);
-    
-    if (!targetStorage) {
+    if (storage) {
+        storage.removeItem(TOKEN_STORAGE_KEY);
+        storage.removeItem(SESSION_STORAGE_KEY);
         return;
     }
-    
-    targetStorage.removeItem(TOKEN_STORAGE_KEY);
-    targetStorage.removeItem(SESSION_STORAGE_KEY);
+
+    if (typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+
+    if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+    }
 }
 
 /**
@@ -161,6 +171,30 @@ async function parsePayload(response) {
 }
 
 /**
+ * Determina de forma insensible a mayúsculas si la ruta corresponde a la página de Login.
+ * @param {string} [pathname]
+ * @returns {boolean}
+ */
+function isLoginPath(pathname) {
+    return String(pathname || "").toLowerCase().startsWith("/cuenta/login");
+}
+
+/**
+ * Construye la URL de redirección a Login preservando `returnUrl` para rutas internas no públicas.
+ * @param {Location|{ pathname?: string, search?: string }} [loc]
+ * @returns {string}
+ */
+function buildLoginRedirectUrl(loc) {
+    const pathname = String(loc?.pathname || "");
+    const lowerPath = pathname.toLowerCase();
+    if (!pathname || pathname === "/" || lowerPath.startsWith("/cuenta/")) {
+        return "/Cuenta/Login";
+    }
+
+    return `/Cuenta/Login?returnUrl=${encodeURIComponent(pathname + (loc.search || ""))}`;
+}
+
+/**
  * Ejecuta una petición HTTP contra `SistemaFuneraria.Api` con soporte de JWT y mapeo de `ProblemDetails`.
  * @param {string} endpoint Ruta del recurso (ej. `"/api/v1/clientes"`).
  * @param {"GET"|"POST"|"PUT"|"PATCH"|"DELETE"} method Verbo HTTP.
@@ -191,9 +225,9 @@ async function request(endpoint, method, options = {}, data = null) {
     if (!response.ok) {
         if (response.status === 401) {
             clearStoredSession(options.storage);
-            
-            if (typeof window !== "undefined" && !window.location.pathname.startsWith("/Cuenta/Login")) {
-                window.location.assign("/Cuenta/Login");
+
+            if (typeof window !== "undefined" && !isLoginPath(window.location.pathname)) {
+                window.location.assign(buildLoginRedirectUrl(window.location));
             }
         }
 

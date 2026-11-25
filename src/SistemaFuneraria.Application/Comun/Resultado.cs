@@ -8,11 +8,19 @@ public class Resultado
 {
     private static readonly string[] ErroresVacios = Array.Empty<string>();
 
-    protected Resultado(bool esExitoso, IEnumerable<string>? errores = null)
+    protected Resultado(bool esExitoso, IEnumerable<string>? errores = null, TipoError tipoError = TipoError.Ninguno)
     {
         EsExitoso = esExitoso;
         Errores = errores?.ToArray() ?? ErroresVacios;
+        TipoError = esExitoso
+            ? TipoError.Ninguno
+            : ResolverTipoError(tipoError, Errores);
     }
+
+    /// <summary>
+    /// Categoría semántica del fallo (o <see cref="TipoError.Ninguno"/> si la operación fue exitosa).
+    /// </summary>
+    public TipoError TipoError { get; }
 
     /// <summary>
     /// Indica si la operación culminó exitosamente.
@@ -47,23 +55,34 @@ public class Resultado
     /// <summary>
     /// Crea una instancia fallida con un único mensaje de error descriptivo.
     /// </summary>
-    public static Resultado Fallo(string error)
+    public static Resultado Fallo(string error, TipoError tipoError = TipoError.Ninguno)
     {
         if (string.IsNullOrWhiteSpace(error))
         {
             throw new ArgumentException("El mensaje de error no puede ser nulo ni estar vacío.", nameof(error));
         }
 
-        return new(false, new[] { error.Trim() });
+        return new(false, new[] { error.Trim() }, tipoError);
     }
 
     /// <summary>
     /// Crea una instancia fallida a partir de una colección de mensajes de error.
     /// </summary>
-    public static Resultado Fallo(IEnumerable<string> errores)
+    public static Resultado Fallo(IEnumerable<string> errores, TipoError tipoError = TipoError.Ninguno)
     {
         ArgumentNullException.ThrowIfNull(errores);
 
+        var listaFiltrada = NormalizarErrores(errores);
+        return new(false, listaFiltrada, tipoError);
+    }
+
+    public static Resultado FalloNoEncontrado(string error) => Fallo(error, TipoError.NoEncontrado);
+    public static Resultado FalloConflicto(string error) => Fallo(error, TipoError.Conflicto);
+    public static Resultado FalloNoAutorizado(string error) => Fallo(error, TipoError.NoAutorizado);
+    public static Resultado FalloProhibido(string error) => Fallo(error, TipoError.Prohibido);
+
+    protected static string[] NormalizarErrores(IEnumerable<string> errores)
+    {
         var listaFiltrada = errores
             .Where(e => !string.IsNullOrWhiteSpace(e))
             .Select(e => e.Trim())
@@ -74,7 +93,28 @@ public class Resultado
             throw new ArgumentException("La colección de errores no puede estar vacía ni contener solo elementos en blanco.", nameof(errores));
         }
 
-        return new(false, listaFiltrada);
+        return listaFiltrada;
+    }
+
+    private static TipoError ResolverTipoError(TipoError tipoExplicito, IReadOnlyList<string> errores)
+    {
+        if (tipoExplicito != TipoError.Ninguno)
+        {
+            return tipoExplicito;
+        }
+
+        var primero = errores.Count > 0 ? errores[0] : string.Empty;
+        if (primero.StartsWith("[CONFLICTO]", StringComparison.Ordinal))
+        {
+            return TipoError.Conflicto;
+        }
+
+        if (primero.StartsWith("[NO_ENCONTRADO]", StringComparison.Ordinal))
+        {
+            return TipoError.NoEncontrado;
+        }
+
+        return TipoError.Validacion;
     }
 }
 
@@ -86,8 +126,8 @@ public class Resultado<T> : Resultado
 {
     private readonly T? _valor;
 
-    protected Resultado(bool esExitoso, T? valor, IEnumerable<string>? errores = null)
-        : base(esExitoso, errores)
+    protected Resultado(bool esExitoso, T? valor, IEnumerable<string>? errores = null, TipoError tipoError = TipoError.Ninguno)
+        : base(esExitoso, errores, tipoError)
     {
         _valor = valor;
     }
@@ -108,35 +148,31 @@ public class Resultado<T> : Resultado
     /// <summary>
     /// Crea una instancia fallida tipada con un único mensaje de error.
     /// </summary>
-    public static new Resultado<T> Fallo(string error)
+    public static new Resultado<T> Fallo(string error, TipoError tipoError = TipoError.Ninguno)
     {
         if (string.IsNullOrWhiteSpace(error))
         {
             throw new ArgumentException("El mensaje de error no puede ser nulo ni estar vacío.", nameof(error));
         }
 
-        return new(false, default, new[] { error.Trim() });
+        return new(false, default, new[] { error.Trim() }, tipoError);
     }
 
     /// <summary>
     /// Crea una instancia fallida tipada a partir de una colección de errores.
     /// </summary>
-    public static new Resultado<T> Fallo(IEnumerable<string> errores)
+    public static new Resultado<T> Fallo(IEnumerable<string> errores, TipoError tipoError = TipoError.Ninguno)
     {
         ArgumentNullException.ThrowIfNull(errores);
 
-        var listaFiltrada = errores
-            .Where(e => !string.IsNullOrWhiteSpace(e))
-            .Select(e => e.Trim())
-            .ToArray();
-
-        if (listaFiltrada.Length == 0)
-        {
-            throw new ArgumentException("La colección de errores no puede estar vacía ni contener solo elementos en blanco.", nameof(errores));
-        }
-
-        return new(false, default, listaFiltrada);
+        var listaFiltrada = NormalizarErrores(errores);
+        return new(false, default, listaFiltrada, tipoError);
     }
+
+    public static new Resultado<T> FalloNoEncontrado(string error) => Fallo(error, TipoError.NoEncontrado);
+    public static new Resultado<T> FalloConflicto(string error) => Fallo(error, TipoError.Conflicto);
+    public static new Resultado<T> FalloNoAutorizado(string error) => Fallo(error, TipoError.NoAutorizado);
+    public static new Resultado<T> FalloProhibido(string error) => Fallo(error, TipoError.Prohibido);
 
     /// <summary>
     /// Operador de conversión implícita para simplificar el retorno directo de instancias de <typeparamref name="T"/>.

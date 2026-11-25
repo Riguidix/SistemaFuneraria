@@ -1,25 +1,26 @@
 @page
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @model SistemaFuneraria.Web.Pages.Cuenta.OlvideContrasenaModel
 @{
     Layout = null;
     ViewData["Title"] = "Recuperar Contraseña - Sistema Funerario";
+    var apiBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5180";
 }
 <!DOCTYPE html>
 <html lang="es-MX">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="api-base-url" content="@apiBaseUrl" />
     <title>@ViewData["Title"]</title>
-    <!-- Bootstrap 5.3.8 (RNF-06) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" onerror="this.onerror=null;this.href='/lib/bootstrap/dist/css/bootstrap.min.css';" />
-    <!-- CDN de Font Awesome 7.3.1 (SF-020 / SF-028) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/sistema-tokens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/funeraria-theme.css" asp-append-version="true" />
     <style>
         body.forgot-body {
-            background-color: #F4F1EA;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--sf-bg-cream, #F4F1EA);
+            font-family: var(--sf-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
             min-height: 100vh;
             margin: 0;
             display: flex;
@@ -44,12 +45,12 @@
             color: #1E221E;
         }
         .form-control-serenia:focus {
-            border-color: #2D4224;
+            border-color: var(--sf-primary-olive, #2D4224);
             box-shadow: 0 0 0 0.2rem rgba(45, 66, 36, 0.15);
         }
         .btn-serenia-primary {
-            background-color: #2D4224 !important;
-            border-color: #2D4224 !important;
+            background-color: var(--sf-primary-olive, #2D4224) !important;
+            border-color: var(--sf-primary-olive, #2D4224) !important;
             color: #FFFFFF !important;
             border-radius: 0.65rem;
             padding: 0.75rem 1.25rem;
@@ -63,7 +64,7 @@
         .brand-seal-sm {
             width: 44px;
             height: 44px;
-            background: #CCA352;
+            background: var(--gold, #c59d52);
             color: #1A2415;
             border-radius: 12px;
             font-family: Georgia, 'Times New Roman', serif;
@@ -77,7 +78,6 @@
 </head>
 <body class="forgot-body">
     <div class="forgot-card">
-        <!-- Encabezado con sello institucional -->
         <div class="text-center mb-4">
             <div class="d-inline-flex align-items-center justify-content-center brand-seal-sm mb-3">S</div>
             <h1 class="h4 fw-bold mb-1" style="color: #1E221E;">Recuperar acceso</h1>
@@ -86,43 +86,45 @@
             </p>
         </div>
 
-        @if (Model.SolicitudEnviada && !string.IsNullOrEmpty(Model.MensajeConfirmacion))
-        {
-            <!-- Mensaje uniforme seguro (RNF-01, RNF-03) -->
-            <div class="alert alert-serenia-gold d-flex align-items-start gap-3 p-3 mb-4 rounded-3" role="alert" style="background-color: #FBF6EC; border: 1px solid #C59D52; color: #7A5814;">
-                <i class="fa-solid fa-circle-check mt-1 fs-5" style="color: #CCA352;"></i>
-                <div class="small">
-                    <strong>Solicitud procesada:</strong>
-                    <div class="mt-1">@Model.MensajeConfirmacion</div>
+        <div id="forgotAlertContainer" aria-live="polite">
+            @if (Model.SolicitudEnviada && !string.IsNullOrEmpty(Model.MensajeConfirmacion))
+            {
+                <div class="alert alert-serenia-gold d-flex align-items-start gap-3 p-3 mb-4 rounded-3" role="alert" style="background-color: #FBF6EC; border: 1px solid #C59D52; color: #7A5814;">
+                    <i class="fa-solid fa-circle-check mt-1 fs-5" style="color: #CCA352;"></i>
+                    <div class="small">
+                        <strong>Solicitud procesada:</strong>
+                        <div class="mt-1">@Model.MensajeConfirmacion</div>
+                    </div>
                 </div>
-            </div>
+            }
+        </div>
 
-            <div class="text-center mt-3">
-                <a href="/Cuenta/Login" class="btn btn-serenia-primary w-100 d-inline-flex align-items-center justify-content-center gap-2">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span>Volver a iniciar sesión</span>
-                </a>
-            </div>
-        }
-        else
+        <div id="forgotBackOnly" class="@(Model.SolicitudEnviada ? "" : "d-none") text-center mt-3">
+            <a href="/Cuenta/Login" class="btn btn-serenia-primary w-100 d-inline-flex align-items-center justify-content-center gap-2">
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                <span>Volver a iniciar sesión</span>
+            </a>
+        </div>
+
+        @if (!Model.SolicitudEnviada)
         {
-            <form method="post" novalidate>
+            <form id="forgotPasswordForm" method="post" novalidate>
                 <div class="mb-3">
                     <label asp-for="Email" class="form-label small fw-semibold text-secondary">
-                        <i class="fa-solid fa-envelope me-1 text-muted"></i> Correo electrónico registrado
+                        <i class="fa-solid fa-envelope me-1 text-muted" aria-hidden="true"></i> Correo electrónico registrado
                     </label>
-                    <input asp-for="Email" class="form-control form-control-serenia" placeholder="ejemplo@funeraria.mx" autocomplete="email" required />
+                    <input asp-for="Email" id="forgotEmailInput" class="form-control form-control-serenia" placeholder="ejemplo@funeraria.mx" autocomplete="email" required />
                     <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
                 </div>
 
-                <button type="submit" class="btn btn-serenia-primary w-100 d-flex align-items-center justify-content-center gap-2 mb-3">
-                    <i class="fa-solid fa-paper-plane"></i>
+                <button type="submit" id="btnForgotSubmit" class="btn btn-serenia-primary w-100 d-flex align-items-center justify-content-center gap-2 mb-3">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
                     <span>Enviar instrucciones</span>
                 </button>
 
                 <div class="text-center">
-                    <a href="/Cuenta/Login" class="small fw-semibold text-decoration-none" style="color: #2D4224;">
-                        <i class="fa-solid fa-arrow-left me-1"></i> Regresar al inicio de sesión
+                    <a href="/Cuenta/Login" class="small fw-semibold text-decoration-none" style="color: var(--sf-primary-olive, #2D4224);">
+                        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> Regresar al inicio de sesión
                     </a>
                 </div>
             </form>
@@ -135,7 +137,101 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/api/apiClient.js" asp-append-version="true"></script>
+    <script src="~/js/api/authApi.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var form = document.getElementById("forgotPasswordForm");
+            if (!form || !window.authApi) return;
+
+            var emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+
+            form.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                var emailInput = document.getElementById("forgotEmailInput");
+                var btnSubmit = document.getElementById("btnForgotSubmit");
+                var alertContainer = document.getElementById("forgotAlertContainer");
+                var backOnly = document.getElementById("forgotBackOnly");
+
+                var correo = emailInput ? emailInput.value.trim() : "";
+                if (!correo) {
+                    if (alertContainer) {
+                        alertContainer.innerHTML = "";
+                        var errBox = document.createElement("div");
+                        errBox.className = "alert alert-danger rounded-3 small mb-3";
+                        errBox.setAttribute("role", "alert");
+                        errBox.textContent = "El correo electrónico es obligatorio.";
+                        alertContainer.appendChild(errBox);
+                    }
+                    return;
+                }
+
+                if (!emailRegex.test(correo)) {
+                    if (alertContainer) {
+                        alertContainer.innerHTML = "";
+                        var fmtBox = document.createElement("div");
+                        fmtBox.className = "alert alert-danger rounded-3 small mb-3";
+                        fmtBox.setAttribute("role", "alert");
+                        fmtBox.textContent = "El formato del correo electrónico no es válido.";
+                        alertContainer.appendChild(fmtBox);
+                    }
+                    return;
+                }
+
+                var originalBtnHtml = btnSubmit ? btnSubmit.innerHTML : "";
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span>Enviando...</span>';
+                }
+                try {
+                    var res = await window.authApi.olvideContrasena(correo);
+                    var mensaje = res?.mensaje || "Si el correo ingresado se encuentra registrado, recibirás un enlace de restablecimiento en breve";
+
+                    if (alertContainer) {
+                        alertContainer.innerHTML = "";
+                        var box = document.createElement("div");
+                        box.className = "alert d-flex align-items-start gap-3 p-3 mb-4 rounded-3";
+                        box.setAttribute("role", "alert");
+                        box.style.backgroundColor = "#FBF6EC";
+                        box.style.border = "1px solid #C59D52";
+                        box.style.color = "#7A5814";
+
+                        var icon = document.createElement("i");
+                        icon.className = "fa-solid fa-circle-check mt-1 fs-5";
+                        icon.style.color = "#CCA352";
+
+                        var body = document.createElement("div");
+                        body.className = "small";
+                        var title = document.createElement("strong");
+                        title.textContent = "Solicitud procesada:";
+                        var text = document.createElement("div");
+                        text.className = "mt-1";
+                        text.textContent = mensaje;
+                        body.append(title, text);
+                        box.append(icon, body);
+                        alertContainer.appendChild(box);
+                    }
+
+                    form.classList.add("d-none");
+                    if (backOnly) backOnly.classList.remove("d-none");
+                } catch (err) {
+                    if (alertContainer) {
+                        alertContainer.innerHTML = "";
+                        var errBox = document.createElement("div");
+                        errBox.className = "alert alert-danger rounded-3 small mb-3";
+                        errBox.setAttribute("role", "alert");
+                        errBox.textContent = err?.message || "No se pudo procesar la solicitud en este momento.";
+                        alertContainer.appendChild(errBox);
+                    }
+                } finally {
+                    if (btnSubmit) {
+                        btnSubmit.disabled = false;
+                        btnSubmit.innerHTML = originalBtnHtml;
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,5 +1,3 @@
-@SistemaFuneraria.Api_HostAddress = http://localhost:5044
-
 # El siguiente archivo funciona para el testeo, este funciona como un Postman directamente, pero siguiendo un proceso
 # tipo cURL, se puede testear desde aqui o testear directo en Postman, pero me gustaría revisar y mantener este archivo
 # puesto que tendríamos que crear un environment para que todos estemos dentro del Postman como equipo
@@ -7,4 +5,11 @@
 ## GET {{SistemaFuneraria.Api_HostAddress}}/weatherforecast/
 ## Accept: application/json
 
-###
+## POST Login Users
+POST {{SistemaFuneraria_BaseURL}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "Correo": "andrea.morales@sistemafunerario.mx",
+  "Password": "Sistema Funerario2026!"
+}

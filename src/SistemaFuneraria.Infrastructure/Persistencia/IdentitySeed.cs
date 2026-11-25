@@ -95,9 +95,9 @@ public static class IdentitySeed
         var existentes = await userManager.GetClaimsAsync(user);
         var requeridos = new[]
         {
-            new Claim("NombreCompleto", spec.NombreCompleto),
-            new Claim("Iniciales", spec.Iniciales),
-            new Claim("Sucursal", ParametrosNegocio.SucursalPorDefecto)
+            new Claim(ParametrosNegocio.ClaimNombreCompleto, spec.NombreCompleto),
+            new Claim(ParametrosNegocio.ClaimIniciales, spec.Iniciales),
+            new Claim(ParametrosNegocio.ClaimSucursal, ParametrosNegocio.SucursalPorDefecto)
         };
 
         var faltantes = requeridos

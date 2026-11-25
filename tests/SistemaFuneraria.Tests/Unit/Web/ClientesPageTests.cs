@@ -85,5 +85,17 @@ public class ClientesPageTests
         js.Should().Contain("root.clientesPage");
         js.Should().Contain("clientesApi");
         js.Should().Contain("authApi");
+        js.Should().Contain("authApi.getToken");
+        js.Should().Contain("btnDrawerNuevaVenta");
+        js.Should().Contain("btnDrawerVerContratos");
+        js.Should().Contain("aria-sort");
+
+        var vistaPath = Path.Combine(raiz, "src", "SistemaFuneraria.Web", "Pages", "Clientes", "Index.cshtml");
+        var html = File.ReadAllText(vistaPath);
+        html.Should().Contain("role=\"group\"");
+        html.Should().NotContain("role=\"tablist\"");
+        html.Should().Contain("aria-sort=\"none\"");
+        html.Should().Contain("id=\"btnVolver403Clientes\"");
+        html.Should().Contain("id=\"btnDrawerNuevaVenta\"");
     }
 }

@@ -13,6 +13,10 @@ public static class ParametrosNegocio
     public const string RolCajero = "Cajero";
     public const string SucursalPorDefecto = "Jardines del Valle";
 
+    public const string ClaimNombreCompleto = "NombreCompleto";
+    public const string ClaimIniciales = "Iniciales";
+    public const string ClaimSucursal = "Sucursal";
+
     public static readonly IReadOnlyList<int> PlazosAutorizados = new ReadOnlyCollection<int>([12, 18, 24, 48]);
     public static readonly IReadOnlyList<int> EnganchesAutorizados = new ReadOnlyCollection<int>([10, 20, 30]);
     public static readonly IReadOnlyList<decimal> PreciosLotesAutorizados = new ReadOnlyCollection<decimal>([120000.00m, 150000.00m, 180000.00m]);

@@ -58,6 +58,9 @@ function obtenerMetadatosEstadoLote(estado) {
         case "vendido":
         case "3":
             return { clase: "badge-sf-neutral", texto: "Vendido", accion: "Ver contrato" };
+        case "mantenimiento":
+        case "4":
+            return { clase: "badge-sf-maintenance", texto: "Mantenimiento", accion: "Ver detalle" };
         default:
             return { clase: "badge-sf-neutral", texto: String(estado || "Desconocido"), accion: "Ver detalle" };
     }
@@ -70,7 +73,7 @@ function obtenerMetadatosEstadoLote(estado) {
  */
 function renderizarBadgeEstadoLote(estado) {
     const meta = obtenerMetadatosEstadoLote(estado);
-    return `<span class="badge ${meta.clase}">${meta.texto}</span>`;
+    return `<span class="badge badge-estado ${meta.clase}">${meta.texto}</span>`;
 }
 
 /**
