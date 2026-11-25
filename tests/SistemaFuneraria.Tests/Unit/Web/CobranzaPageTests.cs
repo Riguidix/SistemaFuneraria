@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using SistemaFuneraria.Web.Pages.Cobranza;
 using Xunit;
 
@@ -7,15 +8,13 @@ namespace SistemaFuneraria.Tests.Unit.Web;
 public class CobranzaPageTests
 {
     [Fact]
-    public void Cobranza_OnGet_DebeCargarCorrectamente()
+    public void Cobranza_OnGet_DebeRedirigirACajaIndex()
     {
-        // Arrange
         var pageModel = new IndexModel();
 
-        // Act
-        pageModel.OnGet();
+        var resultado = pageModel.OnGet();
 
-        // Assert
-        pageModel.Should().NotBeNull();
+        var redirect = resultado.Should().BeOfType<RedirectToPageResult>().Subject;
+        redirect.PageName.Should().Be("/Caja/Index");
     }
 }
