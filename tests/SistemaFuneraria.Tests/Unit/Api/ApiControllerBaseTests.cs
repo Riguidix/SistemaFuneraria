@@ -103,4 +103,19 @@ public class ApiControllerBaseTests
         problem.Status.Should().Be(StatusCodes.Status404NotFound);
         problem.Detail.Should().Contain("El cliente solicitado no existe");
     }
+
+    [Theory]
+    [InlineData(TipoError.NoAutorizado, StatusCodes.Status401Unauthorized)]
+    [InlineData(TipoError.Prohibido, StatusCodes.Status403Forbidden)]
+    [InlineData(TipoError.Conflicto, StatusCodes.Status409Conflict)]
+    [InlineData(TipoError.NoEncontrado, StatusCodes.Status404NotFound)]
+    public void FromResult_ConTipoErrorExplicito_DebeMapearCodigoHttpEsperado(TipoError tipoError, int statusEsperado)
+    {
+        var resultado = Resultado<string>.Fallo("Detalle de prueba", tipoError);
+
+        var actionResult = _controller.InvocarFromResult(resultado);
+
+        var objectResult = actionResult.Should().BeAssignableTo<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(statusEsperado);
+    }
 }
