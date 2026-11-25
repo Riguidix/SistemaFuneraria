@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SistemaFuneraria.Api.Servicios;
 using SistemaFuneraria.Application.Comun.Persistencia;
+using SistemaFuneraria.Application.Servicios.Auth;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Application.Servicios.Cobranza;
 using SistemaFuneraria.Application.Servicios.Configuracion;
@@ -66,10 +68,11 @@ builder.Services.AddScoped<ICarteraContratosService, CarteraContratosService>();
 builder.Services.AddScoped<ICobranzaService, CobranzaService>();
 builder.Services.AddScoped<IDashboardReportesService, DashboardReportesService>();
 builder.Services.AddScoped<IConfiguracionSucursalService, ConfiguracionSucursalService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var allowedOriginsRaw = builder.Configuration["Cors:AllowedOrigins"];
 var allowedOrigins = string.IsNullOrWhiteSpace(allowedOriginsRaw)
-    ? new[] { "http://localhost:5080", "https://localhost:7080" }
+    ? ["http://localhost:5080", "https://localhost:7080"]
     : allowedOriginsRaw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 builder.Services.AddCors(options =>
@@ -137,6 +140,7 @@ if (app.Environment.IsDevelopment())
     {
         options.SerializeAsV2 = true;
     });
+    
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Sistema Funeraria");
@@ -144,7 +148,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(corsPolicy);
-// app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
