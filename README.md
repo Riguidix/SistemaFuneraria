@@ -27,37 +27,57 @@ El proyecto implementa un proceso formal de **Verificación y Validación (V&V)*
 
 ## Arquitectura y stack tecnológico
 
-El sistema adopta una **Clean Architecture pragmática** dividida en cinco proyectos independientes. Las dependencias fluyen estrictamente hacia el centro; la lógica de negocio no depende de infraestructura, bases de datos ni frameworks web.
+El sistema adopta una **Clean Architecture de 6 proyectos** con separación física **Cliente–Servidor**: la lógica de negocio y el acceso a base de datos residen exclusivamente detrás del servidor REST **`SistemaFuneraria.Api`**, mientras que **`SistemaFuneraria.Web`** opera como un cliente frontend puro que consume los endpoints mediante `fetch()` y un API Wrapper modular.
 
 ```mermaid
-flowchart TD
-    Web["SistemaFuneraria.Web<br>(ASP.NET Core Razor Pages + Bootstrap 5.3.8)"]
-    Infra["SistemaFuneraria.Infrastructure<br>(EF Core 8 + Npgsql + PostgreSQL 16)"]
-    App["SistemaFuneraria.Application<br>(Casos de uso y contratos de persistencia)"]
-    Core["SistemaFuneraria.Core<br>(Entidades, Value Objects y Matemática Financiera)"]
-    Tests["SistemaFuneraria.Tests<br>(xUnit, Testcontainers, Respawn, NSubstitute)"]
+flowchart LR
+    subgraph CLIENTE["Cliente Frontend (SistemaFuneraria.Web)"]
+        Razor["Razor Pages + Bootstrap 5.3.8"]
+        Wrapper["Fetch API Wrapper<br>(wwwroot/js/api/apiClient.js)"]
+        Razor --> Wrapper
+    end
 
-    Web --> App
-    Web --> Infra
-    Infra --> App
-    App --> Core
+    subgraph SERVIDOR["Servidor REST (SistemaFuneraria.Api)"]
+        Api["Controllers /api/v1/* + JWT + CORS + /health"]
+        App["SistemaFuneraria.Application<br>(Servicios, DTOs, Resultado<T>)"]
+        Core["SistemaFuneraria.Core<br>(Entidades, Dinero, Oráculo 36 Comb.)"]
+        Infra["SistemaFuneraria.Infrastructure<br>(EF Core 8 + Npgsql + Identity)"]
+        Api --> App
+        Api --> Infra
+        Infra --> App
+        App --> Core
+    end
+
+    DB[("PostgreSQL 16<br>(funeraria_dev)")]
+    Tests["SistemaFuneraria.Tests<br>(xUnit, WebApplicationFactory, Testcontainers)"]
+
+    Wrapper -->|"HTTPS / JSON + Bearer JWT<br>(ApiSettings__BaseUrl)"| Api
+    Infra --> DB
+    Tests --> Api
     Tests --> Web
-    Tests --> Infra
-    Tests --> App
     Tests --> Core
 ```
+
+### Cómo se integra `SistemaFuneraria.Api` con `SistemaFuneraria.Web`
+
+1. **Aislamiento estricto (Regla de Arquitectura):** `SistemaFuneraria.Web` no referencia a `SistemaFuneraria.Infrastructure` ni a `Npgsql`; jamás abre conexiones directas a PostgreSQL. Toda operación de lectura o escritura atraviesa la API REST.
+2. **Contrato HTTP estandarizado (`/api/v1/*`):** Todos los controladores (`AuthController`, `ClientesController`, `LotesController`, `SimuladorController`, `UsuariosAdminController`, etc.) heredan de `ApiControllerBase`, el cual traduce automáticamente `Resultado<T>` a respuestas HTTP semánticas (`200`, `201`, `204`, `400`, `401`, `403`, `404`, `409`) usando **`ProblemDetails` (RFC 7807)**.
+3. **Autenticación JWT y CORS:** Al iniciar sesión en `/Cuenta/Login`, `authApi.js` invoca `POST /api/v1/auth/login`, almacena el token JWT Bearer emitido por la API y `apiClient.js` lo adjunta en la cabecera `Authorization: Bearer <token>` de cada petición subsiguiente. La API valida el origen del frontend mediante `Cors__AllowedOrigins`.
+4. **API Wrapper Modular (`wwwroot/js/api/`):** Las vistas Razor consumen módulos especializados (`apiClient.js`, `authApi.js`, `clientesApi.js`, `lotesApi.js`, `adminApi.js`) que centralizan manejo de errores `ProblemDetails`, expiración de sesión (`401`) y formateo `es-MX`.
+5. **Despliegue Desacoplado en Contenedores:** Cada capa se empaqueta por separado (`Dockerfile.Api` y `Dockerfile.Web`) sobre el puerto `8080`, orquestadas declarativamente en [`render.yaml`](render.yaml) con sonda de salud en `GET /health`.
 
 ### Componentes del stack
 
 | Capa / Dimensión | Tecnología | Descripción técnica |
 |---|---|---|
 | **Runtime y lenguaje** | **.NET 8 (LTS) / C# 12** | Compilación con `Nullable=enable`, tipos de registro (`record`), expresiones de colección e inyección de dependencias nativa. |
-| **Capa de Dominio (`Core`)** | **C# puro (0 dependencias NuGet)** | Entidades ricas con estado protegido, Value Objects inmutables y motores matemáticos puros (`CalculadoraFinanciamiento`, `GeneradorAmortizacion`). |
-| **Capa de Aplicación (`Application`)** | **C# puro + Abstracciones EF Core** | Orquestación de casos de uso mediante el patrón `Resultado<T>` explícito y validadores estáticos de entrada. Sin bibliotecas de validación externas. |
-| **Persistencia (`Infrastructure`)** | **EF Core 8 + Npgsql + PostgreSQL 16** | Mapeo relacional con precisión `numeric(14,2)`, nombres en `snake_case` nativo y control de concurrencia optimista vía token `xmin`. |
-| **Capa de Presentación (`Web`)** | **ASP.NET Core Razor Pages + Bootstrap 5.3.8** | Renderizado del lado del servidor seguro contra CSRF. Reactividad en el cotizador con **Vanilla JS** (`fetch()` nativo y actualización de `PartialViews`). Cero dependencias de Node.js o npm. |
-| **Seguridad e identidad** | **ASP.NET Core Identity** | Autenticación y control de acceso basado en roles (`Administrador`, `Vendedor`, `Cajero`) con formularios dedicados. |
-| **Suite de pruebas (`Tests`)** | **xUnit + NSubstitute + Testcontainers + Respawn** | Pruebas unitarias de dominio sin mocks, oráculo de 36 combinaciones financieras y pruebas de integración sobre PostgreSQL efímero. |
+| **Capa de Dominio (`Core`)** | **C# puro (0 dependencias NuGet)** | Entidades ricas con estado protegido, Value Objects inmutables (`Dinero`) y motores matemáticos puros (`CalculadoraFinanciamiento`, `GeneradorAmortizacion`). |
+| **Capa de Aplicación (`Application`)** | **C# puro + Abstracciones EF Core** | Orquestación de casos de uso mediante el patrón `Resultado<T>` explícito y validadores estáticos de entrada. |
+| **Persistencia (`Infrastructure`)** | **EF Core 8 + Npgsql + PostgreSQL 16** | Mapeo relacional con precisión `numeric(18,2)`, nombres en `snake_case` nativo, secuencias de folios y control de concurrencia optimista vía token `xmin`. |
+| **Servidor REST (`Api`)** | **ASP.NET Core Web API + OpenAPI/Swagger** | Endpoints versionados (`/api/v1/*`), JWT Bearer, `ProblemDetails` RFC 7807, CORS estricto, Rate Limiting y `/health`. |
+| **Cliente Frontend (`Web`)** | **ASP.NET Core Razor Pages + Bootstrap 5.3.8** | Interfaz responsiva desacoplada de BD; reactividad y consumo de datos vía **Vanilla JS (`fetch()` API Wrapper)**. |
+| **Seguridad e identidad** | **ASP.NET Core Identity + JWT** | Autenticación y control de acceso basado en roles (`Administrador`, `Vendedor`, `Cajero`), lockout al 5.º intento fallido (15 min) y jitter anti-enumeración. |
+| **Suite de pruebas (`Tests`)** | **xUnit + NSubstitute + Testcontainers + WebApplicationFactory** | Pruebas unitarias de dominio, oráculo de 36 combinaciones financieras y pruebas de integración HTTP sobre PostgreSQL efímero. |
 | **Gobernanza de compilación** | **`Directory.Build.props` & `Directory.Packages.props`** | Central Package Management (CPM) y regla de compilación estricta (`TreatWarningsAsErrors=true`). |
 
 ---
@@ -104,7 +124,7 @@ La documentación técnica del proyecto se ubica en el primer nivel de la carpet
 | [**05-registro-ejecucion.md**](docs/05-registro-ejecucion.md) | Bitácora de ejecución formal de pruebas. Mantenida bajo política de escritor único por QA Lead y Tech Lead. |
 | [**06-bitacora-incidencias.md**](docs/06-bitacora-incidencias.md) | Registro y ciclo de vida de defectos (SEV1 a SEV3). Incluye plantilla formal y la resolución de la incidencia modelo `INC-001`. |
 | [**07-informe-cierre.md**](docs/07-informe-cierre.md) | Acta formal de certificación de calidad y dictamen de liberación para producción (`v1.0.0`). |
-| [**08-backlog.md**](docs/08-backlog.md) | Backlog Maestro Oficial con 55 tickets atómicos (`SF-001` a `SF-055`, 135 SP) organizados en 4 Milestones. |
+| [**08-backlog.md**](docs/08-backlog.md) | Backlog Maestro Oficial con 100 tickets atómicos (`SF-001` a `SF-100`) organizados en 10 Milestones (`v0.1.0` a `v1.0.0`). |
 | [**09-modelo-datos-erd.md**](docs/09-modelo-datos-erd.md) | Especificación oficial del Modelo Entidad-Relación (ERD), diccionario de datos PostgreSQL 16, índices parciales y tokens de concurrencia optimista (`xmin`). |
 | [**workflow.md**](docs/workflow.md) | Manual operativo del desarrollador: ramas GitFlow, ciclo diario de 8 pasos, límite de Blast Radius y resolución de emergencias Git. |
 | [**evidencias/README.md**](docs/evidencias/README.md) | Guía de aislamiento de evidencias TDD (`Red_Test.md` y `Green_Test.md`) por carpeta de ticket (`docs/evidencias/SF-XXX/`). |
@@ -161,13 +181,19 @@ Verifica que las pruebas unitarias y de integración pasen en verde:
 dotnet test --verbosity normal
 ```
 
-### 5. Iniciar la aplicación web
+### 5. Iniciar el servidor API y el cliente Web
+
+En dos terminales independientes, levanta primero la API REST y después el cliente Razor Pages:
 
 ```bash
+# Terminal 1: Servidor REST + Swagger (/swagger) + Health (/health)
+dotnet run --project src/SistemaFuneraria.Api
+
+# Terminal 2: Cliente Frontend Razor Pages + Fetch Wrapper
 dotnet run --project src/SistemaFuneraria.Web
 ```
 
-Abre tu navegador en `https://localhost:5001` o `http://localhost:5000`.
+Verifica Swagger en el puerto configurado para `SistemaFuneraria.Api` y abre el sistema web desde `SistemaFuneraria.Web`.
 
 ---
 
@@ -249,7 +275,8 @@ dotnet test --logger "console;verbosity=detailed"
 
 ### Reglas de calidad obligatorias
 - **Advertencias como errores:** La compilación falla si el código produce advertencias del analizador (`TreatWarningsAsErrors=true`).
-- **Cero flotantes:** Se prohíbe el uso de `float` o `double` en cálculos de dinero; se utiliza exclusivamente el tipo `decimal` de C# y `numeric(14,2)` en base de datos.
+- **Cero flotantes:** Se prohíbe el uso de `float` o `double` en cálculos de dinero; se utiliza exclusivamente el tipo `decimal` de C# (`Dinero`) y `numeric(18,2)` en base de datos.
+- **Doble Filtro en PRs:** Toda entrega requiere revisión Paso 1 de QA (`docs/evidencias/SF-XXX/`) y Paso 2 del Tech Lead antes de integrarse a `dev`.
 - **Rollback-First:** Todo cambio de persistencia o migración de base de datos debe contar con su script de reversión probado.
 
 ---

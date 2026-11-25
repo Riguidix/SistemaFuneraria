@@ -9,6 +9,7 @@ namespace SistemaFuneraria.Application.Servicios.Dashboard;
 public interface IDashboardReportesService
 {
     Task<Resultado<DashboardResumenDto>> ObtenerResumenDashboardAsync(
+        string? rango = null,
         CancellationToken cancellationToken = default);
 
     Task<Resultado<ReportesIndicadoresDto>> ObtenerIndicadoresReportesAsync(

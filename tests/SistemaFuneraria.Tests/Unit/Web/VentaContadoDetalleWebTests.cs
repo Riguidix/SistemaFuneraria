@@ -77,6 +77,9 @@ public class VentaContadoDetalleWebTests
 
             assert.equal(det.obtenerBadgeEstadoVenta("Liquidado").texto, "Liquidado");
             assert.equal(det.obtenerBadgeEstadoVenta("Cancelado").texto, "Cancelado");
+            const badgeVencido = det.obtenerBadgeEstadoVenta("Vencido");
+            assert.equal(badgeVencido.texto, "Vencido");
+            assert.match(badgeVencido.clase, /bg-danger-subtle/);
             assert.match(det.validarCambioEstadoAdmin("Cancelado", "corto"), /10 caracteres/);
             assert.equal(det.validarCambioEstadoAdmin("Cancelado", "Error de captura en titular"), null);
             """;

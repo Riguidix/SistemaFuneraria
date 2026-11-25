@@ -4,17 +4,17 @@ namespace SistemaFuneraria.Web.Pages.Configuracion;
 
 public class IndexModel : PageModel
 {
-    // 1. Datos de la Sucursal (Captura 12 de Figma · SF-092)
-    public string NombreComercial { get; set; } = "Jardines del Valle";
-    public string Telefono { get; set; } = "55 3128 4400";
-    public string Correo { get; set; } = "contacto@jardinesdelvalle.mx";
-    public string Domicilio { get; set; } = "Av. de la Paz 1840, Col. Del Valle";
-    public string Ciudad { get; set; } = "Ciudad de México";
-    public string CodigoPostal { get; set; } = "03100";
+    // 1. Datos de la Sucursal (SF-092)
+    public string NombreComercial { get; set; } = string.Empty;
+    public string Telefono { get; set; } = string.Empty;
+    public string Correo { get; set; } = string.Empty;
+    public string Domicilio { get; set; } = string.Empty;
+    public string Ciudad { get; set; } = string.Empty;
+    public string CodigoPostal { get; set; } = string.Empty;
 
     // Switches de Automatización Operativa
-    public bool RecordatoriosPagoActivo { get; set; } = true;
-    public bool ResumenDiarioCajaActivo { get; set; } = true;
+    public bool RecordatoriosPagoActivo { get; set; }
+    public bool ResumenDiarioCajaActivo { get; set; }
 
     // Sección activa del submenú lateral
     public string SeccionActiva { get; set; } = "DatosSucursal";
@@ -28,18 +28,13 @@ public class IndexModel : PageModel
 
     public void OnGet()
     {
-        Usuarios = new List<UsuarioConfigDto>
-        {
-            new("Andrea Morales", "admin@funeraria.com", "AM", "Administradora", "Activo", "Hoy, 08:02"),
-            new("Carlos Mendoza", "vendedor@funeraria.com", "CM", "Vendedor", "Activo", "Ayer, 18:24"),
-            new("Guadalupe Ramos", "cajero@funeraria.com", "GR", "Cajera", "Activo", "Hoy, 07:55")
-        };
+        Usuarios = new List<UsuarioConfigDto>();
 
         PlanesLotes = new List<PlanLoteConfigDto>
         {
-            new("Lote Básico", 2, 120000m, "10% a 30%"),
-            new("Lote Familiar", 3, 150000m, "10% a 30%"),
-            new("Lote Preferencial", 4, 180000m, "10% a 30%")
+            new("Lote Básico", 2, 120000m, "10%, 20% o 30%"),
+            new("Lote Familiar", 3, 150000m, "10%, 20% o 30%"),
+            new("Lote Preferencial", 4, 180000m, "10%, 20% o 30%")
         };
 
         TasasPlazos = new List<TasaPlazoConfigDto>

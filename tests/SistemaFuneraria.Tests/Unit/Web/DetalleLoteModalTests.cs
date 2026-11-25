@@ -39,34 +39,49 @@ public class DetalleLoteModalTests
         contenido.Should().Contain("btnCotizarDesdeDetalle", "botón para cotizar cuando el lote esté libre");
     }
 
-    [Fact(DisplayName = "SF-046: Pages/Catalogo/Index.cshtml debe incluir el partial _DetalleLoteModal y conectar botón Ver detalle")]
+    [Fact(DisplayName = "SF-046: Pages/Catalogo/Index.cshtml debe incluir modales y conectar lotesApi.js y catalogoPage.js")]
     public void CatalogoIndex_DebeIncluirModalYConectarBotonVerDetalle()
     {
         var path = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Catalogo", "Index.cshtml");
         var contenido = File.ReadAllText(path);
 
         contenido.Should().Contain("<partial name=\"_DetalleLoteModal\"");
-        contenido.Should().Contain("RO-B-027");
-        contenido.Should().Contain("abrirModalDetalleLote");
+        contenido.Should().Contain("<partial name=\"_FormularioLoteModal\"");
+        contenido.Should().Contain("~/js/api/lotesApi.js");
+        contenido.Should().Contain("~/js/pages/catalogoPage.js");
+        contenido.Should().Contain("href=\"/Ventas/Nueva\"");
+        contenido.Should().Contain("aria-sort=\"none\"");
+        contenido.Should().Contain("Mantenimiento");
     }
 
-    [Fact(DisplayName = "SF-046: Enlace 'Ver contrato' para lote Vendido (LM-A-014) debe apuntar a /Contratos/Detalle?loteClave=LM-A-014")]
+    [Fact(DisplayName = "SF-046: catalogoPage.js debe enlazar lotes vendidos a /Contratos/Detalle y exponer abrirModalDetalleLote")]
     public void CatalogoIndex_LoteVendido_DebeVincularAContratoDetalle()
     {
-        var path = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Catalogo", "Index.cshtml");
+        var path = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "wwwroot", "js", "pages", "catalogoPage.js");
+        File.Exists(path).Should().BeTrue();
         var contenido = File.ReadAllText(path);
 
-        contenido.Should().Contain("/Contratos/Detalle?loteClave=LM-A-014");
+        contenido.Should().Contain("abrirModalDetalleLote");
+        contenido.Should().Contain("/Contratos/Detalle?folio=");
+        contenido.Should().Contain("/Contratos/Detalle?loteClave=");
+        contenido.Should().Contain("/Ventas/Nueva?lote=");
+        contenido.Should().Contain("cambiarEstadoLote");
+        contenido.Should().Contain("crearLote");
+        contenido.Should().Contain("actualizarLote");
     }
 
-    [Fact(DisplayName = "SF-046: DetalleModel debe soportar parámetro de búsqueda por loteClave")]
+    [Fact(DisplayName = "SF-046: DetalleModel y contratoDetallePage.js deben soportar parámetro de búsqueda por loteClave")]
     public void ContratosDetalleModel_DebeSoportarParametroLoteClave()
     {
-        var path = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Contratos", "Detalle.cshtml.cs");
-        var contenido = File.ReadAllText(path);
+        var modelPath = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Contratos", "Detalle.cshtml.cs");
+        var modelContenido = File.ReadAllText(modelPath);
+        var jsPath = Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "wwwroot", "js", "pages", "contratoDetallePage.js");
+        var jsContenido = File.ReadAllText(jsPath);
 
-        contenido.Should().Contain("loteClave");
-        contenido.Should().Contain("LM-A-014");
+        modelContenido.Should().Contain("loteClave");
+        modelContenido.Should().Contain("LoteClaveParam");
+        jsContenido.Should().Contain("loteClave");
+        jsContenido.Should().Contain("obtenerCartera");
     }
 
     [Fact(DisplayName = "SF-046: lotesApi.js debe exponer método obtenerLotePorClave")]

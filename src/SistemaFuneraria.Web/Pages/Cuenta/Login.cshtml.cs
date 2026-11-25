@@ -9,12 +9,6 @@ public class LoginModel : PageModel
     [BindProperty]
     public LoginInputModel Input { get; set; } = new();
 
-    public int IntentosFallidos { get; set; } = 0;
-    public bool EstaBloqueado { get; set; } = false;
-    public int MinutosBloqueoRestantes { get; set; } = 0;
-    public string? MensajeAlerta { get; set; }
-    public string? MensajeError { get; set; }
-
     public class LoginInputModel
     {
         [Required(ErrorMessage = "El correo electrónico es obligatorio")]
@@ -30,25 +24,13 @@ public class LoginModel : PageModel
 
     public void OnGet()
     {
-        IntentosFallidos = 0;
-        EstaBloqueado = false;
-        MinutosBloqueoRestantes = 0;
+        Input = new LoginInputModel();
     }
 
     public IActionResult OnPost()
     {
-        if (!ModelState.IsValid)
-        {
-            return Page();
-        }
-
-        // Simulación de autenticación en modo frontend
-        if (Input.Email.EndsWith("@serenia.mx", StringComparison.OrdinalIgnoreCase) ||
-            Input.Email.Contains("@", StringComparison.OrdinalIgnoreCase))
-        {
-            return RedirectToPage("/Clientes/Index");
-        }
-
+        // La autenticación real ocurre contra SistemaFuneraria.Api vía authApi.js.
+        // Nunca redirigir a rutas protegidas desde este fallback sin validación del servidor.
         return Page();
     }
 }

@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SistemaFuneraria.Api.Controllers.V1;
+using SistemaFuneraria.Api.Servicios;
 using SistemaFuneraria.Application.DTOs.Auth;
 using SistemaFuneraria.Infrastructure.Persistencia;
 using Xunit;
@@ -72,7 +73,8 @@ public class IniciarSesionUsuarioTests : IDisposable
 
     private AuthController CrearController(ClaimsPrincipal? user = null)
     {
-        var controller = new AuthController(_userManager, CrearConfiguracionJwt());
+        var authService = new AuthService(_userManager, CrearConfiguracionJwt());
+        var controller = new AuthController(authService);
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext

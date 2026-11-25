@@ -61,20 +61,33 @@
     function verificarAccesoWizard(deps) {
         const authApi = deps.authApi;
         const apiClient = deps.apiClient;
-        const storage = deps.storage !== undefined
-            ? deps.storage
-            : (typeof sessionStorage !== "undefined" ? sessionStorage : null);
+        const hasExplicitStorage = deps.storage !== undefined;
+        const storageOpts = hasExplicitStorage
+            ? { client: apiClient, storage: deps.storage }
+            : { client: apiClient };
         const navigate = deps.navigate || ((url) => {
             if (typeof window !== "undefined") {
                 window.location.assign(url);
             }
         });
 
-        const token = storage ? storage.getItem(apiClient.TOKEN_STORAGE_KEY) : null;
-        const session = authApi.getSession({ client: apiClient, storage });
+        const token = typeof authApi.getToken === "function"
+            ? authApi.getToken(storageOpts)
+            : (deps.storage ? deps.storage.getItem(apiClient.TOKEN_STORAGE_KEY) : null);
+        const session = authApi.getSession(storageOpts);
+        const expirado = typeof authApi.isTokenExpired === "function" && token
+            ? authApi.isTokenExpired(token)
+            : false;
 
-        if (!token || !session) {
-            navigate("/Cuenta/Login");
+        if (!token || !session || expirado) {
+            let destino = "/Cuenta/Login";
+            if (typeof window !== "undefined" && window.location?.pathname) {
+                const path = window.location.pathname;
+                if (path !== "/" && !path.toLowerCase().startsWith("/cuenta/")) {
+                    destino = `/Cuenta/Login?returnUrl=${encodeURIComponent(path + (window.location.search || ""))}`;
+                }
+            }
+            navigate(destino);
             return { autorizado: false, redirigido: true, motivo: "SIN_SESION", session: null };
         }
 
@@ -117,6 +130,13 @@
                     const principal = doc.getElementById("wizardContenidoPrincipal");
                     const restringido = doc.getElementById("wizardAccesoRestringido");
                     const draftBadge = doc.getElementById("draftBadge");
+                    const btnVolver = doc.getElementById("btnVolver403Wizard");
+                    if (btnVolver) {
+                        const rutaInicio = typeof authApi.getDefaultRouteForRole === "function"
+                            ? authApi.getDefaultRouteForRole(acceso.session?.rol)
+                            : "/Caja";
+                        btnVolver.setAttribute("href", rutaInicio);
+                    }
                     if (principal) principal.classList.add("d-none");
                     if (draftBadge) draftBadge.classList.add("d-none");
                     if (restringido) restringido.classList.remove("d-none");
@@ -360,6 +380,30 @@
                 }));
             }
         });
+
+        // Precarga de cliente si llega ?clienteId=<guid> desde /Clientes
+        if (win?.location?.search && clientesApi && typeof clientesApi.obtenerPorId === "function") {
+            const params = new URLSearchParams(win.location.search);
+            const clienteIdQuery = (params.get("clienteId") || "").trim();
+            if (clienteIdQuery) {
+                clientesApi.obtenerPorId(clienteIdQuery).then(function (cli) {
+                    if (!cli) return;
+                    poblarCampos(cli);
+                    if (inputBuscar) {
+                        inputBuscar.value = `${cli.nombre || ""} ${cli.apellidos || ""}`.trim();
+                    }
+                    if (wizardState) {
+                        const clienteNorm = normalizarClientePaso1(cli);
+                        wizardState.updateDraft({
+                            cliente: { ...clienteNorm, email: clienteNorm.correo },
+                            paso: 1
+                        });
+                    }
+                }).catch(function () {
+                    // Si el cliente no existe o falla la precarga, el usuario puede buscarlo manualmente
+                });
+            }
+        }
 
         return { autorizado: true };
     }

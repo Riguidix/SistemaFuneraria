@@ -147,6 +147,18 @@ public class ResultadoTests
         // Assert
         resultado.Should().NotBeNull();
         resultado.EsExitoso.Should().BeTrue();
+        resultado.TipoError.Should().Be(TipoError.Ninguno);
         resultado.Valor.Should().Be(100);
+    }
+
+    [Fact]
+    public void TipoError_DebeInferirseDePrefijosYRespetarFactoriesTipadas()
+    {
+        Resultado.Exito().TipoError.Should().Be(TipoError.Ninguno);
+        Resultado.Fallo("Error simple").TipoError.Should().Be(TipoError.Validacion);
+        Resultado.Fallo("[CONFLICTO] Duplicado").TipoError.Should().Be(TipoError.Conflicto);
+        Resultado.Fallo("[NO_ENCONTRADO] Falta").TipoError.Should().Be(TipoError.NoEncontrado);
+        Resultado.FalloNoAutorizado("Sin sesión").TipoError.Should().Be(TipoError.NoAutorizado);
+        Resultado<string>.FalloProhibido("Sin rol").TipoError.Should().Be(TipoError.Prohibido);
     }
 }

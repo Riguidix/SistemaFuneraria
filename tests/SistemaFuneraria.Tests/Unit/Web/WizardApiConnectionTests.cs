@@ -65,4 +65,34 @@ public class WizardApiConnectionTests
         p3.Should().Contain("cotizar");
         p3.Should().Contain("wizardState");
     }
+
+    [Fact(DisplayName = "Wizard: Soporta Recordarme (getToken), query params ?lote=/?clienteId=, modal amortización y referencia contado")]
+    public void Wizard_DebeSoportarQueryParamsModalAmortizacionYReferenciaContado()
+    {
+        var p1 = File.ReadAllText(Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "wwwroot", "js", "ventas", "paso1Cliente.js"));
+        var p2 = File.ReadAllText(Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "wwwroot", "js", "ventas", "paso2Lote.js"));
+        var p3 = File.ReadAllText(Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "wwwroot", "js", "ventas", "paso3Financiamiento.js"));
+        var p4 = File.ReadAllText(Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "wwwroot", "js", "ventas", "paso4Confirmacion.js"));
+        var paso3Html = File.ReadAllText(Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Ventas", "Partials", "_Paso3Financiamiento.cshtml"));
+        var nuevaHtml = File.ReadAllText(Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Ventas", "Nueva.cshtml"));
+
+        p1.Should().Contain("authApi.getToken");
+        p1.Should().Contain("params.get(\"clienteId\")");
+        p1.Should().Contain("btnVolver403Wizard");
+
+        p2.Should().Contain("params.get(\"lote\")");
+        p2.Should().Contain("sincronizarCuadriculaSlots");
+        p2.Should().Contain("localStorage");
+
+        p3.Should().Contain("renderizarTablaAmortizacion");
+        p3.Should().Contain("aria-pressed");
+        paso3Html.Should().Contain("id=\"modalTablaAmortizacionPaso3\"");
+        paso3Html.Should().Contain("id=\"btnVerTablaAmortizacion\"");
+        paso3Html.Should().Contain("aria-pressed=\"true\"");
+
+        p4.Should().Contain("sincronizarReferenciaContado");
+        p4.Should().Contain("La referencia de pago es obligatoria");
+
+        nuevaHtml.Should().Contain("id=\"btnVolver403Wizard\"");
+    }
 }

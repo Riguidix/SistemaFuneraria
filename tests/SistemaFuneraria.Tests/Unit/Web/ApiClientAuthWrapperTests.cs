@@ -35,6 +35,10 @@ public class ApiClientAuthWrapperTests
         contenido.Should().Contain("detail");
         contenido.Should().Contain("status === 204");
         contenido.Should().Contain("status === 401");
+        contenido.Should().Contain("isLoginPath(");
+        contenido.Should().Contain("buildLoginRedirectUrl(");
+        contenido.Should().Contain("toLowerCase().startsWith(\"/cuenta/login\")");
+        contenido.Should().Contain("returnUrl=");
     }
 
     [Fact(DisplayName = "SF-024 (BDD): authApi.js expone login, olvideContrasena, logout, getSession y applyRolePermissions")]
@@ -47,6 +51,12 @@ public class ApiClientAuthWrapperTests
         contenido.Should().Contain("logout(");
         contenido.Should().Contain("getSession(");
         contenido.Should().Contain("applyRolePermissions(");
+        contenido.Should().Contain("getDefaultRouteForRole(");
+        contenido.Should().Contain("sanitizeReturnUrl(");
+        contenido.Should().Contain("resolvePostLoginUrl(");
+        contenido.Should().Contain("buildRequireAuthRedirectUrl(");
+        contenido.Should().Contain("\"/Caja\"");
+        contenido.Should().Contain("\"/Resumen\"");
         contenido.Should().Contain("/api/v1/auth/login");
         contenido.Should().Contain("/api/v1/auth/olvide-contrasena");
         contenido.Should().Contain("data-roles");

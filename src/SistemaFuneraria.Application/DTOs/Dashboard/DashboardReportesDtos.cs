@@ -6,7 +6,9 @@ public sealed record DashboardKpisDto(
     int ContratosActivos,
     int ContratosNuevosMes,
     int PagosVencidosCount,
-    decimal MontoPorRecuperar
+    decimal MontoPorRecuperar,
+    decimal? VariacionVentasPct = null,
+    decimal? VariacionCobranzaPct = null
 );
 
 public sealed record SerieMensualDto(
@@ -32,7 +34,8 @@ public sealed record ActividadRecienteDto(
     string Referencia,
     decimal Importe,
     string Estado,
-    string FechaRelativa
+    string FechaRelativa,
+    string? FolioContrato = null
 );
 
 public sealed record DashboardResumenDto(
