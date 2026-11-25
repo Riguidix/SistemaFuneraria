@@ -19,9 +19,11 @@ public class DashboardReportesController(IDashboardReportesService dashboardRepo
     [HttpGet("api/v1/dashboard/resumen")]
     [Authorize]
     [ProducesResponseType(typeof(DashboardResumenDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> ObtenerResumenDashboard(CancellationToken ct = default)
+    public async Task<IActionResult> ObtenerResumenDashboard(
+        [FromQuery] string? rango = null,
+        CancellationToken ct = default)
     {
-        var resultado = await _dashboardReportesService.ObtenerResumenDashboardAsync(ct);
+        var resultado = await _dashboardReportesService.ObtenerResumenDashboardAsync(rango, ct);
         return FromResult(resultado);
     }
 
