@@ -61,7 +61,7 @@ public class ConfiguracionController(
         {
             var roles = await _userManager.GetRolesAsync(u);
             var claims = await _userManager.GetClaimsAsync(u);
-            var nombre = claims.FirstOrDefault(c => c.Type == "nombre_completo")?.Value ?? u.Email ?? u.UserName ?? "-";
+            var nombre = ObtenerNombreDesdeClaims(claims, u);
             bool bloqueado = u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.UtcNow;
             bool activo = !(u.LockoutEnabled && u.LockoutEnd.HasValue && u.LockoutEnd.Value > DateTimeOffset.UtcNow.AddYears(10));
 
@@ -124,7 +124,7 @@ public class ConfiguracionController(
         await _userManager.AddToRoleAsync(user, request.Rol);
         if (!string.IsNullOrWhiteSpace(request.Nombre))
         {
-            await _userManager.AddClaimAsync(user, new Claim("nombre_completo", request.Nombre.Trim()));
+            await _userManager.AddClaimAsync(user, new Claim(ParametrosNegocio.ClaimNombreCompleto, request.Nombre.Trim()));
         }
 
         var dto = new UsuarioSistemaDto(user.Id, request.Nombre?.Trim() ?? correoNorm, correoNorm, request.Rol, true, false);
@@ -177,9 +177,38 @@ public class ConfiguracionController(
             }
         }
 
-        var dto = new UsuarioSistemaDto(user.Id, request.Nombre ?? user.Email ?? "-", user.Email ?? "-", request.Rol, true, false);
+        var claims = await _userManager.GetClaimsAsync(user);
+        string nombreFinal;
+        if (!string.IsNullOrWhiteSpace(request.Nombre))
+        {
+            nombreFinal = request.Nombre.Trim();
+            var claimsNombre = claims
+                .Where(c => c.Type == ParametrosNegocio.ClaimNombreCompleto || c.Type == "nombre_completo")
+                .ToList();
+            if (claimsNombre.Count > 0)
+            {
+                await _userManager.RemoveClaimsAsync(user, claimsNombre);
+            }
+            await _userManager.AddClaimAsync(user, new Claim(ParametrosNegocio.ClaimNombreCompleto, nombreFinal));
+        }
+        else
+        {
+            nombreFinal = ObtenerNombreDesdeClaims(claims, user);
+        }
+
+        bool bloqueado = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+        bool activo = !(user.LockoutEnabled && user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow.AddYears(10));
+
+        var dto = new UsuarioSistemaDto(user.Id, nombreFinal, user.Email ?? "-", request.Rol, activo, bloqueado);
         return Ok(dto);
     }
+
+    private static string ObtenerNombreDesdeClaims(IList<Claim> claims, IdentityUser user) =>
+        claims.FirstOrDefault(c => c.Type == ParametrosNegocio.ClaimNombreCompleto)?.Value
+        ?? claims.FirstOrDefault(c => c.Type == "nombre_completo")?.Value
+        ?? user.Email
+        ?? user.UserName
+        ?? "-";
 
     [HttpPatch("usuarios/{id}/estado")]
     [ProducesResponseType(StatusCodes.Status200OK)]
