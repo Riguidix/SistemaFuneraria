@@ -134,4 +134,38 @@ public class DashboardReportesServiceTests : IDisposable
             a.Referencia == "CTR-2026-0102" &&
             a.FolioContrato == "CTR-2026-0102");
     }
+
+    [Fact(DisplayName = "Reportes: ObtenerIndicadoresReportesAsync filtra por periodo mes-actual vs historico")]
+    public async Task ObtenerIndicadoresReportes_DebeFiltrarPorPeriodoMesActualEHistorico()
+    {
+        var hoy = DateTimeOffset.UtcNow;
+        var enMesActual = new DateTimeOffset(hoy.Year, hoy.Month, 1, 12, 0, 0, TimeSpan.Zero);
+        var haceDosMeses = enMesActual.AddMonths(-2);
+
+        var cliente = Cliente.Crear("Elena", "Vargas", "VARE800101MDFRRN02", "5533334444", "elena@ejemplo.mx", "Dir");
+        var lote1 = Lote.Crear("RO-A-001", "Rosales", "A", 2, new Dinero(120000m));
+        var lote2 = Lote.Crear("RO-A-002", "Rosales", "A", 4, new Dinero(180000m));
+
+        lote1.MarcarVendido();
+        lote2.MarcarVendido();
+
+        var ventaAntigua = Venta.CrearContado("CTR-2026-0301", cliente.Id, lote1.Id, "vend-1", lote1.PrecioContado, haceDosMeses);
+        var ventaActual = Venta.CrearContado("CTR-2026-0302", cliente.Id, lote2.Id, "vend-1", lote2.PrecioContado, enMesActual);
+
+        await _dbContext.Clientes.AddAsync(cliente);
+        await _dbContext.Lotes.AddRangeAsync(lote1, lote2);
+        await _dbContext.Ventas.AddRangeAsync(ventaAntigua, ventaActual);
+        await _dbContext.SaveChangesAsync();
+
+        var resMes = await _service.ObtenerIndicadoresReportesAsync("mes-actual", "Jardines del Valle");
+        resMes.EsExitoso.Should().BeTrue();
+        resMes.Valor.MetaMensual.Acumulado.Should().Be(180000m);
+        resMes.Valor.TicketPromedio.Should().Be(180000m);
+
+        var resHist = await _service.ObtenerIndicadoresReportesAsync("historico", "Todas las sucursales");
+        resHist.EsExitoso.Should().BeTrue();
+        resHist.Valor.Periodo.Should().Be("Histórico completo");
+        resHist.Valor.MetaMensual.Acumulado.Should().Be(300000m);
+        resHist.Valor.TicketPromedio.Should().Be(150000m);
+    }
 }

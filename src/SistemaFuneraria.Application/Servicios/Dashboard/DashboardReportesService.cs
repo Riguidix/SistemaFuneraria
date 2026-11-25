@@ -242,15 +242,17 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
         CancellationToken cancellationToken = default)
     {
         var ahora = _timeProvider.GetLocalNow();
-        var periodoEfectivo = string.IsNullOrWhiteSpace(periodo)
-            ? CultureInfo.InvariantCulture.TextInfo.ToTitleCase(ahora.ToString("MMMM yyyy", CulturaEsMx))
-            : periodo.Trim();
+        var (periodoEfectivo, fechaDesde, fechaHasta) = ResolverRangoPeriodo(periodo, ahora);
         var sucursalEfectiva = string.IsNullOrWhiteSpace(sucursal) ? "Jardines del Valle" : sucursal.Trim();
 
-        var ventas = await _context.Ventas
+        var todasVentas = await _context.Ventas
             .AsNoTracking()
             .Where(v => v.Estado != EstadoVenta.Cancelado)
             .ToListAsync(cancellationToken);
+
+        var ventas = fechaDesde.HasValue && fechaHasta.HasValue
+            ? todasVentas.Where(v => v.FechaVenta >= fechaDesde.Value && v.FechaVenta < fechaHasta.Value).ToList()
+            : todasVentas;
 
         var lotes = await _context.Lotes
             .AsNoTracking()
@@ -303,5 +305,51 @@ public class DashboardReportesService(IAppDbContext context, TimeProvider? timeP
                 ObjetivoMensual: ObjetivoMensualOficial,
                 Acumulado: totalVentas,
                 PorcentajeAvance: porcentajeAvance)));
+    }
+
+    private static (string Etiqueta, DateTimeOffset? Desde, DateTimeOffset? Hasta) ResolverRangoPeriodo(
+        string? periodo,
+        DateTimeOffset ahora)
+    {
+        var raw = periodo?.Trim() ?? string.Empty;
+        var norm = raw.ToLowerInvariant();
+        var inicioMesActual = new DateTimeOffset(ahora.Year, ahora.Month, 1, 0, 0, 0, ahora.Offset);
+
+        switch (norm)
+        {
+            case "mes-actual":
+            {
+                var label = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(
+                    inicioMesActual.ToString("MMMM yyyy", CulturaEsMx));
+                return (label, inicioMesActual, inicioMesActual.AddMonths(1));
+            }
+            case "mes-anterior":
+            {
+                var inicioMesAnt = inicioMesActual.AddMonths(-1);
+                var label = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(
+                    inicioMesAnt.ToString("MMMM yyyy", CulturaEsMx));
+                return (label, inicioMesAnt, inicioMesActual);
+            }
+            case "trimestre-actual":
+            {
+                int q = (ahora.Month - 1) / 3 + 1;
+                var inicioTrim = new DateTimeOffset(ahora.Year, (q - 1) * 3 + 1, 1, 0, 0, 0, ahora.Offset);
+                return ($"Trimestre actual (T{q} {ahora.Year})", inicioTrim, inicioTrim.AddMonths(3));
+            }
+            case "anio-actual":
+            {
+                var inicioAnio = new DateTimeOffset(ahora.Year, 1, 1, 0, 0, 0, ahora.Offset);
+                return ($"Año {ahora.Year}", inicioAnio, inicioAnio.AddYears(1));
+            }
+            case "historico":
+                return ("Histórico completo", null, null);
+            default:
+            {
+                var label = string.IsNullOrWhiteSpace(raw)
+                    ? CultureInfo.InvariantCulture.TextInfo.ToTitleCase(ahora.ToString("MMMM yyyy", CulturaEsMx))
+                    : raw;
+                return (label, null, null);
+            }
+        }
     }
 }
