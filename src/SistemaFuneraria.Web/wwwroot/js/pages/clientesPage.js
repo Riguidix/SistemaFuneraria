@@ -238,20 +238,33 @@
     function verificarAcceso(deps) {
         const authApi = deps.authApi;
         const apiClient = deps.apiClient;
-        const storage = deps.storage !== undefined
-            ? deps.storage
-            : (typeof sessionStorage !== "undefined" ? sessionStorage : null);
+        const hasExplicitStorage = deps.storage !== undefined;
+        const storageOpts = hasExplicitStorage
+            ? { client: apiClient, storage: deps.storage }
+            : { client: apiClient };
         const navigate = deps.navigate || ((url) => {
             if (typeof window !== "undefined") {
                 window.location.assign(url);
             }
         });
 
-        const token = storage ? storage.getItem(apiClient.TOKEN_STORAGE_KEY) : null;
-        const session = authApi.getSession({ client: apiClient, storage });
+        const token = typeof authApi.getToken === "function"
+            ? authApi.getToken(storageOpts)
+            : (deps.storage ? deps.storage.getItem(apiClient.TOKEN_STORAGE_KEY) : null);
+        const session = authApi.getSession(storageOpts);
+        const expirado = typeof authApi.isTokenExpired === "function" && token
+            ? authApi.isTokenExpired(token)
+            : false;
 
-        if (!token || !session) {
-            navigate("/Cuenta/Login");
+        if (!token || !session || expirado) {
+            let destino = "/Cuenta/Login";
+            if (typeof window !== "undefined" && window.location?.pathname) {
+                const path = window.location.pathname;
+                if (path !== "/" && !path.toLowerCase().startsWith("/cuenta/")) {
+                    destino = `/Cuenta/Login?returnUrl=${encodeURIComponent(path + (window.location.search || ""))}`;
+                }
+            }
+            navigate(destino);
             return { autorizado: false, redirigido: true, motivo: "SIN_SESION", session: null };
         }
 
@@ -288,12 +301,19 @@
             return null;
         }
 
-        function mostrarAccesoRestringido() {
+        function mostrarAccesoRestringido(session) {
             authApi.applyRolePermissions(doc);
             if (contenidoPrincipal) contenidoPrincipal.classList.add("d-none");
             if (btnAbrirNuevoCliente) {
                 btnAbrirNuevoCliente.classList.remove("d-inline-flex");
                 btnAbrirNuevoCliente.classList.add("d-none");
+            }
+            const btnVolver = doc.getElementById("btnVolver403Clientes");
+            if (btnVolver) {
+                const rutaDestino = typeof authApi.getDefaultRouteForRole === "function"
+                    ? authApi.getDefaultRouteForRole(session?.rol)
+                    : "/Caja";
+                btnVolver.setAttribute("href", rutaDestino);
             }
             if (accesoRestringidoEl) accesoRestringidoEl.classList.remove("d-none");
         }
@@ -307,7 +327,7 @@
 
         if (!estadoAcceso.autorizado) {
             if (!estadoAcceso.redirigido) {
-                mostrarAccesoRestringido();
+                mostrarAccesoRestringido(estadoAcceso.session);
             }
             return { autorizado: false, motivo: estadoAcceso.motivo };
         }
@@ -661,6 +681,16 @@
             if (drawerEditCurp) drawerEditCurp.value = cliente.curp || "";
             if (drawerEditCorreo) drawerEditCorreo.value = cliente.correo || "";
             if (drawerEditDireccion) drawerEditDireccion.value = cliente.direccion || "";
+
+            const btnNuevaVenta = doc.getElementById("btnDrawerNuevaVenta");
+            if (btnNuevaVenta) {
+                btnNuevaVenta.setAttribute("href", cliente.id ? `/Ventas/Nueva?clienteId=${encodeURIComponent(cliente.id)}` : "/Ventas/Nueva");
+            }
+            const btnVerContratos = doc.getElementById("btnDrawerVerContratos");
+            if (btnVerContratos) {
+                const filtroContrato = cliente.curp || nombreCompleto;
+                btnVerContratos.setAttribute("href", filtroContrato ? `/Contratos?buscar=${encodeURIComponent(filtroContrato)}` : "/Contratos");
+            }
         }
 
         async function abrirExpediente(id) {
@@ -757,30 +787,42 @@
             });
         });
 
-        // Ordenamiento por cabeceras
+        // Ordenamiento accesible por cabeceras (clic y teclado)
+        function toggleOrdenCabecera(th) {
+            const col = th.getAttribute("data-sort-col");
+            if (ordenActual.columna === col) {
+                ordenActual.ascendente = !ordenActual.ascendente;
+            } else {
+                ordenActual.columna = col;
+                ordenActual.ascendente = true;
+            }
+
+            sortHeaders.forEach((header) => {
+                header.setAttribute("aria-sort", "none");
+                const icon = header.querySelector(".sort-icon");
+                if (icon) icon.className = "fa-solid fa-sort sort-icon";
+            });
+            th.setAttribute("aria-sort", ordenActual.ascendente ? "ascending" : "descending");
+            const currentIcon = th.querySelector(".sort-icon");
+            if (currentIcon) {
+                currentIcon.className = ordenActual.ascendente
+                    ? "fa-solid fa-sort-up sort-icon text-dark"
+                    : "fa-solid fa-sort-down sort-icon text-dark";
+            }
+
+            paginaActual = 1;
+            renderizarTabla();
+        }
+
         sortHeaders.forEach((th) => {
             th.addEventListener("click", function () {
-                const col = this.getAttribute("data-sort-col");
-                if (ordenActual.columna === col) {
-                    ordenActual.ascendente = !ordenActual.ascendente;
-                } else {
-                    ordenActual.columna = col;
-                    ordenActual.ascendente = true;
+                toggleOrdenCabecera(this);
+            });
+            th.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleOrdenCabecera(this);
                 }
-
-                sortHeaders.forEach((header) => {
-                    const icon = header.querySelector(".sort-icon");
-                    if (icon) icon.className = "fa-solid fa-sort sort-icon";
-                });
-                const currentIcon = this.querySelector(".sort-icon");
-                if (currentIcon) {
-                    currentIcon.className = ordenActual.ascendente
-                        ? "fa-solid fa-sort-up sort-icon text-dark"
-                        : "fa-solid fa-sort-down sort-icon text-dark";
-                }
-
-                paginaActual = 1;
-                renderizarTabla();
             });
         });
 

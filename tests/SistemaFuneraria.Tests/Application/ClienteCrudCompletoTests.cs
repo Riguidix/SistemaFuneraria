@@ -2,7 +2,9 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using SistemaFuneraria.Application.Servicios.Clientes;
 using SistemaFuneraria.Core.Entidades;
+using SistemaFuneraria.Core.Enums;
 using SistemaFuneraria.Core.Excepciones;
+using SistemaFuneraria.Core.Calculos;
 using SistemaFuneraria.Core.ValueObjects;
 using SistemaFuneraria.Infrastructure.Persistencia;
 using Xunit;
@@ -251,5 +253,81 @@ public class ClienteCrudCompletoTests
         // Assert
         resultado.EsFallo.Should().BeTrue();
         resultado.Error.Should().Contain("[CONFLICTO]");
+    }
+
+    [Fact(DisplayName = "Clientes: BuscarClientesAsync soporta nombre completo, correo y teléfono con espacios")]
+    public async Task BuscarClientesAsync_ConNombreCompletoCorreoYTelefonoConEspacios_DebeEncontrarCoincidencias()
+    {
+        using var context = CrearContextoEnMemoria();
+        var cliente = Cliente.Crear("Carlos", "Vega Morales", "VEMC800101HDFRRN01", "5511112222", "carlos.vega@example.com", "Dir 1");
+        await context.Clientes.AddAsync(cliente);
+        await context.SaveChangesAsync();
+
+        var service = new ClienteService(context);
+
+        var resNombreCompleto = await service.BuscarClientesAsync("Carlos Vega");
+        var resCorreo = await service.BuscarClientesAsync("carlos.vega@example.com");
+        var resTelEspacios = await service.BuscarClientesAsync("55 1111 2222");
+
+        resNombreCompleto.Valor.Should().ContainSingle(c => c.Id == cliente.Id);
+        resCorreo.Valor.Should().ContainSingle(c => c.Id == cliente.Id);
+        resTelEspacios.Valor.Should().ContainSingle(c => c.Id == cliente.Id);
+    }
+
+    [Fact(DisplayName = "Clientes: ObtenerPorId y Buscar calculan cartera real (ContratosActivos, SaldoActual, UltimoPago, Pago vencido)")]
+    public async Task BuscarClientesAsync_ConFinanciamientoVencidoYPago_DebeCalcularCarteraReal()
+    {
+        using var context = CrearContextoEnMemoria();
+        var cliente = Cliente.Crear("Elena", "Vargas", "VAEL880101MDFRRN01", "5544445555", "elena@example.com", "Dir 1");
+        var lote = Lote.Crear("JC-B-020", "Jardín Central", "Andador B · Fila 2", 3, new Dinero(150000m));
+        lote.MarcarVendido();
+
+        var fechaVenta = DateTimeOffset.UtcNow.AddMonths(-2);
+        var venta = Venta.CrearFinanciada("CTR-2026-0400", cliente.Id, lote.Id, "vend-1", lote.PrecioContado, fechaVenta);
+        var tabla = GeneradorAmortizacion.Generar(120000m, 0.16m / 12m, 12);
+        var financiamiento = Financiamiento.Crear(
+            venta.Id,
+            20m,
+            new Dinero(30000m),
+            new Dinero(120000m),
+            12,
+            0.16m,
+            tabla,
+            DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-10)));
+        var fechaPago = DateTimeOffset.UtcNow.AddDays(-5);
+        var pago = Pago.Crear(
+            folio: "PAG-2026-000099",
+            ventaId: venta.Id,
+            financiamientoId: financiamiento.Id,
+            mensualidadId: null,
+            cajeroId: "caj-1",
+            tipo: TipoPago.Enganche,
+            metodo: MetodoPago.Efectivo,
+            referencia: null,
+            montoTotal: new Dinero(30000m),
+            montoCapital: new Dinero(30000m),
+            montoInteres: new Dinero(0m),
+            saldoAnterior: new Dinero(150000m),
+            saldoPosterior: new Dinero(120000m),
+            claveIdempotencia: "idem-cli-99",
+            fechaPago: fechaPago);
+
+        await context.Clientes.AddAsync(cliente);
+        await context.Lotes.AddAsync(lote);
+        await context.Ventas.AddAsync(venta);
+        await context.Financiamientos.AddAsync(financiamiento);
+        await context.Mensualidades.AddRangeAsync(financiamiento.Mensualidades);
+        await context.Pagos.AddAsync(pago);
+        await context.SaveChangesAsync();
+
+        var service = new ClienteService(context);
+        var res = await service.BuscarClientesAsync("Elena Vargas");
+
+        res.EsExitoso.Should().BeTrue();
+        var dto = res.Valor.Should().ContainSingle().Subject;
+        dto.ContratosActivos.Should().Be(1);
+        dto.SaldoActual.Should().Be(financiamiento.SaldoInsoluto.Monto);
+        dto.UltimoPago.Should().BeCloseTo(fechaPago.UtcDateTime, TimeSpan.FromSeconds(1));
+        dto.EstadoCartera.Should().Be("Pago vencido");
     }
 }
