@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using SistemaFuneraria.Application.DTOs.Ventas;
 using SistemaFuneraria.Application.Servicios.Ventas;
+using SistemaFuneraria.Core.Comun;
 using SistemaFuneraria.Core.Enums;
 
 namespace SistemaFuneraria.Api.Controllers.V1;
@@ -39,13 +40,18 @@ public class VentasController(IVentaService ventaService) : ApiControllerBase
         var vendedorId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.Identity?.Name
             ?? "sistema";
+        var vendedorNombre = User.FindFirstValue(ParametrosNegocio.ClaimNombreCompleto)
+            ?? User.Identity?.Name
+            ?? vendedorId;
 
         var command = new RegistrarVentaContadoCommand(
             ClienteId: request.ClienteId,
             LoteId: request.LoteId,
             VendedorId: vendedorId,
             MetodoPago: request.MetodoPago,
-            ReferenciaPago: request.ReferenciaPago);
+            ReferenciaPago: request.ReferenciaPago,
+            FirmaClienteBase64: request.FirmaClienteBase64,
+            VendedorNombre: vendedorNombre);
 
         var resultado = await _ventaService.RegistrarVentaContadoAsync(command, ct);
         if (resultado.EsFallo)
@@ -77,6 +83,9 @@ public class VentasController(IVentaService ventaService) : ApiControllerBase
         var vendedorId = User.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? User.Identity?.Name
             ?? "sistema";
+        var vendedorNombre = User.FindFirstValue(ParametrosNegocio.ClaimNombreCompleto)
+            ?? User.Identity?.Name
+            ?? vendedorId;
 
         var command = new RegistrarVentaFinanciadaCommand(
             ClienteId: request.ClienteId,
@@ -84,7 +93,9 @@ public class VentasController(IVentaService ventaService) : ApiControllerBase
             VendedorId: vendedorId,
             PorcentajeEnganche: request.PorcentajeEnganche,
             PlazoMeses: request.PlazoMeses,
-            FechaPrimerPago: request.FechaPrimerPago);
+            FechaPrimerPago: request.FechaPrimerPago,
+            FirmaClienteBase64: request.FirmaClienteBase64,
+            VendedorNombre: vendedorNombre);
 
         var resultado = await _ventaService.RegistrarVentaFinanciadaAsync(command, ct);
         if (resultado.EsFallo)

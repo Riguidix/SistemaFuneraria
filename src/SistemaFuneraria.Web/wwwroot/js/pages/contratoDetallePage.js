@@ -155,6 +155,15 @@
         const compFecha = doc.getElementById("comprobanteFechaVenta");
         const compPrecio = doc.getElementById("comprobantePrecioPagado");
 
+        const badgeTipoFirma = doc.getElementById("badgeTipoFirmaContrato");
+        const imgFirmaCliente = doc.getElementById("imgFirmaClienteContrato");
+        const espacioFirmaFisica = doc.getElementById("espacioFirmaFisicaCliente");
+        const elFirmaTitular = doc.getElementById("firmaDetalleTitular");
+        const elFirmaMetaCliente = doc.getElementById("firmaDetalleMetaCliente");
+        const elFirmaVendedor = doc.getElementById("firmaDetalleVendedor");
+        const elFirmaFolioSello = doc.getElementById("firmaDetalleFolioSello");
+        const elFirmaFechaEmision = doc.getElementById("firmaDetalleFechaEmision");
+
         const modalEl = doc.getElementById("modalAdminEstadoContrato");
         const alertaModal = doc.getElementById("alertaModalAdminContrato");
         const modalFolio = doc.getElementById("modalAdminFolioContrato");
@@ -368,6 +377,42 @@
             }
 
             renderizarHistorialPagos(dto.historialPagos);
+
+            const firmaDataUrl = String(dto.firmaClienteBase64 || "").trim();
+            const tieneFirmaDigital = /^data:image\/(png|jpeg|webp);base64,/i.test(firmaDataUrl);
+
+            if (elFirmaTitular) elFirmaTitular.textContent = dto.clienteNombre || "-";
+            if (elFirmaVendedor) elFirmaVendedor.textContent = dto.vendedorNombre || "Asesor autorizado";
+            if (elFirmaFolioSello) elFirmaFolioSello.textContent = dto.folioContrato || "-";
+            if (elFirmaFechaEmision) elFirmaFechaEmision.textContent = formatearFecha(dto.fechaVenta);
+
+            if (tieneFirmaDigital) {
+                if (imgFirmaCliente) {
+                    imgFirmaCliente.setAttribute("src", firmaDataUrl);
+                    imgFirmaCliente.classList.remove("d-none");
+                }
+                if (espacioFirmaFisica) espacioFirmaFisica.classList.add("d-none");
+                if (elFirmaMetaCliente) {
+                    elFirmaMetaCliente.textContent = `Firmado digitalmente · ${formatearFecha(dto.fechaFirma || dto.fechaVenta)}`;
+                }
+                if (badgeTipoFirma) {
+                    badgeTipoFirma.className = "badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 small";
+                    badgeTipoFirma.innerHTML = '<i class="fa-solid fa-signature me-1" aria-hidden="true"></i> Firma digital registrada';
+                }
+            } else {
+                if (imgFirmaCliente) {
+                    imgFirmaCliente.removeAttribute("src");
+                    imgFirmaCliente.classList.add("d-none");
+                }
+                if (espacioFirmaFisica) espacioFirmaFisica.classList.remove("d-none");
+                if (elFirmaMetaCliente) {
+                    elFirmaMetaCliente.textContent = "Pendiente de firma autógrafa al imprimir";
+                }
+                if (badgeTipoFirma) {
+                    badgeTipoFirma.className = "badge rounded-pill bg-light text-muted border px-3 py-2 small";
+                    badgeTipoFirma.innerHTML = '<i class="fa-solid fa-pen-nib me-1" aria-hidden="true"></i> Firma autógrafa en impresión';
+                }
+            }
         }
 
         function renderizarHistorialPagos(historialPagos) {

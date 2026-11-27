@@ -324,7 +324,10 @@ public class CarteraContratosService(IAppDbContext context, TimeProvider? timePr
             FolioPago: pagos.FirstOrDefault()?.Folio,
             Financiamiento: finDto,
             Amortizacion: cuotas,
-            HistorialPagos: pagos));
+            HistorialPagos: pagos,
+            VendedorNombre: venta.VendedorNombre ?? venta.VendedorId,
+            FirmaClienteBase64: venta.FirmaClienteBase64,
+            FechaFirma: venta.FechaFirma));
     }
 
     private static string FormatearFechaCorta(DateOnly fecha) =>

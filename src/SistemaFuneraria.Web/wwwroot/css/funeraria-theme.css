@@ -1116,3 +1116,70 @@ button.sf-plot-cell:disabled {
   padding-top: 0.75rem;
   border-top: 1px solid #EFECE4;
 }
+
+
+/* ==========================================================================
+   FIRMA DIGITAL DEL CLIENTE Y SELLO DEL VENDEDOR (PASO 4 Y EXPEDIENTE)
+   ========================================================================== */
+
+.sf-signature-pad-wrap {
+  height: 155px;
+  overflow: hidden;
+  border-color: #DCD6C8 !important;
+  touch-action: none;
+  user-select: none;
+}
+
+.sf-signature-canvas {
+  height: 155px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sf-signature-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: #9E9A90;
+  font-size: 0.85rem;
+}
+
+.sf-signature-baseline {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 28px;
+  border-bottom: 1px dashed #D5D0C3;
+  pointer-events: none;
+}
+
+.sf-contract-signature-box {
+  height: 110px;
+}
+
+.sf-contract-signature-img {
+  max-height: 100px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.sf-contract-signature-line {
+  width: 82%;
+  max-width: 300px;
+  border-bottom: 1.5px solid #2D2A24;
+}
+
+.sf-seller-seal-card {
+  background-color: #FAF8F5;
+  border-color: #E8E3D9 !important;
+}
+
+@media print {
+  .sf-print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

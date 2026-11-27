@@ -10,7 +10,9 @@ public sealed record RegistrarVentaContadoCommand(
     Guid LoteId,
     string VendedorId,
     MetodoPago MetodoPago = MetodoPago.Efectivo,
-    string? ReferenciaPago = null
+    string? ReferenciaPago = null,
+    string? FirmaClienteBase64 = null,
+    string? VendedorNombre = null
 );
 
 /// <summary>
@@ -20,5 +22,6 @@ public sealed record RegistrarVentaContadoRequest(
     Guid ClienteId,
     Guid LoteId,
     MetodoPago MetodoPago = MetodoPago.Efectivo,
-    string? ReferenciaPago = null
+    string? ReferenciaPago = null,
+    string? FirmaClienteBase64 = null
 );

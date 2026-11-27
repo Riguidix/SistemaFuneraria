@@ -218,6 +218,55 @@
             </table>
         </div>
     </div>
+
+    <!-- Sección de Firmas y Conformidad del Contrato (Visible en pantalla e impresión) -->
+    <div id="seccionFirmasContrato" class="bg-white rounded-4 shadow-sm border p-4 mb-4 sf-print-avoid-break">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">Firmas y conformidad del contrato</h5>
+                <p class="small text-muted mb-0">Respaldo de aceptación del titular y emisión autorizada del vendedor.</p>
+            </div>
+            <span id="badgeTipoFirmaContrato" class="badge rounded-pill bg-light text-muted border px-3 py-2 small">
+                <i class="fa-solid fa-signature me-1" aria-hidden="true"></i> Conformidad
+            </span>
+        </div>
+
+        <div class="row g-4 align-items-end">
+            <!-- Columna Izquierda: Firma del Titular (Cliente) -->
+            <div class="col-12 col-md-6 text-center">
+                <div class="sf-contract-signature-box d-flex align-items-center justify-content-center mb-2">
+                    <img id="imgFirmaClienteContrato"
+                         class="sf-contract-signature-img d-none"
+                         alt="Firma digital del cliente titular" />
+                    <div id="espacioFirmaFisicaCliente" class="text-muted small fst-italic">
+                        Espacio reservado para firma autógrafa del titular
+                    </div>
+                </div>
+                <div class="sf-contract-signature-line mx-auto mb-2"></div>
+                <div class="fw-bold text-dark small" id="firmaDetalleTitular">-</div>
+                <div class="text-muted" style="font-size: 0.78rem;">Titular / Cliente</div>
+                <div class="text-muted mt-1" style="font-size: 0.75rem;" id="firmaDetalleMetaCliente">Sin firma digital registrada</div>
+            </div>
+
+            <!-- Columna Derecha: Sello Digital del Vendedor -->
+            <div class="col-12 col-md-6">
+                <div class="sf-seller-seal-card rounded-3 border p-3 text-center text-md-start">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.72rem;">
+                            <i class="fa-solid fa-shield-check me-1" aria-hidden="true"></i> Sello digital de emisión
+                        </span>
+                    </div>
+                    <div class="fw-bold text-dark small" id="firmaDetalleVendedor">-</div>
+                    <div class="text-muted" style="font-size: 0.78rem;">Asesor / Vendedor autorizado</div>
+                    <hr class="my-2 opacity-25" />
+                    <div class="d-flex flex-wrap justify-content-between gap-2 text-muted" style="font-size: 0.75rem;">
+                        <span>Folio: <strong class="text-dark sf-monospace" id="firmaDetalleFolioSello">-</strong></span>
+                        <span>Fecha: <strong class="text-dark" id="firmaDetalleFechaEmision">-</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Modal de Gestión Exclusiva de Administrador (SF-063 / SF-071) -->

@@ -60,7 +60,9 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
                 lote.Id,
                 command.VendedorId,
                 lote.PrecioContado,
-                fechaVenta);
+                fechaVenta,
+                command.FirmaClienteBase64,
+                command.VendedorNombre);
 
             lote.MarcarVendido();
 
@@ -278,7 +280,9 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
                 lote.Id,
                 command.VendedorId,
                 lote.PrecioContado,
-                fechaVenta);
+                fechaVenta,
+                command.FirmaClienteBase64,
+                command.VendedorNombre);
 
             var fechaPrimerPago = command.FechaPrimerPago
                 ?? DateOnly.FromDateTime(fechaVenta.DateTime).AddMonths(1);

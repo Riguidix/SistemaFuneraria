@@ -95,5 +95,8 @@ public sealed record ContratoDetalleDto(
     string? FolioPago,
     ContratoFinanciamientoDetalleDto? Financiamiento,
     IReadOnlyList<CuotaAmortizacionContratoDto> Amortizacion,
-    IReadOnlyList<ContratoPagoHistorialDto> HistorialPagos
+    IReadOnlyList<ContratoPagoHistorialDto> HistorialPagos,
+    string? VendedorNombre = null,
+    string? FirmaClienteBase64 = null,
+    DateTimeOffset? FechaFirma = null
 );

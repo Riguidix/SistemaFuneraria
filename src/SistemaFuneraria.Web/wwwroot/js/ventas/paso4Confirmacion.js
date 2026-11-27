@@ -34,28 +34,38 @@
         return String(mensaje ?? "").replace(/^\[(CONFLICTO|NO_ENCONTRADO)\]\s*/i, "");
     }
 
-    function construirPayloadVentaContado(draft, metodoPago = "Efectivo", referenciaPago = "") {
+    function construirPayloadVentaContado(draft, metodoPago = "Efectivo", referenciaPago = "", firmaClienteBase64 = "") {
         const clienteId = draft?.cliente?.id || "";
         const loteId = draft?.lote?.id || "";
         const metodo = String(metodoPago || "Efectivo").trim() || "Efectivo";
         const refLimpia = String(referenciaPago ?? "").trim();
+        const firmaLimpia = String(firmaClienteBase64 ?? "").trim();
 
-        return {
+        const payload = {
             clienteId,
             loteId,
             metodoPago: metodo,
             referenciaPago: refLimpia ? refLimpia : null
         };
+        if (firmaLimpia) {
+            payload.firmaClienteBase64 = firmaLimpia;
+        }
+        return payload;
     }
 
-    function construirPayloadVentaFinanciada(draft) {
+    function construirPayloadVentaFinanciada(draft, firmaClienteBase64 = "") {
         const fin = draft?.financiamiento || {};
-        return {
+        const firmaLimpia = String(firmaClienteBase64 ?? "").trim();
+        const payload = {
             clienteId: draft?.cliente?.id || "",
             loteId: draft?.lote?.id || "",
             porcentajeEnganche: Number(fin.enganchePorcentaje ?? 20),
             plazoMeses: Number(fin.plazoMeses ?? 24)
         };
+        if (firmaLimpia) {
+            payload.firmaClienteBase64 = firmaLimpia;
+        }
+        return payload;
     }
 
     function init(deps = {}) {
@@ -63,6 +73,8 @@
         const win = deps.window ?? (typeof window !== "undefined" ? window : null);
         const ventasApi = deps.ventasApi ?? win?.ventasApi;
         const wizardState = deps.wizardState ?? win?.wizardState;
+        const authApi = deps.authApi ?? win?.authApi;
+        const firmaPadLib = deps.SfFirmaPad ?? win?.SfFirmaPad;
         const autoRedirectDelayMs = deps.autoRedirectDelayMs ?? 700;
 
         if (!doc) return null;
@@ -101,7 +113,56 @@
         const step3Indicator = doc.getElementById("stepIndicator3");
         const step4Indicator = doc.getElementById("stepIndicator4");
 
+        const canvasFirma = doc.getElementById("canvasFirmaCliente");
+        const btnLimpiarFirma = doc.getElementById("btnLimpiarFirmaCliente");
+        const badgeEstadoFirma = doc.getElementById("badgeEstadoFirma");
+        const placeholderFirma = doc.getElementById("firmaClientePlaceholder");
+        const lblFirmaClienteNombre = doc.getElementById("firmaClienteNombrePreview");
+        const lblFirmaVendedor = doc.getElementById("firmaVendedorPreview");
+
         const htmlBtnOriginal = btnGenerar ? btnGenerar.innerHTML : "";
+        let firmaPad = null;
+
+        function actualizarEstadoFirmaUI(tieneFirma) {
+            if (placeholderFirma) {
+                placeholderFirma.classList.toggle("d-none", Boolean(tieneFirma));
+            }
+            if (badgeEstadoFirma) {
+                if (tieneFirma) {
+                    badgeEstadoFirma.textContent = "Firmado";
+                    badgeEstadoFirma.className = "badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1";
+                } else {
+                    badgeEstadoFirma.textContent = "Pendiente";
+                    badgeEstadoFirma.className = "badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1";
+                }
+            }
+        }
+
+        function actualizarEstadoBotonGenerar() {
+            if (!btnGenerar) return;
+            const checkOk = Boolean(chkConfirmar?.checked);
+            const firmaOk = !firmaPad || !firmaPad.isEmpty();
+            btnGenerar.disabled = !(checkOk && firmaOk);
+        }
+
+        if (canvasFirma && firmaPadLib && typeof firmaPadLib.create === "function") {
+            firmaPad = firmaPadLib.create(canvasFirma, {
+                onChange: function (tieneFirma) {
+                    actualizarEstadoFirmaUI(tieneFirma);
+                    actualizarEstadoBotonGenerar();
+                    ocultarError();
+                }
+            });
+            actualizarEstadoFirmaUI(false);
+        }
+
+        if (btnLimpiarFirma) {
+            btnLimpiarFirma.addEventListener("click", function () {
+                if (firmaPad) firmaPad.clear();
+                actualizarEstadoFirmaUI(false);
+                actualizarEstadoBotonGenerar();
+            });
+        }
 
         function ocultarError() {
             if (alertaError) alertaError.classList.add("d-none");
@@ -140,6 +201,15 @@
             if (lblClienteNombre) {
                 const nombre = `${cliente.nombre || ""} ${cliente.apellidos || ""}`.trim();
                 lblClienteNombre.textContent = nombre || "-";
+                if (lblFirmaClienteNombre) {
+                    lblFirmaClienteNombre.textContent = nombre || "-";
+                }
+            }
+            if (lblFirmaVendedor) {
+                const session = authApi && typeof authApi.getSession === "function"
+                    ? authApi.getSession()
+                    : null;
+                lblFirmaVendedor.textContent = session?.nombreCompleto || session?.nombre || session?.email || "Sesión autenticada";
             }
             if (lblClienteEmail) {
                 lblClienteEmail.textContent = cliente.correo || cliente.email || "-";
@@ -189,6 +259,11 @@
             if (step4Card) step4Card.classList.remove("d-none");
 
             if (chkConfirmar) chkConfirmar.checked = false;
+            if (firmaPad) {
+                firmaPad.clear();
+                firmaPad.resize(false);
+            }
+            actualizarEstadoFirmaUI(false);
             if (btnGenerar) {
                 btnGenerar.disabled = true;
                 btnGenerar.innerHTML = htmlBtnOriginal || '<i class="fa-solid fa-check me-2" aria-hidden="true"></i> Generar contrato';
@@ -281,7 +356,7 @@
 
         if (chkConfirmar && btnGenerar) {
             chkConfirmar.addEventListener("change", function () {
-                btnGenerar.disabled = !chkConfirmar.checked;
+                actualizarEstadoBotonGenerar();
             });
         }
 
@@ -314,6 +389,10 @@
         if (btnGenerar) {
             btnGenerar.addEventListener("click", async function () {
                 if (!chkConfirmar?.checked) return;
+                if (firmaPad && firmaPad.isEmpty()) {
+                    mostrarError("Captura la firma digital del cliente antes de generar el contrato.");
+                    return;
+                }
                 ocultarError();
 
                 const draft = obtenerBorradorSeguro();
@@ -339,9 +418,10 @@
                     return;
                 }
 
+                const firmaClienteBase64 = firmaPad ? firmaPad.toDataURL() : "";
                 const payload = esContado
-                    ? construirPayloadVentaContado(draft, metodoSeleccionado, referenciaTexto)
-                    : construirPayloadVentaFinanciada(draft);
+                    ? construirPayloadVentaContado(draft, metodoSeleccionado, referenciaTexto, firmaClienteBase64)
+                    : construirPayloadVentaFinanciada(draft, firmaClienteBase64);
 
                 btnGenerar.disabled = true;
                 btnGenerar.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Generando contrato...';
