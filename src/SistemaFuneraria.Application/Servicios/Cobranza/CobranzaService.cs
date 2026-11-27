@@ -244,7 +244,7 @@ public class CobranzaService(IAppDbContext context, TimeProvider? timeProvider =
             await _context.BeginTransactionAsync(cancellationToken);
             try
             {
-                var fechaPago = _timeProvider.GetLocalNow();
+                var fechaPago = _timeProvider.GetUtcNow();
                 var saldoAnterior = financiamiento.SaldoInsoluto;
 
                 financiamiento.AplicarPagoCuota(siguiente.NumeroCuota, fechaPago);
@@ -395,7 +395,7 @@ public class CobranzaService(IAppDbContext context, TimeProvider? timeProvider =
             await _context.BeginTransactionAsync(cancellationToken);
             try
             {
-                var fechaPago = _timeProvider.GetLocalNow();
+                var fechaPago = _timeProvider.GetUtcNow();
                 var saldoAnterior = financiamiento.SaldoInsoluto;
 
                 financiamiento.AplicarAbonoCapital(new Dinero(command.MontoAbono), resultadoAbono);
@@ -537,7 +537,7 @@ public class CobranzaService(IAppDbContext context, TimeProvider? timeProvider =
             await _context.BeginTransactionAsync(cancellationToken);
             try
             {
-                var fechaPago = _timeProvider.GetLocalNow();
+                var fechaPago = _timeProvider.GetUtcNow();
                 var saldoAnterior = financiamiento.SaldoInsoluto;
 
                 CalculadorLiquidacion.AplicarLiquidacion(financiamiento, fechaPago);

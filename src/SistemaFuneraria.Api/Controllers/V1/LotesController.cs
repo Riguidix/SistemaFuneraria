@@ -59,11 +59,25 @@ public class LotesController(ILoteService loteService) : ApiControllerBase
     }
 
     /// <summary>
+    /// Calcula la siguiente clave física, andador y fila disponibles para una sección. Exclusivo Administrador.
+    /// </summary>
+    [HttpGet("siguiente-ubicacion")]
+    [Authorize(Roles = "Administrador")]
+    [ProducesResponseType(typeof(SiguienteUbicacionLoteDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ObtenerSiguienteUbicacion([FromQuery] string seccion, CancellationToken ct = default)
+    {
+        var resultado = await _loteService.ObtenerSiguienteUbicacionAsync(seccion, ct);
+        return FromResult(resultado);
+    }
+
+    /// <summary>
     /// Registra un nuevo lote en el catálogo. Exclusivo para el rol Administrador.
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Administrador")]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(LoteItemDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Crear([FromBody] CrearLoteCommand command, CancellationToken ct = default)
@@ -72,6 +86,24 @@ public class LotesController(ILoteService loteService) : ApiControllerBase
         if (resultado.EsFallo)
         {
             return FromResult(resultado);
+        }
+
+        var detalle = await _loteService.ObtenerPorIdAsync(resultado.Valor, ct);
+        if (detalle.EsExitoso)
+        {
+            var lote = detalle.Valor;
+            return CreatedAtAction(
+                nameof(ObtenerPorId),
+                new { id = lote.Id },
+                new
+                {
+                    id = lote.Id,
+                    clave = lote.Clave,
+                    seccion = lote.Seccion,
+                    andadorFila = lote.AndadorFila,
+                    gavetas = lote.Gavetas,
+                    precioContado = lote.PrecioContado
+                });
         }
 
         return CreatedAtAction(nameof(ObtenerPorId), new { id = resultado.Valor }, new { id = resultado.Valor });

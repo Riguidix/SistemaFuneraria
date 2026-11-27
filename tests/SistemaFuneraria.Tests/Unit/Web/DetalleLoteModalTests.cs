@@ -66,6 +66,7 @@ public class DetalleLoteModalTests
         contenido.Should().Contain("/Contratos/Detalle?loteClave=");
         contenido.Should().Contain("/Ventas/Nueva?lote=");
         contenido.Should().Contain("cambiarEstadoLote");
+        contenido.Should().Contain("obtenerSiguienteUbicacion");
         contenido.Should().Contain("crearLote");
         contenido.Should().Contain("actualizarLote");
     }

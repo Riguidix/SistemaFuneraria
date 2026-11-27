@@ -99,4 +99,81 @@ public class CarteraContratosServiceTests : IDisposable
         resDetallePorFolio.Valor.EstadoVisual.Should().Be("Vencido");
         resDetallePorFolio.Valor.Amortizacion.Should().HaveCount(12);
     }
+
+    [Fact(DisplayName = "RF-13: ObtenerDetalleAsync devuelve historial completo de pagos incluyendo abonos a capital")]
+    public async Task ObtenerDetalleAsync_ConMensualidadYAbonoCapital_DebeDevolverHistorialCompletoOrdenado()
+    {
+        var cliente = Cliente.Crear("Carlos", "Mendoza", "MENC880101HDFRRN01", "5544444444", "carlos@test.mx", "Dir 4");
+        var lote = Lote.Crear("JN-B-101", "Jardín Norte", "B", 2, new Dinero(120000m));
+        lote.MarcarVendido();
+
+        await _dbContext.Clientes.AddAsync(cliente);
+        await _dbContext.Lotes.AddAsync(lote);
+
+        var (tasaAnual, tasaMensual) = CalculadoraFinanciamiento.ObtenerTasas(12);
+        var renglones = GeneradorAmortizacion.Generar(96000m, tasaMensual, 12);
+        var fechaBase = new DateTimeOffset(2026, 11, 1, 10, 0, 0, TimeSpan.Zero);
+        var venta = Venta.CrearFinanciada("CTR-2026-0199", cliente.Id, lote.Id, "vend-1", lote.PrecioContado, fechaBase);
+        var fin = Financiamiento.Crear(venta.Id, 20m, new Dinero(24000m), new Dinero(96000m), 12, tasaAnual, renglones, new DateOnly(2026, 12, 1));
+
+        var cuota1 = fin.Mensualidades.OrderBy(m => m.NumeroCuota).First();
+        var pagoCuota = Pago.Crear(
+            folio: "PAG-2026-000101",
+            ventaId: venta.Id,
+            financiamientoId: fin.Id,
+            mensualidadId: cuota1.Id,
+            cajeroId: "cajero-1",
+            tipo: TipoPago.Mensualidad,
+            metodo: MetodoPago.Efectivo,
+            referencia: null,
+            montoTotal: cuota1.MontoTotalCuota,
+            montoCapital: cuota1.CapitalProgramado,
+            montoInteres: cuota1.InteresProgramado,
+            saldoAnterior: new Dinero(96000m),
+            saldoPosterior: cuota1.SaldoFinalPeriodo,
+            claveIdempotencia: Guid.NewGuid().ToString(),
+            fechaPago: fechaBase.AddDays(5));
+
+        var pagoAbono = Pago.Crear(
+            folio: "PAG-2026-000102",
+            ventaId: venta.Id,
+            financiamientoId: fin.Id,
+            mensualidadId: null,
+            cajeroId: "cajero-1",
+            tipo: TipoPago.AbonoCapital,
+            metodo: MetodoPago.TransferenciaBancaria,
+            referencia: "SPEI-778899",
+            montoTotal: new Dinero(10000m),
+            montoCapital: new Dinero(10000m),
+            montoInteres: Dinero.Zero,
+            saldoAnterior: cuota1.SaldoFinalPeriodo,
+            saldoPosterior: new Dinero(cuota1.SaldoFinalPeriodo.Monto - 10000m),
+            claveIdempotencia: Guid.NewGuid().ToString(),
+            fechaPago: fechaBase.AddDays(10));
+
+        await _dbContext.Ventas.AddAsync(venta);
+        await _dbContext.Financiamientos.AddAsync(fin);
+        await _dbContext.Pagos.AddRangeAsync(pagoCuota, pagoAbono);
+        await _dbContext.SaveChangesAsync();
+
+        var res = await _carteraService.ObtenerDetalleAsync("CTR-2026-0199");
+
+        res.EsExitoso.Should().BeTrue();
+        res.Valor.FolioPago.Should().Be("PAG-2026-000102");
+        res.Valor.HistorialPagos.Should().HaveCount(2);
+
+        var primero = res.Valor.HistorialPagos[0];
+        primero.Folio.Should().Be("PAG-2026-000102");
+        primero.TipoPago.Should().Be("AbonoCapital");
+        primero.MetodoPago.Should().Be("TransferenciaBancaria");
+        primero.Referencia.Should().Be("SPEI-778899");
+        primero.MontoTotal.Should().Be(10000m);
+        primero.MontoCapital.Should().Be(10000m);
+        primero.MontoInteres.Should().Be(0m);
+        primero.SaldoPosterior.Should().Be(cuota1.SaldoFinalPeriodo.Monto - 10000m);
+
+        var segundo = res.Valor.HistorialPagos[1];
+        segundo.Folio.Should().Be("PAG-2026-000101");
+        segundo.TipoPago.Should().Be("Mensualidad");
+    }
 }

@@ -20,12 +20,16 @@ public class VentaContadoDetalleWebTests
         var paso4Html = File.ReadAllText(Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "Pages", "Ventas", "Partials", "_Paso4Confirmacion.cshtml"));
         var paso4Js = File.ReadAllText(Path.Combine(RepoRoot, "src", "SistemaFuneraria.Web", "wwwroot", "js", "ventas", "paso4Confirmacion.js"));
 
-        nuevaHtml.Should().Contain("~/js/api/ventasApi.js");
+        nuevaHtml.Should().Contain("~/js/api/ventasApi.js")
+            .And.Contain("~/js/components/firmaPad.js");
         paso4Html.Should().Contain("selectMetodoPagoContado")
             .And.Contain("alertaErrorContrato")
-            .And.Contain("btnElegirOtroLote");
+            .And.Contain("btnElegirOtroLote")
+            .And.Contain("canvasFirmaCliente")
+            .And.Contain("btnLimpiarFirmaCliente");
 
         paso4Js.Should().Contain("ventasApi.registrarVentaContado")
+            .And.Contain("firmaClienteBase64")
             .And.Contain("module.exports")
             .And.NotContain("CTR-2026-0190");
     }
@@ -41,6 +45,9 @@ public class VentaContadoDetalleWebTests
             .And.Contain("~/js/pages/contratoDetallePage.js")
             .And.Contain("comprobanteContadoCard")
             .And.Contain("contratoNoEncontrado")
+            .And.Contain("seccionFirmasContrato")
+            .And.Contain("imgFirmaClienteContrato")
+            .And.Contain("firmaDetalleVendedor")
             .And.Contain("@media print")
             .And.Contain("data-roles=\"Administrador\"");
 
@@ -74,6 +81,21 @@ public class VentaContadoDetalleWebTests
                 metodoPago: "TransferenciaBancaria",
                 referenciaPago: "SPEI-99"
             });
+
+            const firmaDemo = "data:image/png;base64,AAAA";
+            const payloadConFirma = p4.construirPayloadVentaContado(
+                { cliente: { id: "cli-1" }, lote: { id: "lot-1" } },
+                "Efectivo",
+                "",
+                firmaDemo
+            );
+            assert.equal(payloadConFirma.firmaClienteBase64, firmaDemo);
+
+            const payloadFinConFirma = p4.construirPayloadVentaFinanciada(
+                { cliente: { id: "cli-1" }, lote: { id: "lot-1" }, financiamiento: { enganchePorcentaje: 20, plazoMeses: 24 } },
+                firmaDemo
+            );
+            assert.equal(payloadFinConFirma.firmaClienteBase64, firmaDemo);
 
             assert.equal(det.obtenerBadgeEstadoVenta("Liquidado").texto, "Liquidado");
             assert.equal(det.obtenerBadgeEstadoVenta("Cancelado").texto, "Cancelado");

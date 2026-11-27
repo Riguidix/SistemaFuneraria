@@ -8,7 +8,8 @@ public sealed record RegistrarVentaFinanciadaRequest(
     Guid LoteId,
     int PorcentajeEnganche,
     int PlazoMeses,
-    DateOnly? FechaPrimerPago = null
+    DateOnly? FechaPrimerPago = null,
+    string? FirmaClienteBase64 = null
 );
 
 /// <summary>
@@ -20,7 +21,9 @@ public sealed record RegistrarVentaFinanciadaCommand(
     string VendedorId,
     int PorcentajeEnganche,
     int PlazoMeses,
-    DateOnly? FechaPrimerPago = null
+    DateOnly? FechaPrimerPago = null,
+    string? FirmaClienteBase64 = null,
+    string? VendedorNombre = null
 );
 
 /// <summary>

@@ -69,6 +69,14 @@
             <option value="Vendido">Vendido</option>
             <option value="Mantenimiento">Mantenimiento</option>
         </select>
+        <div class="sf-view-toggle" role="group" aria-label="Cambiar vista del catálogo">
+            <button type="button" id="btnVistaTablaCatalogo" class="sf-view-toggle-btn active" aria-pressed="true">
+                <i class="fa-solid fa-table-list me-1" aria-hidden="true"></i> Tabla
+            </button>
+            <button type="button" id="btnVistaMapaCatalogo" class="sf-view-toggle-btn" aria-pressed="false">
+                <i class="fa-solid fa-map me-1" aria-hidden="true"></i> Mapa
+            </button>
+        </div>
     </div>
 </div>
 
@@ -107,7 +115,7 @@
 </div>
 
 <!-- Card Contenedor: Tabla de Lotes -->
-<div class="funeraria-table-card card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+<div id="catalogoVistaTabla" class="funeraria-table-card card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
     <div class="table-responsive">
         <table class="table funeraria-table align-middle mb-0" id="tablaLotes" aria-label="Catálogo de lotes funerarios">
             <thead>
@@ -171,6 +179,11 @@
     </div>
 </div>
 
+<!-- Card Contenedor: Vista Mapa / Plano de Lotes -->
+<div id="catalogoVistaMapa" class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white d-none">
+    <div id="contenedorMapaCatalogo"></div>
+</div>
+
 <!-- Modal Detalle de Lote y Trazabilidad de Estado (SF-046) -->
 <partial name="_DetalleLoteModal" />
 
@@ -179,5 +192,6 @@
 
 @section Scripts {
     <script src="~/js/api/lotesApi.js" asp-append-version="true"></script>
+    <script src="~/js/components/mapaLotes.js" asp-append-version="true"></script>
     <script src="~/js/pages/catalogoPage.js" asp-append-version="true"></script>
 }

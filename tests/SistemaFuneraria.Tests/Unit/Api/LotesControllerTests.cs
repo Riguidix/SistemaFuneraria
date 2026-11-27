@@ -203,6 +203,35 @@ public class LotesControllerTests : IDisposable
 
     #region 3. CRUD Administrativo (POST, PUT, PATCH)
 
+    [Fact(DisplayName = "SF-042: ObtenerSiguienteUbicacion por Administrador devuelve vista previa secuencial")]
+    public async Task ObtenerSiguienteUbicacion_DebeRetornar200ConClaveYAndadorFila()
+    {
+        await CrearLoteSemillaAsync("JN-A-010");
+        var controller = CrearController(rol: "Administrador");
+
+        var result = await controller.ObtenerSiguienteUbicacion("Jardín Norte");
+
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        var dto = ok.Value.Should().BeOfType<SiguienteUbicacionLoteDto>().Subject;
+        dto.Clave.Should().Be("JN-A-011");
+        dto.AndadorFila.Should().Be("Andador A · Fila 2");
+    }
+
+    [Fact(DisplayName = "SF-042: Crear lote sin clave por Administrador debe retornar 201 Created con ubicación definitiva")]
+    public async Task Crear_SinClave_DebeRetornar201CreatedConClaveGenerada()
+    {
+        var controller = CrearController(rol: "Administrador");
+        var command = new CrearLoteCommand(null, "Las Magnolias", null, 3, 0m);
+
+        var result = await controller.Crear(command);
+
+        var createdResult = result.Should().BeOfType<CreatedAtActionResult>().Subject;
+        createdResult.StatusCode.Should().Be(StatusCodes.Status201Created);
+        var json = System.Text.Json.JsonSerializer.Serialize(createdResult.Value);
+        json.Should().Contain("\"clave\":\"LM-A-001\"");
+        json.Should().Contain("\"andadorFila\":\"Andador A \\u00B7 Fila 1\"");
+    }
+
     [Fact(DisplayName = "SF-042: Crear lote válido por Administrador debe retornar 201 Created")]
     public async Task Crear_ConDatosValidos_DebeRetornar201CreatedYRutaObtenerPorId()
     {

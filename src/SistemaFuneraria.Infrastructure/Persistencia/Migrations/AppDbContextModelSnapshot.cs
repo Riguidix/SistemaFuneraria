@@ -726,11 +726,19 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("estado");
 
+                    b.Property<DateTimeOffset?>("FechaFirma")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fecha_firma");
+
                     b.Property<DateTimeOffset>("FechaVenta")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("fecha_venta")
                         .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("FirmaClienteBase64")
+                        .HasColumnType("text")
+                        .HasColumnName("firma_cliente_base64");
 
                     b.Property<string>("FolioContrato")
                         .IsRequired()
@@ -762,6 +770,11 @@ namespace SistemaFuneraria.Infrastructure.Persistencia.Migrations
                         .HasMaxLength(450)
                         .HasColumnType("character varying(450)")
                         .HasColumnName("vendedor_id");
+
+                    b.Property<string>("VendedorNombre")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("vendedor_nombre");
 
                     b.HasKey("Id");
 

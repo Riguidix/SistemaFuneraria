@@ -66,13 +66,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             await using var command = Database.GetDbConnection().CreateCommand();
             command.CommandText = "SELECT nextval('seq_contratos_folio');";
-            if (Database.CurrentTransaction != null)
-            {
-                command.Transaction = Database.CurrentTransaction.GetDbTransaction();
-            }
             if (command.Connection!.State != System.Data.ConnectionState.Open)
             {
                 await command.Connection.OpenAsync(cancellationToken);
+            }
+            if (Database.CurrentTransaction != null)
+            {
+                command.Transaction = Database.CurrentTransaction.GetDbTransaction();
             }
             var result = await command.ExecuteScalarAsync(cancellationToken);
             consecutivo = Convert.ToInt64(result);
@@ -99,13 +99,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             await using var command = Database.GetDbConnection().CreateCommand();
             command.CommandText = "SELECT nextval('seq_pagos_folio');";
-            if (Database.CurrentTransaction != null)
-            {
-                command.Transaction = Database.CurrentTransaction.GetDbTransaction();
-            }
             if (command.Connection!.State != System.Data.ConnectionState.Open)
             {
                 await command.Connection.OpenAsync(cancellationToken);
+            }
+            if (Database.CurrentTransaction != null)
+            {
+                command.Transaction = Database.CurrentTransaction.GetDbTransaction();
             }
             var result = await command.ExecuteScalarAsync(cancellationToken);
             consecutivo = Convert.ToInt64(result);

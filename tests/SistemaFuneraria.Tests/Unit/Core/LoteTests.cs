@@ -23,7 +23,7 @@ public class LoteTests
         string andadorFila = AndadorFilaValido,
         int gavetas = GavetasValidas,
         Dinero? precioContado = null) =>
-        Lote.Crear(clave, seccion, andadorFila, gavetas, precioContado ?? PrecioValido);
+        Lote.Crear(clave, seccion, andadorFila, gavetas, precioContado ?? (gavetas is 2 or 3 or 4 ? Lote.ObtenerPrecioOficial(gavetas) : PrecioValido));
 
     [Fact]
     [Trait("Ticket", "SF-039")]
@@ -231,15 +231,15 @@ public class LoteTests
 
     [Fact]
     [Trait("Ticket", "SF-039")]
-    public void ActualizarDatosAdmin_ConDatosValidos_DebeActualizarPropiedades()
+    public void ActualizarDatosAdmin_ConDatosValidos_DebeActualizarCapacidadPrecioYEstadoManteniendoUbicacionInmutable()
     {
         var lote = CrearLoteValido();
         var nuevoPrecio = new Dinero(180000m);
 
         lote.ActualizarDatosAdmin("  Robles  ", "  Andador B · Fila 2  ", 4, nuevoPrecio, EstadoLote.Mantenimiento);
 
-        lote.Seccion.Should().Be("Robles");
-        lote.AndadorFila.Should().Be("Andador B · Fila 2");
+        lote.Seccion.Should().Be(SeccionValida, "la sección física de un lote existente es inmutable");
+        lote.AndadorFila.Should().Be(AndadorFilaValido, "el andador y fila físicos de un lote existente son inmutables");
         lote.Gavetas.Should().Be(4);
         lote.PrecioContado.Should().Be(nuevoPrecio);
         lote.Estado.Should().Be(EstadoLote.Mantenimiento);
@@ -259,20 +259,33 @@ public class LoteTests
 
     [Theory]
     [Trait("Ticket", "SF-039")]
-    [InlineData("", "Andador B", 2, 120000)]
-    [InlineData("Robles", "", 2, 120000)]
-    [InlineData("Robles", "Andador B", 5, 120000)]
-    [InlineData("Robles", "Andador B", 2, 0)]
-    public void ActualizarDatosAdmin_ConInvariantesInvalidos_DebeLanzarReglaNegocioException(
-        string seccion,
-        string andadorFila,
+    [InlineData(5, 120000)]
+    [InlineData(2, 0)]
+    [InlineData(2, 150000)]
+    [InlineData(3, 120000)]
+    [InlineData(4, 150000)]
+    public void ActualizarDatosAdmin_ConInvariantesInvalidosORn01Incumplida_DebeLanzarReglaNegocioException(
         int gavetas,
         decimal precio)
     {
         var lote = CrearLoteValido();
 
-        Action accion = () => lote.ActualizarDatosAdmin(seccion, andadorFila, gavetas, new Dinero(precio), EstadoLote.Disponible);
+        Action accion = () => lote.ActualizarDatosAdmin(SeccionValida, AndadorFilaValido, gavetas, new Dinero(precio), EstadoLote.Disponible);
 
         accion.Should().Throw<ReglaNegocioException>();
+    }
+
+    [Theory]
+    [InlineData(2, 150000)]
+    [InlineData(3, 180000)]
+    [InlineData(4, 120000)]
+    public void Crear_ConPrecioNoCorrespondienteAGavetasRn01_DebeLanzarReglaNegocioException(
+        int gavetas,
+        decimal precioIncorrecto)
+    {
+        Action accion = () => Lote.Crear(ClaveValida, SeccionValida, AndadorFilaValido, gavetas, new Dinero(precioIncorrecto));
+
+        accion.Should().Throw<ReglaNegocioException>()
+            .WithMessage("*RN-01*");
     }
 }

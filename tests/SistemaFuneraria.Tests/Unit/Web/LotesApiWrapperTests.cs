@@ -38,6 +38,7 @@ public class LotesApiWrapperTests
 
         contenido.Should().Contain("obtenerCatalogo:");
         contenido.Should().Contain("obtenerLotePorId:");
+        contenido.Should().Contain("obtenerSiguienteUbicacion:");
         contenido.Should().Contain("crearLote:");
         contenido.Should().Contain("actualizarLote:");
         contenido.Should().Contain("cambiarEstadoLote:");

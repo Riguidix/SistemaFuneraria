@@ -57,6 +57,12 @@ public class VentasFinanciamientosConfigurationTests
         entityType.FindProperty(nameof(Venta.Modalidad))!.GetColumnType(store).Should().BeOneOf("character varying(20)", "varchar(20)");
         entityType.FindProperty(nameof(Venta.Estado))!.GetColumnType(store).Should().BeOneOf("character varying(20)", "varchar(20)");
         entityType.FindProperty(nameof(Venta.MotivoCancelacion))!.IsNullable.Should().BeTrue();
+        entityType.FindProperty(nameof(Venta.FirmaClienteBase64))!.GetColumnName(store).Should().Be("firma_cliente_base64");
+        entityType.FindProperty(nameof(Venta.FirmaClienteBase64))!.IsNullable.Should().BeTrue();
+        entityType.FindProperty(nameof(Venta.VendedorNombre))!.GetColumnName(store).Should().Be("vendedor_nombre");
+        entityType.FindProperty(nameof(Venta.VendedorNombre))!.IsNullable.Should().BeTrue();
+        entityType.FindProperty(nameof(Venta.FechaFirma))!.GetColumnName(store).Should().Be("fecha_firma");
+        entityType.FindProperty(nameof(Venta.FechaFirma))!.IsNullable.Should().BeTrue();
 
         var fks = entityType.GetForeignKeys().ToList();
         fks.Should().Contain(fk => fk.PrincipalEntityType.ClrType == typeof(Cliente) && fk.DeleteBehavior == DeleteBehavior.Restrict);
