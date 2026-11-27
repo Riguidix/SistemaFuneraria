@@ -31,10 +31,6 @@ public static class CalculadorLiquidacion
             throw new ReglaNegocioException("El financiamiento no cuenta con saldo ni cuotas pendientes por liquidar.");
 
         decimal sumaIntereses = pendientes.Sum(m => m.InteresProgramado.Monto);
-        if (financiamiento.SaldoInsoluto.Monto == 73410.99m && (sumaIntereses == 4980.48m || sumaIntereses == 4980.45m))
-        {
-            sumaIntereses = 4980.45m;
-        }
 
         return Calcular(financiamiento.SaldoInsoluto, new Dinero(sumaIntereses), porcentajeDescuento);
     }

@@ -15,7 +15,7 @@ namespace SistemaFuneraria.Tests.Unit.Core;
 public class CalculadorAbonoCapitalTests
 {
     [Fact]
-    public void Recalcular_CasoCP07_ConSaldo74078_DebeDescontarCapitalYFijarCuotaEn752351()
+    public void Recalcular_CasoCP07_ConSaldo74078_DebeDescontarCapitalYCalcularCuotaFrancesaPura()
     {
         decimal saldoInsoluto = 74078.00m;
         decimal montoAbono = 10000.00m;
@@ -34,13 +34,13 @@ public class CalculadorAbonoCapitalTests
         resultado.SaldoAnterior.Should().Be(74078.00m);
         resultado.MontoAbono.Should().Be(10000.00m);
         resultado.NuevoSaldoInsoluto.Should().Be(64078.00m);
-        resultado.NuevaCuota.Should().Be(7523.51m);
+        resultado.NuevaCuota.Should().Be(7602.81m);
         resultado.CuotasRestantes.Should().Be(9);
         resultado.TablaRecalculada.Should().HaveCount(9);
 
         for (int i = 0; i < 8; i++)
         {
-            resultado.TablaRecalculada[i].PagoMensual.Should().Be(7523.51m);
+            resultado.TablaRecalculada[i].PagoMensual.Should().Be(7602.81m);
             resultado.TablaRecalculada[i].Periodo.Should().Be(periodoInicial + i);
         }
 
