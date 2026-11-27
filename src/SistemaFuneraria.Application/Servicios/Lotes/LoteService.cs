@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using SistemaFuneraria.Application.Comun;
 using SistemaFuneraria.Application.Comun.Persistencia;
@@ -187,24 +188,148 @@ public class LoteService(IAppDbContext context) : ILoteService
             contrato?.FolioContrato));
     }
 
+    private static readonly Regex RegexConsecutivoClave = new(@"-(\d{3})$", RegexOptions.Compiled);
+
+    private static bool TryResolverSeccion(string? seccion, out string nombreOficial, out string prefijo)
+    {
+        var norm = (seccion ?? string.Empty).Trim().ToLowerInvariant()
+            .Replace("á", "a")
+            .Replace("é", "e")
+            .Replace("í", "i")
+            .Replace("ó", "o")
+            .Replace("ú", "u");
+
+        switch (norm)
+        {
+            case "jardin norte":
+                nombreOficial = "Jardín Norte";
+                prefijo = "JN";
+                return true;
+            case "jardin central":
+                nombreOficial = "Jardín Central";
+                prefijo = "JC";
+                return true;
+            case "robles":
+                nombreOficial = "Robles";
+                prefijo = "RO";
+                return true;
+            case "las magnolias":
+                nombreOficial = "Las Magnolias";
+                prefijo = "LM";
+                return true;
+            default:
+                nombreOficial = string.Empty;
+                prefijo = string.Empty;
+                return false;
+        }
+    }
+
+    public async Task<Resultado<SiguienteUbicacionLoteDto>> ObtenerSiguienteUbicacionAsync(
+        string seccion,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryResolverSeccion(seccion, out var nombreOficial, out var prefijo))
+        {
+            return Resultado<SiguienteUbicacionLoteDto>.Fallo(
+                "La sección indicada no es válida. Las secciones autorizadas son: Jardín Norte, Jardín Central, Robles y Las Magnolias.");
+        }
+
+        var lotesExistentes = await _context.Lotes
+            .AsNoTracking()
+            .Select(l => new { l.Clave, l.Seccion })
+            .ToListAsync(cancellationToken);
+
+        var todasClaves = lotesExistentes
+            .Select(l => l.Clave.Trim().ToUpperInvariant())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var maxConsecutivo = 0;
+        var prefijoGuion = $"{prefijo}-";
+        
+        foreach (var item in lotesExistentes)
+        {
+            var claveUpper = item.Clave.Trim().ToUpperInvariant();
+            var perteneceSeccion = item.Seccion.Equals(nombreOficial, StringComparison.OrdinalIgnoreCase)
+                                   || claveUpper.StartsWith(prefijoGuion, StringComparison.Ordinal);
+
+            if (!perteneceSeccion) continue;
+
+            var match = RegexConsecutivoClave.Match(claveUpper);
+            
+            if (match.Success && int.TryParse(match.Groups[1].Value, out var num) && num > maxConsecutivo)
+            {
+                maxConsecutivo = num;
+            }
+        }
+
+        var consecutivo = maxConsecutivo + 1;
+        while (consecutivo <= 999)
+        {
+            var andador = (char)('A' + ((consecutivo - 1) / 100));
+            var fila = (((consecutivo - 1) % 100) / 10) + 1;
+            var clave = $"{prefijo}-{andador}-{consecutivo:D3}";
+
+            if (!todasClaves.Contains(clave))
+            {
+                return Resultado<SiguienteUbicacionLoteDto>.Exito(new SiguienteUbicacionLoteDto(
+                    Seccion: nombreOficial,
+                    Prefijo: prefijo,
+                    Andador: andador.ToString(),
+                    Fila: fila,
+                    Consecutivo: consecutivo,
+                    Clave: clave,
+                    AndadorFila: $"Andador {andador} · Fila {fila}"));
+            }
+
+            consecutivo++;
+        }
+
+        return Resultado<SiguienteUbicacionLoteDto>.Fallo(
+            $"[CONFLICTO] La sección '{nombreOficial}' alcanzó la capacidad máxima de 999 lotes.");
+    }
+
     public async Task<Resultado<Guid>> CrearLoteAsync(CrearLoteCommand command, CancellationToken cancellationToken = default)
     {
         if (command == null)
             return Resultado<Guid>.Fallo("El comando de creación no puede ser nulo.");
 
-        var claveNorm = command.Clave?.Trim().ToUpperInvariant() ?? string.Empty;
-        bool existeClave = await _context.Lotes.AnyAsync(l => l.Clave == claveNorm, cancellationToken);
-        if (existeClave)
-            return Resultado<Guid>.Fallo("[CONFLICTO] Ya existe un lote registrado con la clave especificada.");
+        string claveFinal;
+        var seccionFinal = command.Seccion?.Trim() ?? string.Empty;
+        var andadorFilaFinal = command.AndadorFila?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(command.Clave))
+        {
+            var siguiente = await ObtenerSiguienteUbicacionAsync(seccionFinal, cancellationToken);
+            if (siguiente.EsFallo)
+                return Resultado<Guid>.Fallo(siguiente.Error);
+
+            claveFinal = siguiente.Valor.Clave;
+            seccionFinal = siguiente.Valor.Seccion;
+            andadorFilaFinal = string.IsNullOrWhiteSpace(andadorFilaFinal)
+                ? siguiente.Valor.AndadorFila
+                : andadorFilaFinal;
+        }
+        else
+        {
+            claveFinal = command.Clave.Trim().ToUpperInvariant();
+            var existeClave = await _context.Lotes.AnyAsync(l => l.Clave == claveFinal, cancellationToken);
+            
+            if (existeClave)
+                return Resultado<Guid>.Fallo("[CONFLICTO] Ya existe un lote registrado con la clave especificada.");
+        }
 
         try
         {
+            var precio = command.PrecioContado > 0m
+                ? new Dinero(command.PrecioContado)
+                : Lote.ObtenerPrecioOficial(command.Gavetas);
+
             var lote = Lote.Crear(
-                command.Clave ?? string.Empty,
-                command.Seccion ?? string.Empty,
-                command.AndadorFila ?? string.Empty,
+                claveFinal,
+                seccionFinal,
+                andadorFilaFinal,
                 command.Gavetas,
-                new Dinero(command.PrecioContado));
+                precio);
 
             await _context.Lotes.AddAsync(lote, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
@@ -231,11 +356,15 @@ public class LoteService(IAppDbContext context) : ILoteService
 
         try
         {
+            var precio = command.PrecioContado > 0m
+                ? new Dinero(command.PrecioContado)
+                : Lote.ObtenerPrecioOficial(command.Gavetas);
+
             lote.ActualizarDatosAdmin(
-                command.Seccion,
-                command.AndadorFila,
+                lote.Seccion,
+                lote.AndadorFila,
                 command.Gavetas,
-                new Dinero(command.PrecioContado),
+                precio,
                 command.Estado);
 
             await _context.SaveChangesAsync(cancellationToken);

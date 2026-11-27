@@ -33,22 +33,38 @@ public record ResumenCatalogoLotesDto(
 );
 
 /// <summary>
-/// Comando para el registro administrativo de un nuevo lote (SF-041).
+/// Vista previa y resultado de ubicación física autogenerada para un nuevo lote por sección.
 /// </summary>
-public record CrearLoteCommand(
-    string Clave,
+public record SiguienteUbicacionLoteDto(
     string Seccion,
-    string AndadorFila,
-    int Gavetas,
-    decimal PrecioContado
+    string Prefijo,
+    string Andador,
+    int Fila,
+    int Consecutivo,
+    string Clave,
+    string AndadorFila
 );
 
 /// <summary>
-/// Comando para la edición administrativa de ubicación, capacidad, precio o estado de un lote (SF-041).
+/// Comando para el registro administrativo de un nuevo lote (SF-041).
+/// Si <see cref="Clave"/> o <see cref="AndadorFila"/> se omiten, el backend genera automáticamente
+/// la siguiente ubicación secuencial disponible para la sección.
+/// </summary>
+public record CrearLoteCommand(
+    string? Clave,
+    string Seccion,
+    string? AndadorFila,
+    int Gavetas,
+    decimal PrecioContado = 0m
+);
+
+/// <summary>
+/// Comando para la edición administrativa de capacidad, precio oficial RN-01 y estado de un lote (SF-041).
+/// La ubicación física del lote permanece inmutable.
 /// </summary>
 public record ActualizarLoteCommand(
-    string Seccion,
-    string AndadorFila,
+    string? Seccion,
+    string? AndadorFila,
     int Gavetas,
     decimal PrecioContado,
     EstadoLote Estado

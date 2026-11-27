@@ -50,8 +50,11 @@
         const authApi = deps.authApi ?? win?.authApi;
         const apiClient = deps.apiClient ?? win?.apiClient;
         const lotesApi = deps.lotesApi ?? win?.lotesApi;
+        const sfUi = deps.SfUi ?? win?.SfUi;
 
         if (!doc || !lotesApi) return null;
+
+        let previewReqId = 0;
 
         const state = {
             page: 1,
@@ -430,6 +433,34 @@
             }
         }
 
+        async function cargarVistaPreviaUbicacion(seccion) {
+            const claveInput = doc.getElementById("loteFormClave");
+            const andadorInput = doc.getElementById("loteFormAndador");
+            const alertaForm = doc.getElementById("alertaFormLote");
+            const reqId = ++previewReqId;
+
+            if (claveInput) claveInput.value = "Calculando...";
+            if (andadorInput) andadorInput.value = "Calculando...";
+
+            if (typeof lotesApi.obtenerSiguienteUbicacion !== "function") {
+                if (claveInput) claveInput.value = "";
+                if (andadorInput) andadorInput.value = "";
+                return;
+            }
+
+            try {
+                const preview = await lotesApi.obtenerSiguienteUbicacion(seccion);
+                if (reqId !== previewReqId) return;
+                if (claveInput) claveInput.value = preview?.clave || "";
+                if (andadorInput) andadorInput.value = preview?.andadorFila || "";
+            } catch (err) {
+                if (reqId !== previewReqId) return;
+                if (claveInput) claveInput.value = "";
+                if (andadorInput) andadorInput.value = "";
+                mostrarAlertaModal(alertaForm, "warning", err?.message || "No se pudo calcular la vista previa de ubicación.");
+            }
+        }
+
         function abrirModalFormulario(loteEditar = null) {
             const elModal = doc.getElementById("modalFormularioLote");
             if (!elModal) return;
@@ -439,6 +470,7 @@
             const claveInput = doc.getElementById("loteFormClave");
             const seccionInput = doc.getElementById("loteFormSeccion");
             const andadorInput = doc.getElementById("loteFormAndador");
+            const hintUbicacion = doc.getElementById("loteFormUbicacionHint");
             const gavetasInput = doc.getElementById("loteFormGavetas");
             const precioInput = doc.getElementById("loteFormPrecio");
             const grupoEstado = doc.getElementById("grupoLoteFormEstado");
@@ -451,14 +483,24 @@
             }
 
             if (loteEditar) {
+                previewReqId++;
                 if (titleEl) titleEl.textContent = `Editar lote ${loteEditar.clave}`;
                 if (idInput) idInput.value = loteEditar.id || "";
                 if (claveInput) {
                     claveInput.value = loteEditar.clave || "";
                     claveInput.readOnly = true;
                 }
-                if (seccionInput) seccionInput.value = loteEditar.seccion || "Jardín Norte";
-                if (andadorInput) andadorInput.value = loteEditar.andadorFila || "";
+                if (seccionInput) {
+                    seccionInput.value = loteEditar.seccion || "Jardín Norte";
+                    seccionInput.disabled = true;
+                }
+                if (andadorInput) {
+                    andadorInput.value = loteEditar.andadorFila || "";
+                    andadorInput.readOnly = true;
+                }
+                if (hintUbicacion) {
+                    hintUbicacion.textContent = "La ubicación física de un lote existente es inmutable.";
+                }
                 if (gavetasInput) gavetasInput.value = String(loteEditar.gavetas || 2);
                 if (precioInput) precioInput.value = formatearMoneda(obtenerPrecioPorGavetas(loteEditar.gavetas || 2));
                 if (grupoEstado) grupoEstado.classList.remove("d-none");
@@ -466,16 +508,20 @@
             } else {
                 if (titleEl) titleEl.textContent = "Nuevo lote";
                 if (idInput) idInput.value = "";
-                if (claveInput) {
-                    claveInput.value = "";
-                    claveInput.readOnly = false;
+                if (claveInput) claveInput.readOnly = true;
+                if (andadorInput) andadorInput.readOnly = true;
+                if (seccionInput) {
+                    seccionInput.disabled = false;
+                    seccionInput.value = "Jardín Norte";
                 }
-                if (seccionInput) seccionInput.value = "Jardín Norte";
-                if (andadorInput) andadorInput.value = "";
+                if (hintUbicacion) {
+                    hintUbicacion.textContent = "Ubicación secuencial asignada automáticamente al guardar.";
+                }
                 if (gavetasInput) gavetasInput.value = "2";
                 if (precioInput) precioInput.value = formatearMoneda(obtenerPrecioPorGavetas(2));
                 if (grupoEstado) grupoEstado.classList.add("d-none");
                 if (estadoInput) estadoInput.value = "Disponible";
+                cargarVistaPreviaUbicacion(seccionInput ? seccionInput.value : "Jardín Norte");
             }
 
             if (typeof bootstrap !== "undefined" && bootstrap.Modal) {
@@ -646,6 +692,16 @@
             });
         }
 
+        const seccionFormSelect = doc.getElementById("loteFormSeccion");
+        if (seccionFormSelect) {
+            seccionFormSelect.addEventListener("change", function () {
+                const idActual = (doc.getElementById("loteFormId")?.value || "").trim();
+                if (!idActual) {
+                    cargarVistaPreviaUbicacion(seccionFormSelect.value);
+                }
+            });
+        }
+
         const gavetasSelect = doc.getElementById("loteFormGavetas");
         if (gavetasSelect) {
             gavetasSelect.addEventListener("change", function () {
@@ -670,8 +726,8 @@
                 const alertaForm = doc.getElementById("alertaFormLote");
                 const btnGuardar = doc.getElementById("btnGuardarLote");
 
-                if (!clave || !seccion || !andadorFila) {
-                    mostrarAlertaModal(alertaForm, "danger", "Todos los campos obligatorios deben completarse.");
+                if (!seccion) {
+                    mostrarAlertaModal(alertaForm, "danger", "Selecciona una sección válida.");
                     return;
                 }
 
@@ -684,8 +740,26 @@
                 try {
                     if (id) {
                         await lotesApi.actualizarLote(id, { seccion, andadorFila, gavetas, precioContado, estado });
+                        if (sfUi && typeof sfUi.showToast === "function") {
+                            sfUi.showToast({
+                                type: "success",
+                                title: "Lote actualizado",
+                                message: `Se actualizaron los datos del lote ${clave}.`
+                            });
+                        }
                     } else {
-                        await lotesApi.crearLote({ clave, seccion, andadorFila, gavetas, precioContado });
+                        const creado = await lotesApi.crearLote({ seccion, gavetas, precioContado });
+                        if (sfUi && typeof sfUi.showToast === "function") {
+                            const claveFinal = creado?.clave || clave || "Nuevo lote";
+                            const ubicacionFinal = creado?.andadorFila || andadorFila;
+                            sfUi.showToast({
+                                type: "success",
+                                title: "Lote registrado",
+                                message: ubicacionFinal
+                                    ? `Lote ${claveFinal} creado en ${seccion} (${ubicacionFinal}).`
+                                    : `Lote ${claveFinal} creado correctamente.`
+                            });
+                        }
                     }
 
                     const elModal = doc.getElementById("modalFormularioLote");
@@ -709,7 +783,7 @@
         }
 
         cargarCatalogo(1);
-        return { cargarCatalogo, abrirModalDetalleLote, abrirModalFormulario };
+        return { cargarCatalogo, abrirModalDetalleLote, abrirModalFormulario, cargarVistaPreviaUbicacion };
     }
 
     return { PRECIOS_RN01, obtenerPrecioPorGavetas, construirUrlContrato, init };
