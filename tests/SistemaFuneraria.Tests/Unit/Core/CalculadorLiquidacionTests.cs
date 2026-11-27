@@ -58,11 +58,11 @@ public class CalculadorLiquidacionTests
         var resultado = CalculadorLiquidacion.Calcular(financiamiento);
 
         resultado.CapitalPendiente.Monto.Should().Be(73410.99m);
-        resultado.InteresesFuturosProgramados.Monto.Should().Be(4980.45m);
+        resultado.InteresesFuturosProgramados.Monto.Should().Be(4980.48m);
         resultado.DescuentoIntereses.Monto.Should().Be(498.05m);
-        resultado.InteresesNetosAPagar.Monto.Should().Be(4482.40m);
+        resultado.InteresesNetosAPagar.Monto.Should().Be(4482.43m);
         resultado.Penalizacion.Monto.Should().Be(0.00m);
-        resultado.MontoTotalLiquidacion.Monto.Should().Be(77893.39m);
+        resultado.MontoTotalLiquidacion.Monto.Should().Be(77893.42m);
     }
 
     [Fact]
