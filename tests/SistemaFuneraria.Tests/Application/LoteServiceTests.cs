@@ -217,7 +217,7 @@ public class LoteServiceTests
         resultado.Error.Should().StartWith("[CONFLICTO]");
     }
 
-    [Fact(DisplayName = "SF-041: ActualizarLoteAsync con datos válidos debe persistir cambios")]
+    [Fact(DisplayName = "SF-041: ActualizarLoteAsync actualiza capacidad, precio RN-01 y estado manteniendo ubicación inmutable")]
     public async Task ActualizarLoteAsync_ConDatosValidos_DebeActualizarCampos()
     {
         // Arrange
@@ -227,7 +227,7 @@ public class LoteServiceTests
         await context.SaveChangesAsync();
 
         var service = new LoteService(context);
-        var command = new ActualizarLoteCommand("Jardín Norte", "Andador A · Fila 5", 3, 150000m, EstadoLote.Reservado);
+        var command = new ActualizarLoteCommand("Robles", "Andador B · Fila 9", 3, 150000m, EstadoLote.Reservado);
 
         // Act
         var resultado = await service.ActualizarLoteAsync(lote.Id, command);
@@ -235,10 +235,64 @@ public class LoteServiceTests
         // Assert
         resultado.EsExitoso.Should().BeTrue();
         var actualizado = await context.Lotes.FindAsync(lote.Id);
-        actualizado!.AndadorFila.Should().Be("Andador A · Fila 5");
+        actualizado!.Seccion.Should().Be("Jardín Norte");
+        actualizado.AndadorFila.Should().Be("Andador A · Fila 4");
         actualizado.Gavetas.Should().Be(3);
         actualizado.PrecioContado.Monto.Should().Be(150000m);
         actualizado.Estado.Should().Be(EstadoLote.Reservado);
+    }
+
+    [Fact(DisplayName = "Generador secuencial: ObtenerSiguienteUbicacionAsync calcula bloques 1-based de 10 lotes/fila y 100/andador")]
+    public async Task ObtenerSiguienteUbicacionAsync_DebeCalcularBloques1BasedYSaltarColisiones()
+    {
+        using var context = CrearContextoEnMemoria();
+        context.Lotes.AddRange(
+            Lote.Crear("JN-D-065", "Jardín Norte", "Andador D · Fila 6", 3, new Dinero(150000m)),
+            Lote.Crear("JC-A-100", "Jardín Central", "Andador A · Fila 10", 2, new Dinero(120000m)));
+        await context.SaveChangesAsync();
+
+        var service = new LoteService(context);
+
+        var sigJn = await service.ObtenerSiguienteUbicacionAsync("Jardín Norte");
+        sigJn.EsExitoso.Should().BeTrue();
+        sigJn.Valor.Clave.Should().Be("JN-A-066");
+        sigJn.Valor.Andador.Should().Be("A");
+        sigJn.Valor.Fila.Should().Be(7);
+        sigJn.Valor.AndadorFila.Should().Be("Andador A · Fila 7");
+
+        var sigJc = await service.ObtenerSiguienteUbicacionAsync("Jardín Central");
+        sigJc.EsExitoso.Should().BeTrue();
+        sigJc.Valor.Clave.Should().Be("JC-B-101");
+        sigJc.Valor.Andador.Should().Be("B");
+        sigJc.Valor.Fila.Should().Be(1);
+        sigJc.Valor.AndadorFila.Should().Be("Andador B · Fila 1");
+
+        var sigLm = await service.ObtenerSiguienteUbicacionAsync("Las Magnolias");
+        sigLm.EsExitoso.Should().BeTrue();
+        sigLm.Valor.Clave.Should().Be("LM-A-001");
+        sigLm.Valor.AndadorFila.Should().Be("Andador A · Fila 1");
+    }
+
+    [Fact(DisplayName = "Alta automática: CrearLoteAsync sin Clave ni AndadorFila genera ubicación y precio RN-01 automáticamente")]
+    public async Task CrearLoteAsync_SinClave_DebeGenerarUbicacionYPrecioRn01()
+    {
+        using var context = CrearContextoEnMemoria();
+        context.Lotes.Add(Lote.Crear("RO-A-010", "Robles", "Andador A · Fila 1", 2, new Dinero(120000m)));
+        await context.SaveChangesAsync();
+
+        var service = new LoteService(context);
+        var command = new CrearLoteCommand(Clave: null, Seccion: "Robles", AndadorFila: null, Gavetas: 4, PrecioContado: 0m);
+
+        var resultado = await service.CrearLoteAsync(command);
+
+        resultado.EsExitoso.Should().BeTrue();
+        var creado = await context.Lotes.FindAsync(resultado.Valor);
+        creado.Should().NotBeNull();
+        creado!.Clave.Should().Be("RO-A-011");
+        creado.Seccion.Should().Be("Robles");
+        creado.AndadorFila.Should().Be("Andador A · Fila 2");
+        creado.Gavetas.Should().Be(4);
+        creado.PrecioContado.Monto.Should().Be(180000m);
     }
 
     [Fact(DisplayName = "SF-041: CambiarEstadoLoteAsync cambia estado operativo del lote")]

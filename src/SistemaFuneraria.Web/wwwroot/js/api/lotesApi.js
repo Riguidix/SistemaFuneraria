@@ -128,6 +128,15 @@ const lotesApi = {
         resolveClient(opts).get(`${LOTES_ENDPOINT}/clave/${encodeURIComponent(clave)}`, opts),
 
     /**
+     * Obtiene la vista previa de la siguiente clave física, andador y fila disponibles para una sección.
+     */
+    obtenerSiguienteUbicacion: (seccion, opts = {}) =>
+        resolveClient(opts).get(`${LOTES_ENDPOINT}/siguiente-ubicacion`, {
+            ...opts,
+            params: { ...(opts.params || {}), seccion }
+        }),
+
+    /**
      * Crea un nuevo lote (exclusivo Administrador).
      */
     crearLote: (payload, opts = {}) =>

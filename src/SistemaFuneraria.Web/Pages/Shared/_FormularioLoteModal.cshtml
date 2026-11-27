@@ -18,13 +18,7 @@
                     <div id="alertaFormLote" class="alert d-none rounded-3 py-2 px-3 small mb-3" role="alert"></div>
 
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="loteFormClave" class="form-label small fw-semibold">Clave física</label>
-                            <input type="text" id="loteFormClave" class="form-control text-uppercase" placeholder="JN-A-099" maxlength="20" required />
-                            <div class="form-text">Formato: XX-X-000 (ej. JN-A-099)</div>
-                        </div>
-
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <label for="loteFormSeccion" class="form-label small fw-semibold">Sección</label>
                             <select id="loteFormSeccion" class="form-select" required>
                                 <option value="Jardín Norte">Jardín Norte</option>
@@ -32,11 +26,6 @@
                                 <option value="Robles">Robles</option>
                                 <option value="Las Magnolias">Las Magnolias</option>
                             </select>
-                        </div>
-
-                        <div class="col-12">
-                            <label for="loteFormAndador" class="form-label small fw-semibold">Andador y fila</label>
-                            <input type="text" id="loteFormAndador" class="form-control" placeholder="Andador A · Fila 5" maxlength="60" required />
                         </div>
 
                         <div class="col-md-6">
@@ -51,6 +40,23 @@
                         <div class="col-md-6">
                             <label for="loteFormPrecio" class="form-label small fw-semibold">Precio de contado (RN-01)</label>
                             <input type="text" id="loteFormPrecio" class="form-control bg-light sf-money fw-semibold" value="$120,000.00" readonly aria-readonly="true" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="loteFormClave" class="form-label small fw-semibold">Clave física</label>
+                            <input type="text" id="loteFormClave" class="form-control bg-light text-uppercase fw-semibold" placeholder="Calculando..." readonly aria-readonly="true" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="loteFormAndador" class="form-label small fw-semibold">Andador y fila</label>
+                            <input type="text" id="loteFormAndador" class="form-control bg-light" placeholder="Calculando..." readonly aria-readonly="true" />
+                        </div>
+
+                        <div class="col-12 mt-1">
+                            <div class="form-text text-muted" id="loteFormUbicacionHint">
+                                <i class="fa-solid fa-wand-magic-sparkles me-1" aria-hidden="true"></i>
+                                Ubicación secuencial asignada automáticamente al guardar.
+                            </div>
                         </div>
 
                         <div class="col-12 d-none" id="grupoLoteFormEstado">

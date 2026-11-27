@@ -61,7 +61,8 @@ public class VentaContadoServiceTests : IDisposable
         EstadoLote estado = EstadoLote.Disponible,
         decimal precio = 120000m)
     {
-        var lote = Lote.Crear(clave, "Jardín Norte", "Andador A · Fila 4", 2, new Dinero(precio));
+        int gavetas = precio == 180000m ? 4 : precio == 150000m ? 3 : 2;
+        var lote = Lote.Crear(clave, "Jardín Norte", "Andador A · Fila 4", gavetas, new Dinero(precio));
         if (estado == EstadoLote.Reservado)
         {
             lote.Reservar();
@@ -72,7 +73,7 @@ public class VentaContadoServiceTests : IDisposable
         }
         else if (estado == EstadoLote.Mantenimiento)
         {
-            lote.ActualizarDatosAdmin("Jardín Norte", "Andador A · Fila 4", 2, new Dinero(precio), EstadoLote.Mantenimiento);
+            lote.ActualizarDatosAdmin("Jardín Norte", "Andador A · Fila 4", gavetas, new Dinero(precio), EstadoLote.Mantenimiento);
         }
 
         await _dbContext.Lotes.AddAsync(lote);

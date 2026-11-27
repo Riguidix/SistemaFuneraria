@@ -36,6 +36,13 @@ public interface ILoteService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Calcula la siguiente clave física, andador y fila disponibles para una sección en bloques de 10 lotes/fila y 10 filas/andador.
+    /// </summary>
+    Task<Resultado<SiguienteUbicacionLoteDto>> ObtenerSiguienteUbicacionAsync(
+        string seccion,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Registra un nuevo lote en el catálogo validando unicidad de clave (exclusivo Administrador).
     /// </summary>
     Task<Resultado<Guid>> CrearLoteAsync(

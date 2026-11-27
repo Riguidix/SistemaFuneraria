@@ -67,6 +67,7 @@
         const doc = deps.document ?? (typeof document !== "undefined" ? document : null);
         const win = deps.window ?? (typeof window !== "undefined" ? window : null);
         const lotesApi = deps.lotesApi ?? win?.lotesApi;
+        const mapaLotes = deps.mapaLotes ?? win?.mapaLotes;
         const wizardState = deps.wizardState ?? win?.wizardState;
 
         if (!doc) return null;
@@ -74,6 +75,9 @@
         const step1Card = doc.getElementById("step1Card");
         const step2Card = doc.getElementById("step2Card");
         const contenedor = doc.getElementById("contenedorTarjetasLote");
+        const contenedorMapa = doc.getElementById("contenedorMapaPaso2");
+        const btnVistaLista = doc.getElementById("btnVistaListaPaso2");
+        const btnVistaMapa = doc.getElementById("btnVistaMapaPaso2");
         const alertaError = doc.getElementById("paso2AlertaError");
         const mensajeError = doc.getElementById("paso2MensajeError");
         const btnReintentar = doc.getElementById("btnReintentarLotesPaso2");
@@ -95,6 +99,8 @@
         let lotesDisponibles = [];
         let loteSeleccionado = null;
         let cargaIniciada = false;
+        let mapaPaso2 = null;
+        let vistaActual = "lista";
 
         function sincronizarBotonContinuar() {
             if (btnContinuar2) {
@@ -189,6 +195,9 @@
 
             loteSeleccionado = loteDraft;
             marcarTarjetaActiva(loteDraft.clave);
+            if (mapaPaso2 && vistaActual === "mapa") {
+                mapaPaso2.setSeleccion(loteDraft.clave);
+            }
             sincronizarPanelDerecho(loteDraft);
             sincronizarBotonContinuar();
             return loteDraft;
@@ -317,6 +326,61 @@
                 contenedor.innerHTML = "";
                 mostrarError(err?.message || "No fue posible cargar el inventario de lotes disponibles.");
             }
+        }
+
+        async function cargarMapaPaso2() {
+            if (!contenedorMapa || !mapaLotes || typeof mapaLotes.crearMapa !== "function") return;
+            if (!mapaPaso2) {
+                mapaPaso2 = mapaLotes.crearMapa(contenedorMapa, {
+                    modo: "seleccion",
+                    claveSeleccionada: loteSeleccionado?.clave || "",
+                    onSelectLote: function (lote) {
+                        seleccionarLote(lote, 2);
+                    }
+                });
+            }
+            try {
+                const resTodos = await lotesApi.obtenerCatalogo({ page: 1, pageSize: 100 });
+                mapaPaso2.setLotes(resTodos?.items || lotesDisponibles, {
+                    claveSeleccionada: loteSeleccionado?.clave || ""
+                });
+            } catch {
+                mapaPaso2.setLotes(lotesDisponibles, {
+                    claveSeleccionada: loteSeleccionado?.clave || ""
+                });
+            }
+        }
+
+        function cambiarVistaPaso2(nuevaVista) {
+            vistaActual = nuevaVista === "mapa" ? "mapa" : "lista";
+            const esMapa = vistaActual === "mapa";
+            if (contenedor) {
+                contenedor.classList.toggle("d-none", esMapa);
+                contenedor.classList.toggle("d-flex", !esMapa);
+            }
+            if (contenedorMapa) contenedorMapa.classList.toggle("d-none", !esMapa);
+            if (btnVistaLista) {
+                btnVistaLista.classList.toggle("active", !esMapa);
+                btnVistaLista.setAttribute("aria-pressed", !esMapa ? "true" : "false");
+            }
+            if (btnVistaMapa) {
+                btnVistaMapa.classList.toggle("active", esMapa);
+                btnVistaMapa.setAttribute("aria-pressed", esMapa ? "true" : "false");
+            }
+            if (esMapa) {
+                cargarMapaPaso2();
+            }
+        }
+
+        if (btnVistaLista) {
+            btnVistaLista.addEventListener("click", function () {
+                cambiarVistaPaso2("lista");
+            });
+        }
+        if (btnVistaMapa) {
+            btnVistaMapa.addEventListener("click", function () {
+                cambiarVistaPaso2("mapa");
+            });
         }
 
         // Permitir selección desde la cuadrícula derecha 2x4 para los lotes numéricos cargados
