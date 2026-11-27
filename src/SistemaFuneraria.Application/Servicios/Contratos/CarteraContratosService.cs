@@ -248,11 +248,22 @@ public class CarteraContratosService(IAppDbContext context, TimeProvider? timePr
 
         var cliente = await _context.Clientes.AsNoTracking().FirstOrDefaultAsync(c => c.Id == venta.ClienteId, cancellationToken);
         var lote = await _context.Lotes.AsNoTracking().FirstOrDefaultAsync(l => l.Id == venta.LoteId, cancellationToken);
-        var pago = await _context.Pagos
+        var pagos = await _context.Pagos
             .AsNoTracking()
             .Where(p => p.VentaId == venta.Id)
             .OrderByDescending(p => p.FechaPago)
-            .FirstOrDefaultAsync(cancellationToken);
+            .Select(p => new ContratoPagoHistorialDto(
+                p.Folio,
+                p.FechaPago,
+                p.Tipo.ToString(),
+                p.Metodo.ToString(),
+                p.Referencia,
+                p.MontoTotal.Monto,
+                p.MontoCapital.Monto,
+                p.MontoInteres.Monto,
+                p.SaldoAnterior.Monto,
+                p.SaldoPosterior.Monto))
+            .ToListAsync(cancellationToken);
         var financiamiento = await _context.Financiamientos.AsNoTracking().FirstOrDefaultAsync(f => f.VentaId == venta.Id, cancellationToken);
 
         var cuotas = financiamiento is null
@@ -310,9 +321,10 @@ public class CarteraContratosService(IAppDbContext context, TimeProvider? timePr
             Estado: venta.Estado.ToString(),
             EstadoVisual: estadoVisual,
             FechaVenta: venta.FechaVenta,
-            FolioPago: pago?.Folio,
+            FolioPago: pagos.FirstOrDefault()?.Folio,
             Financiamiento: finDto,
             Amortizacion: cuotas,
+            HistorialPagos: pagos,
             VendedorNombre: venta.VendedorNombre ?? venta.VendedorId,
             FirmaClienteBase64: venta.FirmaClienteBase64,
             FechaFirma: venta.FechaFirma));

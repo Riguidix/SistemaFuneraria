@@ -59,6 +59,22 @@ public sealed record ContratoFinanciamientoDetalleDto(
 );
 
 /// <summary>
+/// Registro individual del historial de pagos aplicados a un contrato (RF-13).
+/// </summary>
+public sealed record ContratoPagoHistorialDto(
+    string Folio,
+    DateTimeOffset FechaPago,
+    string TipoPago,
+    string MetodoPago,
+    string? Referencia,
+    decimal MontoTotal,
+    decimal MontoCapital,
+    decimal MontoInteres,
+    decimal SaldoAnterior,
+    decimal SaldoPosterior
+);
+
+/// <summary>
 /// Expediente completo de un contrato comercial consultado por UUID o folio CTR-YYYY-XXXX (SF-069).
 /// </summary>
 public sealed record ContratoDetalleDto(
@@ -79,6 +95,7 @@ public sealed record ContratoDetalleDto(
     string? FolioPago,
     ContratoFinanciamientoDetalleDto? Financiamiento,
     IReadOnlyList<CuotaAmortizacionContratoDto> Amortizacion,
+    IReadOnlyList<ContratoPagoHistorialDto> HistorialPagos,
     string? VendedorNombre = null,
     string? FirmaClienteBase64 = null,
     DateTimeOffset? FechaFirma = null
