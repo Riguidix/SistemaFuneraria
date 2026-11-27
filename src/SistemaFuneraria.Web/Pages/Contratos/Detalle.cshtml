@@ -180,6 +180,44 @@
             </table>
         </div>
     </div>
+
+    <!-- Historial de Pagos Aplicados (RF-13) -->
+    <div id="seccionHistorialPagos" class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">Historial de pagos aplicados</h5>
+                <p class="small text-muted mb-0">Registro cronológico de mensualidades, abonos extraordinarios a capital y liquidaciones aplicadas al contrato.</p>
+            </div>
+            <span id="badgeConteoHistorialPagos" class="badge bg-light text-dark border px-3 py-2 rounded-pill small">
+                <i class="fa-solid fa-receipt me-1 text-success" aria-hidden="true"></i> Cargando pagos...
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-tabular" id="tablaHistorialPagosContrato">
+                <thead class="table-light text-uppercase small text-muted">
+                    <tr>
+                        <th scope="col" class="ps-3">Folio</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Método / Referencia</th>
+                        <th scope="col" class="text-end">Capital</th>
+                        <th scope="col" class="text-end">Interés</th>
+                        <th scope="col" class="text-end fw-bold">Monto Total</th>
+                        <th scope="col" class="text-end pe-3">Saldo Posterior</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyHistorialPagos">
+                    <tr id="filaCargandoHistorialPagos">
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Cargando historial de pagos...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <!-- Modal de Gestión Exclusiva de Administrador (SF-063 / SF-071) -->
