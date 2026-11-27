@@ -80,6 +80,29 @@
         return String(mensaje ?? "").replace(/^\[(CONFLICTO|NO_ENCONTRADO)\]\s*/i, "");
     }
 
+    function escaparHtml(valor) {
+        return String(valor ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function badgeTipoPagoHtml(tipo) {
+        const norm = String(tipo || "").trim().toLowerCase();
+        if (norm === "abonocapital") {
+            return '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small">Abono a capital</span>';
+        }
+        if (norm === "liquidacion") {
+            return '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">Liquidación</span>';
+        }
+        if (norm === "contado") {
+            return '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">Contado</span>';
+        }
+        return '<span class="badge bg-light text-dark border rounded-pill px-2 py-1 small">Mensualidad</span>';
+    }
+
     function init(deps = {}) {
         const doc = deps.document ?? (typeof document !== "undefined" ? document : null);
         const win = deps.window ?? (typeof window !== "undefined" ? window : null);
@@ -124,6 +147,8 @@
         const seccionAmortizacion = doc.getElementById("seccionTablaAmortizacion");
         const badgeConteoAmortizacion = doc.getElementById("badgeConteoAmortizacion");
         const tbodyAmortizacion = doc.getElementById("tbodyAmortizacion");
+        const badgeConteoHistorialPagos = doc.getElementById("badgeConteoHistorialPagos");
+        const tbodyHistorialPagos = doc.getElementById("tbodyHistorialPagos");
         const comprobanteCard = doc.getElementById("comprobanteContadoCard");
         const compFolioContrato = doc.getElementById("comprobanteFolioContrato");
         const compFolioPago = doc.getElementById("comprobanteFolioPago");
@@ -341,6 +366,37 @@
                     }
                 }
             }
+
+            renderizarHistorialPagos(dto.historialPagos);
+        }
+
+        function renderizarHistorialPagos(historialPagos) {
+            const pagos = Array.isArray(historialPagos) ? historialPagos : [];
+            if (badgeConteoHistorialPagos) {
+                const etiqueta = pagos.length === 1 ? "1 pago registrado" : `${pagos.length} pagos registrados`;
+                badgeConteoHistorialPagos.innerHTML = `<i class="fa-solid fa-receipt me-1 text-success" aria-hidden="true"></i> ${etiqueta}`;
+            }
+            if (!tbodyHistorialPagos) return;
+            if (pagos.length === 0) {
+                tbodyHistorialPagos.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">Aún no se registran pagos aplicados a este contrato.</td></tr>`;
+                return;
+            }
+            tbodyHistorialPagos.innerHTML = pagos.map(function (p) {
+                const folioSeguro = escaparHtml(p.folio || "-");
+                const metodoSeguro = escaparHtml(p.metodoPago || "-");
+                const refTexto = p.referencia ? ` · <span class="text-muted">${escaparHtml(p.referencia)}</span>` : "";
+                const hrefRecibo = `/Caja/Recibo?folio=${encodeURIComponent(p.folio || "")}`;
+                return `<tr>` +
+                    `<td class="ps-3"><a href="${hrefRecibo}" class="fw-semibold text-decoration-none sf-monospace">${folioSeguro}</a></td>` +
+                    `<td class="text-dark">${formatearFecha(p.fechaPago)}</td>` +
+                    `<td>${badgeTipoPagoHtml(p.tipoPago)}</td>` +
+                    `<td class="text-dark">${metodoSeguro}${refTexto}</td>` +
+                    `<td class="text-end text-dark">${formatearMonedaMXN(p.montoCapital)}</td>` +
+                    `<td class="text-end text-muted">${formatearMonedaMXN(p.montoInteres)}</td>` +
+                    `<td class="text-end fw-bold text-dark">${formatearMonedaMXN(p.montoTotal)}</td>` +
+                    `<td class="text-end pe-3 fw-medium text-success">${formatearMonedaMXN(p.saldoPosterior)}</td>` +
+                    `</tr>`;
+            }).join("");
         }
 
         async function cargarPorId() {
@@ -397,6 +453,9 @@
                     mostrarErrorDetalle(err?.message || "No fue posible consultar el expediente del contrato.");
                     if (tbodyAmortizacion && doc.getElementById("filaCargandoAmortizacion")) {
                         tbodyAmortizacion.innerHTML = "";
+                    }
+                    if (tbodyHistorialPagos && doc.getElementById("filaCargandoHistorialPagos")) {
+                        tbodyHistorialPagos.innerHTML = "";
                     }
                     if (sfUi && typeof sfUi.showToast === "function") {
                         sfUi.showToast({
