@@ -33,6 +33,9 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
         builder.Property(v => v.PrecioPactado).HasColumnName("precio_pactado").HasColumnType("numeric(18,2)").HasPrecision(18, 2).HasConversion(d => d.Monto, m => new Dinero(m)).IsRequired();
         builder.Property(v => v.Estado).HasColumnName("estado").HasMaxLength(20).HasConversion<string>().IsRequired();
         builder.Property(v => v.MotivoCancelacion).HasColumnName("motivo_cancelacion").HasColumnType("text");
+        builder.Property(v => v.FirmaClienteBase64).HasColumnName("firma_cliente_base64").HasColumnType("text");
+        builder.Property(v => v.VendedorNombre).HasColumnName("vendedor_nombre").HasMaxLength(150);
+        builder.Property(v => v.FechaFirma).HasColumnName("fecha_firma").HasColumnType("timestamp with time zone");
         builder.Property(v => v.FechaVenta).HasColumnName("fecha_venta").HasColumnType("timestamp with time zone").HasDefaultValueSql("NOW()").IsRequired();
 
         builder.HasOne<Cliente>().WithMany().HasForeignKey(v => v.ClienteId).OnDelete(DeleteBehavior.Restrict);

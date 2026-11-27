@@ -78,5 +78,8 @@ public sealed record ContratoDetalleDto(
     DateTimeOffset FechaVenta,
     string? FolioPago,
     ContratoFinanciamientoDetalleDto? Financiamiento,
-    IReadOnlyList<CuotaAmortizacionContratoDto> Amortizacion
+    IReadOnlyList<CuotaAmortizacionContratoDto> Amortizacion,
+    string? VendedorNombre = null,
+    string? FirmaClienteBase64 = null,
+    DateTimeOffset? FechaFirma = null
 );

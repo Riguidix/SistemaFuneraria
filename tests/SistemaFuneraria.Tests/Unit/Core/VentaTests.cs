@@ -149,4 +149,40 @@ public class VentaTests
         Action cancelada = () => ventaCancelada.MarcarLiquidado();
         cancelada.Should().Throw<ReglaNegocioException>();
     }
+
+    [Fact]
+    public void CrearContado_ConFirmaClienteYVendedorNombre_DebePersistirFirmaYFechaFirma()
+    {
+        const string firmaPng = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+
+        var venta = Venta.CrearContado(
+            FolioValido,
+            ClienteIdValido,
+            LoteIdValido,
+            VendedorIdValido,
+            PrecioValido,
+            FechaValida,
+            firmaClienteBase64: $"  {firmaPng}  ",
+            vendedorNombre: "  Ana María López  ");
+
+        venta.FirmaClienteBase64.Should().Be(firmaPng);
+        venta.VendedorNombre.Should().Be("Ana María López");
+        venta.FechaFirma.Should().Be(FechaValida);
+    }
+
+    [Fact]
+    public void CrearFinanciada_ConFirmaInvalidaOExcedida_DebeLanzarReglaNegocioException()
+    {
+        Action formatoInvalido = () => Venta.CrearFinanciada(
+            FolioValido, ClienteIdValido, LoteIdValido, VendedorIdValido, PrecioValido, FechaValida,
+            firmaClienteBase64: "https://evil.example/firma.png");
+
+        string firmaGigante = "data:image/png;base64," + new string('A', 300_050);
+        Action tamanoExcedido = () => Venta.CrearFinanciada(
+            FolioValido, ClienteIdValido, LoteIdValido, VendedorIdValido, PrecioValido, FechaValida,
+            firmaClienteBase64: firmaGigante);
+
+        formatoInvalido.Should().Throw<ReglaNegocioException>();
+        tamanoExcedido.Should().Throw<ReglaNegocioException>();
+    }
 }

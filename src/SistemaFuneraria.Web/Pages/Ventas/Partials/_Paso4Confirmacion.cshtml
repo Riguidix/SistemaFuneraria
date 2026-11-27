@@ -65,11 +65,42 @@
         </div>
     </div>
 
-    <!-- 3. Checkbox de Confirmación con el Cliente -->
-    <div class="form-check my-4">
+    <!-- 3. Firma Digital de Conformidad del Cliente -->
+    <div id="seccionFirmaCliente" class="rounded-4 border p-3 p-md-4 my-4" style="background-color: #FAF8F5; border-color: #E8E3D9 !important;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-signature text-success" aria-hidden="true"></i>
+                <span class="fw-semibold text-dark small">Firma de conformidad del cliente</span>
+                <span id="badgeEstadoFirma" class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1" style="font-size: 0.72rem;">
+                    Pendiente
+                </span>
+            </div>
+            <button type="button" id="btnLimpiarFirmaCliente" class="btn btn-sm btn-outline-secondary rounded-3 px-2 py-1">
+                <i class="fa-solid fa-eraser me-1" aria-hidden="true"></i> Limpiar firma
+            </button>
+        </div>
+
+        <div class="sf-signature-pad-wrap position-relative rounded-3 bg-white border">
+            <canvas id="canvasFirmaCliente"
+                    class="sf-signature-canvas w-100 d-block"
+                    aria-label="Área de firma digital del cliente"></canvas>
+            <div id="firmaClientePlaceholder" class="sf-signature-placeholder">
+                <i class="fa-solid fa-pen-nib me-1" aria-hidden="true"></i> Firme aquí dentro del recuadro
+            </div>
+            <div class="sf-signature-baseline" aria-hidden="true"></div>
+        </div>
+
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-1 mt-2 small text-muted">
+            <span><strong>Titular:</strong> <span id="firmaClienteNombrePreview">-</span></span>
+            <span><i class="fa-solid fa-shield-check text-success me-1" aria-hidden="true"></i><strong>Sello de vendedor:</strong> <span id="firmaVendedorPreview">Sesión autenticada</span></span>
+        </div>
+    </div>
+
+    <!-- 4. Checkbox de Confirmación con el Cliente -->
+    <div class="form-check my-3">
         <input class="form-check-input sf-checkbox-olive" type="checkbox" id="chkConfirmarDatos" style="cursor: pointer;" />
         <label class="form-check-label text-dark fw-medium small ms-2" for="chkConfirmarDatos" style="cursor: pointer;">
-            Confirmo que los datos fueron revisados con el cliente.
+            Confirmo que los datos fueron revisados y aceptados con el cliente.
         </label>
     </div>
 

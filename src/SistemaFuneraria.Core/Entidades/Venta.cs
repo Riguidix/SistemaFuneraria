@@ -22,6 +22,12 @@ public class Venta
     public EstadoVenta Estado { get; private set; }
     public DateTimeOffset FechaVenta { get; private set; }
     public string? MotivoCancelacion { get; private set; }
+    public string? FirmaClienteBase64 { get; private set; }
+    public string? VendedorNombre { get; private set; }
+    public DateTimeOffset? FechaFirma { get; private set; }
+
+    private const int LongitudMaximaFirmaBase64 = 300_000;
+    private const int LongitudMaximaVendedorNombre = 150;
 
     /// <summary>
     /// Constructor protegido sin parámetros requerido por EF Core para la materialización de la entidad.
@@ -37,7 +43,10 @@ public class Venta
         ModalidadVenta modalidad,
         Dinero precioPactado,
         EstadoVenta estado,
-        DateTimeOffset fechaVenta)
+        DateTimeOffset fechaVenta,
+        string? firmaClienteBase64,
+        string? vendedorNombre,
+        DateTimeOffset? fechaFirma)
     {
         Id = id;
         FolioContrato = folioContrato;
@@ -48,6 +57,9 @@ public class Venta
         PrecioPactado = precioPactado;
         Estado = estado;
         FechaVenta = fechaVenta;
+        FirmaClienteBase64 = firmaClienteBase64;
+        VendedorNombre = vendedorNombre;
+        FechaFirma = fechaFirma;
     }
 
     /// <summary>
@@ -59,8 +71,10 @@ public class Venta
         Guid loteId,
         string vendedorId,
         Dinero precioPactado,
-        DateTimeOffset fechaVenta) =>
-        CrearInterno(folioContrato, clienteId, loteId, vendedorId, ModalidadVenta.Contado, precioPactado, EstadoVenta.Liquidado, fechaVenta);
+        DateTimeOffset fechaVenta,
+        string? firmaClienteBase64 = null,
+        string? vendedorNombre = null) =>
+        CrearInterno(folioContrato, clienteId, loteId, vendedorId, ModalidadVenta.Contado, precioPactado, EstadoVenta.Liquidado, fechaVenta, firmaClienteBase64, vendedorNombre);
 
     /// <summary>
     /// Crea una venta en modalidad Financiado que nace en estado Activo.
@@ -71,8 +85,10 @@ public class Venta
         Guid loteId,
         string vendedorId,
         Dinero precioPactado,
-        DateTimeOffset fechaVenta) =>
-        CrearInterno(folioContrato, clienteId, loteId, vendedorId, ModalidadVenta.Financiado, precioPactado, EstadoVenta.Activo, fechaVenta);
+        DateTimeOffset fechaVenta,
+        string? firmaClienteBase64 = null,
+        string? vendedorNombre = null) =>
+        CrearInterno(folioContrato, clienteId, loteId, vendedorId, ModalidadVenta.Financiado, precioPactado, EstadoVenta.Activo, fechaVenta, firmaClienteBase64, vendedorNombre);
 
     /// <summary>
     /// Cambia administrativamente el estado del contrato a EnRevision, Cancelado o Activo registrando el motivo obligatorio.
@@ -117,7 +133,9 @@ public class Venta
         ModalidadVenta modalidad,
         Dinero precioPactado,
         EstadoVenta estadoInicial,
-        DateTimeOffset fechaVenta)
+        DateTimeOffset fechaVenta,
+        string? firmaClienteBase64,
+        string? vendedorNombre)
     {
         if (string.IsNullOrWhiteSpace(folioContrato))
             throw new ReglaNegocioException("El folio del contrato es obligatorio.");
@@ -138,6 +156,33 @@ public class Venta
         if (precioPactado.Monto <= 0m)
             throw new ReglaNegocioException("El precio pactado debe ser mayor a cero.");
 
+        string? firmaNormalizada = null;
+        DateTimeOffset? fechaFirma = null;
+        if (!string.IsNullOrWhiteSpace(firmaClienteBase64))
+        {
+            firmaNormalizada = firmaClienteBase64.Trim();
+            bool esImagenValida =
+                firmaNormalizada.StartsWith("data:image/png;base64,", StringComparison.OrdinalIgnoreCase) ||
+                firmaNormalizada.StartsWith("data:image/jpeg;base64,", StringComparison.OrdinalIgnoreCase) ||
+                firmaNormalizada.StartsWith("data:image/webp;base64,", StringComparison.OrdinalIgnoreCase);
+
+            if (!esImagenValida)
+                throw new ReglaNegocioException("La firma digital del cliente debe ser una imagen válida en formato PNG, JPEG o WEBP.");
+
+            if (firmaNormalizada.Length > LongitudMaximaFirmaBase64)
+                throw new ReglaNegocioException("La firma digital del cliente excede el tamaño máximo permitido.");
+
+            fechaFirma = fechaVenta;
+        }
+
+        string? nombreVendedorNormalizado = string.IsNullOrWhiteSpace(vendedorNombre)
+            ? null
+            : vendedorNombre.Trim();
+        if (nombreVendedorNormalizado is not null && nombreVendedorNormalizado.Length > LongitudMaximaVendedorNombre)
+        {
+            nombreVendedorNormalizado = nombreVendedorNormalizado[..LongitudMaximaVendedorNombre];
+        }
+
         return new Venta(
             Guid.NewGuid(),
             folioNormalizado,
@@ -147,6 +192,9 @@ public class Venta
             modalidad,
             precioPactado,
             estadoInicial,
-            fechaVenta);
+            fechaVenta,
+            firmaNormalizada,
+            nombreVendedorNormalizado,
+            fechaFirma);
     }
 }
