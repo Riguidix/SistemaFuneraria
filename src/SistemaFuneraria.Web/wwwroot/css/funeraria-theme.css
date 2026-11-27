@@ -917,3 +917,269 @@ body.funeraria-app {
   background-color: #FDECEB;
   color: #A84F4B;
 }
+
+/* ==========================================================================
+   PLANO / MAPA VISUAL DE LOTES (CSS GRID 10xN POR SECCIÓN Y ANDADOR)
+   ========================================================================== */
+
+.sf-view-toggle {
+  display: inline-flex;
+  background-color: #F4F1EA;
+  border: 1px solid var(--funeraria-border-light, #E5E1D7);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.sf-view-toggle-btn {
+  border: none;
+  background: transparent;
+  color: #5F5B52;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.sf-view-toggle-btn.active {
+  background-color: #FFFFFF;
+  color: var(--funeraria-primary, #2D4224);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.sf-map-toolbar {
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid #EFECE4;
+  margin-bottom: 0.9rem;
+}
+
+.sf-map-sec-btn {
+  border: 1px solid #E2DDD2;
+  background-color: #FFFFFF;
+  color: #4A463D;
+  font-weight: 600;
+}
+
+.sf-map-sec-btn.active {
+  background-color: var(--funeraria-primary, #2D4224);
+  border-color: var(--funeraria-primary, #2D4224);
+  color: #FFFFFF;
+}
+
+.sf-map-andador-btn {
+  border: 1px solid #E5E1D7;
+  background-color: #FAF8F4;
+  color: #555147;
+  font-weight: 500;
+}
+
+.sf-map-andador-btn.active {
+  background-color: #EBF1E8;
+  border-color: var(--funeraria-primary, #2D4224);
+  color: var(--funeraria-primary, #2D4224);
+  font-weight: 700;
+}
+
+.sf-map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  font-size: 0.78rem;
+  color: #5F5B52;
+}
+
+.sf-map-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sf-map-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.sf-plot-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.sf-plot-grid {
+  display: grid;
+  grid-template-columns: 44px repeat(10, minmax(46px, 1fr));
+  gap: 6px;
+  min-width: 540px;
+}
+
+.sf-plot-axis-corner,
+.sf-plot-axis-col,
+.sf-plot-axis-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #7D786E;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-plot-axis-col {
+  padding-bottom: 4px;
+}
+
+.sf-plot-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 2px;
+  line-height: 1.1;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+button.sf-plot-cell:not(:disabled) {
+  cursor: pointer;
+}
+
+button.sf-plot-cell:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+button.sf-plot-cell:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.sf-plot-num {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-plot-gav {
+  font-size: 0.65rem;
+  opacity: 0.82;
+}
+
+.sf-plot-disponible {
+  background-color: #E6F4EA;
+  border-color: #A8DAB5;
+  color: #137333;
+}
+
+.sf-plot-reservado {
+  background-color: #F6E9D2;
+  border-color: #DFC394;
+  color: #8A5A16;
+}
+
+.sf-plot-vendido {
+  background-color: #E8EAED;
+  border-color: #CBD0D6;
+  color: #4A5158;
+}
+
+.sf-plot-mantenimiento {
+  background-color: #FDECEB;
+  border-color: #F5B8B4;
+  color: #A84F4B;
+}
+
+.sf-plot-empty {
+  background-color: #FAF9F6;
+  border: 1px dashed #E2DDD2;
+}
+
+.sf-plot-selected {
+  background-color: var(--funeraria-primary, #2D4224) !important;
+  border-color: #1B2A16 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 0 0 3px rgba(45, 66, 36, 0.25);
+}
+
+.sf-map-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #EFECE4;
+}
+
+
+/* ==========================================================================
+   FIRMA DIGITAL DEL CLIENTE Y SELLO DEL VENDEDOR (PASO 4 Y EXPEDIENTE)
+   ========================================================================== */
+
+.sf-signature-pad-wrap {
+  height: 155px;
+  overflow: hidden;
+  border-color: #DCD6C8 !important;
+  touch-action: none;
+  user-select: none;
+}
+
+.sf-signature-canvas {
+  height: 155px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sf-signature-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: #9E9A90;
+  font-size: 0.85rem;
+}
+
+.sf-signature-baseline {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 28px;
+  border-bottom: 1px dashed #D5D0C3;
+  pointer-events: none;
+}
+
+.sf-contract-signature-box {
+  height: 110px;
+}
+
+.sf-contract-signature-img {
+  max-height: 100px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.sf-contract-signature-line {
+  width: 82%;
+  max-width: 300px;
+  border-bottom: 1.5px solid #2D2A24;
+}
+
+.sf-seller-seal-card {
+  background-color: #FAF8F5;
+  border-color: #E8E3D9 !important;
+}
+
+@media print {
+  .sf-print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

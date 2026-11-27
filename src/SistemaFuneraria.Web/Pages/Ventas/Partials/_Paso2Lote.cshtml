@@ -1,9 +1,19 @@
 @model SistemaFuneraria.Web.Pages.Ventas.NuevaModel
 
 <div class="bg-white rounded-4 shadow-sm border p-4 p-md-5 d-none" id="step2Card">
-    <div class="mb-4">
-        <h2 class="h4 fw-bold text-dark mb-1">Selecciona el lote</h2>
-        <p class="small text-muted mb-0">Elige una opción disponible del inventario real para continuar.</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+        <div>
+            <h2 class="h4 fw-bold text-dark mb-1">Selecciona el lote</h2>
+            <p class="small text-muted mb-0">Elige una opción disponible del inventario real para continuar.</p>
+        </div>
+        <div class="sf-view-toggle" role="group" aria-label="Cambiar vista de selección de lote">
+            <button type="button" id="btnVistaListaPaso2" class="sf-view-toggle-btn active" aria-pressed="true">
+                <i class="fa-solid fa-list me-1" aria-hidden="true"></i> Lista
+            </button>
+            <button type="button" id="btnVistaMapaPaso2" class="sf-view-toggle-btn" aria-pressed="false">
+                <i class="fa-solid fa-map me-1" aria-hidden="true"></i> Mapa
+            </button>
+        </div>
     </div>
 
     <!-- Alerta de error al consultar catálogo -->
@@ -27,6 +37,9 @@
             <span class="placeholder col-5 rounded"></span>
         </div>
     </div>
+
+    <!-- Plano visual interactivo de lotes -->
+    <div id="contenedorMapaPaso2" class="border rounded-4 p-3 mb-4 bg-white d-none"></div>
 
     <!-- Botones de Navegación Inferior -->
     <div class="border-top pt-4 mt-4 d-flex justify-content-between align-items-center">

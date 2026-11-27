@@ -37,15 +37,27 @@ public class Lote
     }
 
     /// <summary>
-    /// Crea una nueva instancia de Lote en estado Disponible validando clave, ubicación, gavetas y precio.
+    /// Devuelve el precio oficial de contado según la capacidad en gavetas (RN-01).
+    /// </summary>
+    public static Dinero ObtenerPrecioOficial(int gavetas) => gavetas switch
+    {
+        2 => new Dinero(120000m),
+        3 => new Dinero(150000m),
+        4 => new Dinero(180000m),
+        _ => throw new ReglaNegocioException("La capacidad permitida es de 2, 3 o 4 gavetas.")
+    };
+
+    /// <summary>
+    /// Crea una nueva instancia de Lote en estado Disponible validando clave, ubicación, gavetas y precio oficial RN-01.
     /// </summary>
     public static Lote Crear(string clave, string seccion, string andadorFila, int gavetas, Dinero precioContado)
     {
-        string claveNormalizada = ValidarClave(clave);
-        string seccionNormalizada = ValidarTextoObligatorio(seccion, "La sección del lote es obligatoria.");
-        string andadorNormalizado = ValidarTextoObligatorio(andadorFila, "El andador o fila del lote es obligatorio.");
+        var claveNormalizada = ValidarClave(clave);
+        var seccionNormalizada = ValidarTextoObligatorio(seccion, "La sección del lote es obligatoria.");
+        var andadorNormalizado = ValidarTextoObligatorio(andadorFila, "El andador o fila del lote es obligatorio.");
+        
         ValidarGavetas(gavetas);
-        ValidarPrecio(precioContado);
+        ValidarPrecio(gavetas, precioContado);
 
         return new Lote(Guid.NewGuid(), claveNormalizada, seccionNormalizada, andadorNormalizado, gavetas, precioContado, EstadoLote.Disponible);
     }
@@ -98,9 +110,10 @@ public class Lote
     }
 
     /// <summary>
-    /// Actualiza los datos administrativos y estado de un lote que no se encuentra Vendido.
+    /// Actualiza la capacidad (con precio oficial RN-01) y el estado operativo de un lote que no se encuentra Vendido.
+    /// La ubicación física (Sección y AndadorFila) permanece inmutable una vez registrado el lote.
     /// </summary>
-    public void ActualizarDatosAdmin(string seccion, string andadorFila, int gavetas, Dinero precioContado, EstadoLote nuevoEstado)
+    public void ActualizarDatosAdmin(string? seccion, string? andadorFila, int gavetas, Dinero precioContado, EstadoLote nuevoEstado)
     {
         if (Estado == EstadoLote.Vendido)
             throw new ReglaNegocioException("No es posible modificar un lote que ya se encuentra vendido.");
@@ -108,13 +121,9 @@ public class Lote
         if (!Enum.IsDefined(nuevoEstado))
             throw new ReglaNegocioException("El estado del lote indicado no es válido.");
 
-        string seccionNormalizada = ValidarTextoObligatorio(seccion, "La sección del lote es obligatoria.");
-        string andadorNormalizado = ValidarTextoObligatorio(andadorFila, "El andador o fila del lote es obligatorio.");
         ValidarGavetas(gavetas);
-        ValidarPrecio(precioContado);
+        ValidarPrecio(gavetas, precioContado);
 
-        Seccion = seccionNormalizada;
-        AndadorFila = andadorNormalizado;
         Gavetas = gavetas;
         PrecioContado = precioContado;
         Estado = nuevoEstado;
@@ -146,9 +155,16 @@ public class Lote
             throw new ReglaNegocioException("La capacidad permitida es de 2, 3 o 4 gavetas.");
     }
 
-    private static void ValidarPrecio(Dinero precioContado)
+    private static void ValidarPrecio(int gavetas, Dinero precioContado)
     {
         if (precioContado.Monto <= 0m)
             throw new ReglaNegocioException("El precio de contado debe ser mayor a cero.");
+
+        var precioOficial = ObtenerPrecioOficial(gavetas);
+        if (precioContado.Monto != precioOficial.Monto)
+        {
+            throw new ReglaNegocioException(
+                $"El precio de contado para {gavetas} gavetas debe ser exactamente {precioOficial.Monto:C2} (RN-01).");
+        }
     }
 }

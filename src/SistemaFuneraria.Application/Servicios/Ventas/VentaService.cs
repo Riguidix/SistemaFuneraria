@@ -51,7 +51,7 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
         await _context.BeginTransactionAsync(cancellationToken);
         try
         {
-            var fechaVenta = _timeProvider.GetLocalNow();
+            var fechaVenta = _timeProvider.GetUtcNow();
             var folioContrato = await _context.ObtenerSiguienteFolioContratoAsync(fechaVenta.Year, cancellationToken);
 
             var venta = Venta.CrearContado(
@@ -60,7 +60,9 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
                 lote.Id,
                 command.VendedorId,
                 lote.PrecioContado,
-                fechaVenta);
+                fechaVenta,
+                command.FirmaClienteBase64,
+                command.VendedorNombre);
 
             lote.MarcarVendido();
 
@@ -263,7 +265,7 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
         await _context.BeginTransactionAsync(cancellationToken);
         try
         {
-            var fechaVenta = _timeProvider.GetLocalNow();
+            var fechaVenta = _timeProvider.GetUtcNow();
             var folioContrato = await _context.ObtenerSiguienteFolioContratoAsync(fechaVenta.Year, cancellationToken);
 
             var (montoEnganche, capitalFinanciado) = CalculadoraFinanciamiento.CalcularEnganche(
@@ -278,7 +280,9 @@ public class VentaService(IAppDbContext context, TimeProvider? timeProvider = nu
                 lote.Id,
                 command.VendedorId,
                 lote.PrecioContado,
-                fechaVenta);
+                fechaVenta,
+                command.FirmaClienteBase64,
+                command.VendedorNombre);
 
             var fechaPrimerPago = command.FechaPrimerPago
                 ?? DateOnly.FromDateTime(fechaVenta.DateTime).AddMonths(1);

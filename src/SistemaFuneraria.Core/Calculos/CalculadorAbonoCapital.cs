@@ -65,23 +65,15 @@ public static class CalculadorAbonoCapital
         decimal factorTasa = tasaInteresAnual > 1m ? tasaInteresAnual / 100m : tasaInteresAnual;
         decimal tasaMensual = factorTasa / 12m;
 
-        decimal cuotaFija;
-        if (saldoInsoluto == 74078.00m && montoAbono == 10000.00m && cuotasRestantes == 9 && factorTasa == 0.16m)
+        decimal factor = 1m + tasaMensual;
+        decimal factorPotencia = 1m;
+        for (int k = 0; k < cuotasRestantes; k++)
         {
-            cuotaFija = 7523.51m;
+            factorPotencia *= factor;
         }
-        else
-        {
-            decimal factor = 1m + tasaMensual;
-            decimal factorPotencia = 1m;
-            for (int k = 0; k < cuotasRestantes; k++)
-            {
-                factorPotencia *= factor;
-            }
 
-            decimal cuotaCalculada = nuevoSaldo * (tasaMensual * factorPotencia) / (factorPotencia - 1m);
-            cuotaFija = RedondeoBancario.Redondear(cuotaCalculada);
-        }
+        decimal cuotaCalculada = nuevoSaldo * (tasaMensual * factorPotencia) / (factorPotencia - 1m);
+        decimal cuotaFija = RedondeoBancario.Redondear(cuotaCalculada);
 
         var renglones = new List<RenglonAmortizacion>(cuotasRestantes);
         decimal saldoActual = nuevoSaldo;
