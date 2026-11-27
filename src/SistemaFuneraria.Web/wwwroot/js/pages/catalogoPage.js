@@ -50,6 +50,7 @@
         const authApi = deps.authApi ?? win?.authApi;
         const apiClient = deps.apiClient ?? win?.apiClient;
         const lotesApi = deps.lotesApi ?? win?.lotesApi;
+        const mapaLotes = deps.mapaLotes ?? win?.mapaLotes;
         const sfUi = deps.SfUi ?? win?.SfUi;
 
         if (!doc || !lotesApi) return null;
@@ -63,7 +64,8 @@
             items: [],
             loteSeleccionado: null,
             orden: { columna: null, ascendente: true },
-            esAdmin: false
+            esAdmin: false,
+            vista: "tabla"
         };
 
         let debounceTimer = null;
@@ -288,10 +290,76 @@
                     renderFilas(state.items);
                 }
                 renderPaginacion();
+
+                if (state.vista === "mapa") {
+                    await cargarMapaCatalogo();
+                }
             } catch (err) {
                 if (filaCargando) filaCargando.classList.add("d-none");
                 mostrarError(err?.message || "No se pudo cargar el catálogo de lotes.");
             }
+        }
+
+        const btnVistaTabla = doc.getElementById("btnVistaTablaCatalogo");
+        const btnVistaMapa = doc.getElementById("btnVistaMapaCatalogo");
+        const vistaTablaEl = doc.getElementById("catalogoVistaTabla");
+        const vistaMapaEl = doc.getElementById("catalogoVistaMapa");
+        const contenedorMapa = doc.getElementById("contenedorMapaCatalogo");
+        let mapaCatalogo = null;
+
+        async function cargarMapaCatalogo() {
+            if (!contenedorMapa || !mapaLotes || typeof mapaLotes.crearMapa !== "function") return;
+            if (!mapaCatalogo) {
+                mapaCatalogo = mapaLotes.crearMapa(contenedorMapa, {
+                    modo: "catalogo",
+                    onSelectLote: function (lote) {
+                        if (lote?.clave) abrirModalDetalleLote(lote.clave);
+                    }
+                });
+            }
+            const buscar = inputBuscar ? inputBuscar.value.trim() : "";
+            const estado = selectEstado ? selectEstado.value : "todos";
+            const seccion = selectSeccion ? selectSeccion.value : "todas";
+            try {
+                const resMapa = await lotesApi.obtenerCatalogo({
+                    buscar,
+                    estado,
+                    page: 1,
+                    pageSize: 100
+                });
+                mapaCatalogo.setLotes(resMapa?.items || [], { seccion });
+            } catch {
+                mapaCatalogo.setLotes(state.items, { seccion });
+            }
+        }
+
+        function cambiarVistaCatalogo(nuevaVista) {
+            state.vista = nuevaVista === "mapa" ? "mapa" : "tabla";
+            const esMapa = state.vista === "mapa";
+            if (vistaTablaEl) vistaTablaEl.classList.toggle("d-none", esMapa);
+            if (vistaMapaEl) vistaMapaEl.classList.toggle("d-none", !esMapa);
+            if (btnVistaTabla) {
+                btnVistaTabla.classList.toggle("active", !esMapa);
+                btnVistaTabla.setAttribute("aria-pressed", !esMapa ? "true" : "false");
+            }
+            if (btnVistaMapa) {
+                btnVistaMapa.classList.toggle("active", esMapa);
+                btnVistaMapa.setAttribute("aria-pressed", esMapa ? "true" : "false");
+            }
+            if (esMapa) {
+                cargarMapaCatalogo();
+            }
+        }
+
+        if (btnVistaTabla) {
+            btnVistaTabla.addEventListener("click", function () {
+                cambiarVistaCatalogo("tabla");
+            });
+        }
+        if (btnVistaMapa) {
+            btnVistaMapa.addEventListener("click", function () {
+                cambiarVistaCatalogo("mapa");
+            });
         }
 
         function renderTrazabilidadLote(lote) {
